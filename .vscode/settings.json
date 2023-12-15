@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "dsp_mailbox.h": "c",
+    "debug.h": "c",
+    "kernel.h": "c",
+    "dsp_pmss.h": "c"
+  }
+}

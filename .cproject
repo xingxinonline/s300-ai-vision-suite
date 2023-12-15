@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="com.ceva.toolchain.elf.exe.configuration.debug.1145216361">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.ceva.toolchain.elf.exe.configuration.debug.1145216361" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="com.ceva.toolchain.core.errorparser.bintools" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="elf" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="Debug Configuration" id="com.ceva.toolchain.elf.exe.configuration.debug.1145216361" name="Debug" parent="com.ceva.toolchain.elf.exe.configuration.debug" postbuildStep="ceva-elf-objdump.exe -d ${ProjName}.elf &gt; ${ProjName}.dis">
+					<folderInfo id="com.ceva.toolchain.elf.exe.configuration.debug.1145216361." name="/" resourcePath="">
+						<toolChain id="com.ceva.toolchain.elf.exe.debug.1167248257" name="CEVA-ELF Toolchain" superClass="com.ceva.toolchain.elf.exe.debug">
+							<option id="elf.general.core_config.target.1704164417" name="CEVA Target" superClass="elf.general.core_config.target" useByScannerDiscovery="false" value="Workspace Default" valueType="string"/>
+							<targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="com.ceva.toolchain.elf.target.4392802" name="CEVA-ELF Platform" osList="other" superClass="com.ceva.toolchain.elf.target"/>
+							<builder buildPath="${workspace_loc:/test_data_ext_mem}/Debug" id="com.ceva.toolchain.elf.builder.91812405" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CEVA-ELF Builder" superClass="com.ceva.toolchain.elf.builder"/>
+							<tool id="com.ceva.toolchain.elf.exe.compiler.c.debug.182519767" name="CEVA-ELF C Compiler" superClass="com.ceva.toolchain.elf.exe.compiler.c.debug">
+								<option id="elf.compiler.general.-I.230613879" name="Include directories (-I)" superClass="elf.compiler.general.-I" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_csl/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_lib/includes}&quot;"/>
+								</option>
+								<option id="elf.compiler.preprocessor.definitions.-D.564781971" name="Defined symbols (-D)" superClass="elf.compiler.preprocessor.definitions.-D" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="_LIBCPP_INLINE_VISIBILITY=&quot;&quot;"/>
+									<listOptionValue builtIn="false" value="_LIBCPP_EXTERN_TEMPLATE_INLINE_VISIBILITY=&quot;&quot;"/>
+								</option>
+								<option id="elf.compiler.dialect.std.c.343645441" name="C language standard" superClass="elf.compiler.dialect.std.c" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<option id="elf.compiler.dialect.std.cpp.1276277593" name="C++ language standard" superClass="elf.compiler.dialect.std.cpp" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<inputType id="com.ceva.toolchain.elf.compiler.c.input.186845442" superClass="com.ceva.toolchain.elf.compiler.c.input"/>
+							</tool>
+							<tool id="com.ceva.toolchain.elf.exe.compiler.cpp.debug.2098532715" name="CEVA-ELF C/C++ Compiler" superClass="com.ceva.toolchain.elf.exe.compiler.cpp.debug"/>
+							<tool id="com.ceva.toolchain.elf.exe.assembler.debug.2083345811" name="CEVA-ELF Assembler" superClass="com.ceva.toolchain.elf.exe.assembler.debug"/>
+							<tool id="com.ceva.toolchain.elf.exe.linker.debug.1922253781" name="CEVA-ELF Linker" superClass="com.ceva.toolchain.elf.exe.linker.debug">
+								<option id="elf.linker.includes.include_directories.529929543" name="Search path (-L)" superClass="elf.linker.includes.include_directories" useByScannerDiscovery="false"/>
+								<option id="elf.linker.libraries.libraries.52628094" name="Libraries" superClass="elf.linker.libraries.libraries" useByScannerDiscovery="false"/>
+								<option id="elf.linker.objects.objects.2092755898" name="Additional objects" superClass="elf.linker.objects.objects" useByScannerDiscovery="false" valueType="userObjs">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_csl/lib/libcsl.a}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_lib/lib/ceva_dsp_lib.a}&quot;"/>
+								</option>
+								<option id="elf.linker.build_options.lnkfile.1527138247" name="Linker memory mapping script:" superClass="elf.linker.build_options.lnkfile" useByScannerDiscovery="false" value="D:\Toolbox\workspace_dsp_app12345678\testbench_dsp\Debug\testbench_dsp.ld" valueType="string"/>
+								<option id="elf.linker.build_options.relax.485214526" name="Target specific global optimizations" superClass="elf.linker.build_options.relax" useByScannerDiscovery="false" value="elf.linker.build_options.relax.--relax" valueType="enumerated"/>
+								<option id="elf.linker.build_options.gc.2093793119" name="Remove unused sections" superClass="elf.linker.build_options.gc" useByScannerDiscovery="false" value="elf.linker.build_options.gc.remove" valueType="enumerated"/>
+								<option id="elf.linker.build_options.-Map.695932565" name="Create map file" superClass="elf.linker.build_options.-Map" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+							</tool>
+							<tool id="com.ceva.toolchain.elf.libmanager.1378902638" name="CEVA Archiver" superClass="com.ceva.toolchain.elf.libmanager"/>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="com.ceva.toolchain.elf.externalSettingsProvider" factoryId="org.eclipse.cdt.core.extension.container.factory">
+					<externalSetting/>
+				</externalSettings>
+			</storageModule>
+		</cconfiguration>
+		<cconfiguration id="com.ceva.toolchain.elf.exe.configuration.release.1023142377">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.ceva.toolchain.elf.exe.configuration.release.1023142377" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="com.ceva.toolchain.core.errorparser.bintools" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="elf" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="Release Configuration" id="com.ceva.toolchain.elf.exe.configuration.release.1023142377" name="Release" parent="com.ceva.toolchain.elf.exe.configuration.release">
+					<folderInfo id="com.ceva.toolchain.elf.exe.configuration.release.1023142377." name="/" resourcePath="">
+						<toolChain id="com.ceva.toolchain.elf.exe.release.748599804" name="CEVA-ELF Toolchain" superClass="com.ceva.toolchain.elf.exe.release">
+							<option id="elf.general.core_config.target.1055964219" name="CEVA Target" superClass="elf.general.core_config.target" value="Workspace Default" valueType="string"/>
+							<option id="elf.general.core_config.core_type.704817669" name="Core Type" superClass="elf.general.core_config.core_type" value="elf.general.core_config.core_type.xm4" valueType="enumerated"/>
+							<option id="elf.general.core_config.internal_data_mem.85413988" name="Internal Data memory size" superClass="elf.general.core_config.internal_data_mem" value="elf.general.core_config.internal_data_mem.512" valueType="enumerated"/>
+							<option id="elf.general.core_config.internal_code_mem.580344619" name="Internal Code memory size" superClass="elf.general.core_config.internal_code_mem" value="elf.general.core_config.internal_code_mem.256" valueType="enumerated"/>
+							<targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="com.ceva.toolchain.elf.target.1389170715" name="CEVA-ELF Platform" osList="other" superClass="com.ceva.toolchain.elf.target"/>
+							<builder buildPath="${workspace_loc:/test_data_ext_mem}/Release" id="com.ceva.toolchain.elf.builder.496511774" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CEVA-ELF Builder" superClass="com.ceva.toolchain.elf.builder"/>
+							<tool id="com.ceva.toolchain.elf.compiler.c.251179648" name="CEVA-ELF C Compiler" superClass="com.ceva.toolchain.elf.compiler.c">
+								<option id="elf.compiler.general.-I.1069898113" name="Include directories (-I)" superClass="elf.compiler.general.-I" useByScannerDiscovery="false"/>
+								<option id="elf.compiler.preprocessor.definitions.-D.9013489" name="Defined symbols (-D)" superClass="elf.compiler.preprocessor.definitions.-D" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="_LIBCPP_INLINE_VISIBILITY=&quot;&quot;"/>
+									<listOptionValue builtIn="false" value="_LIBCPP_EXTERN_TEMPLATE_INLINE_VISIBILITY=&quot;&quot;"/>
+								</option>
+								<inputType id="com.ceva.toolchain.elf.compiler.c.input.535357653" superClass="com.ceva.toolchain.elf.compiler.c.input"/>
+							</tool>
+							<tool id="com.ceva.toolchain.elf.compiler.cpp.132808438" name="CEVA-ELF C/C++ Compiler" superClass="com.ceva.toolchain.elf.compiler.cpp"/>
+							<tool id="com.ceva.toolchain.elf.assembler.542940724" name="CEVA-ELF Assembler" superClass="com.ceva.toolchain.elf.assembler"/>
+							<tool id="com.ceva.toolchain.elf.exe.linker.release.1489066925" name="CEVA-ELF Linker" superClass="com.ceva.toolchain.elf.exe.linker.release">
+								<option id="elf.linker.includes.include_directories.1664133967" name="Search path (-L)" superClass="elf.linker.includes.include_directories"/>
+								<option id="elf.linker.libraries.libraries.771594120" name="Libraries" superClass="elf.linker.libraries.libraries"/>
+								<option id="elf.linker.objects.objects.1251819026" name="Additional objects" superClass="elf.linker.objects.objects"/>
+							</tool>
+							<tool id="com.ceva.toolchain.elf.libmanager.1230016008" name="CEVA Archiver" superClass="com.ceva.toolchain.elf.libmanager"/>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="com.ceva.toolchain.elf.externalSettingsProvider" factoryId="org.eclipse.cdt.core.extension.container.factory">
+					<externalSetting/>
+				</externalSettings>
+			</storageModule>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="test_data_ext_mem.com.ceva.toolchain.elf.exe.843816009" name="Executable" projectType="com.ceva.toolchain.elf.exe"/>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="org.eclipse.cdt.core.language.mapping">
+		<project-mappings>
+			<content-type-mapping configuration="" content-type="org.eclipse.cdt.core.cHeader" language="com.ceva.toolchain.elf.c"/>
+			<content-type-mapping configuration="" content-type="org.eclipse.cdt.core.cSource" language="com.ceva.toolchain.elf.c"/>
+			<content-type-mapping configuration="" content-type="org.eclipse.cdt.core.cxxHeader" language="com.ceva.toolchain.elf.cxx"/>
+			<content-type-mapping configuration="" content-type="org.eclipse.cdt.core.cxxSource" language="com.ceva.toolchain.elf.cxx"/>
+		</project-mappings>
+	</storageModule>
+	<storageModule moduleId="com.ceva.toolchain.core.sdtflags" revision="17.0.0"/>
+	<storageModule length="false" moduleId="com.ceva.toolchain.core.useoptfile"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/testbench_dsp"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/testbench_dsp"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+</cproject>
