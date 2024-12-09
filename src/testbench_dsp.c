@@ -21,19 +21,65 @@
 #include "custom_printf.h"
 #include "dsp_mailbox.h"
 
-#define DISP_IMAGE_WIDTH            (160)
-#define DISP_IMAGE_HEIGHT           (128)
+#define DISP_IMAGE_WIDTH            (320)
+#define DISP_IMAGE_HEIGHT           (240)
 
 extern uint8_t bgr320_buffer1[160 * 120 * 3];
-uint16_t *wframe0_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 8));
-uint16_t *wframe1_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 8));
-uint16_t *rframe0_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 4));
-uint16_t *rframe1_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 4));
-uint8_t *alpha0_buffer = (uint8_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 2));
-uint8_t *alpha1_buffer = (uint8_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 2));
+uint16_t *wframe0_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 3));
+uint16_t *wframe1_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 3));
+uint16_t *rframe0_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 5));
+uint16_t *rframe1_buffer = (uint16_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 5));
+uint8_t *alpha0_buffer = (uint8_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 1));
+uint8_t *alpha1_buffer = (uint8_t *)(0x44080000 - (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT * 1));
 
 uint32_t times_count  = 0;
 uint32_t face_detect_count  __attribute__((used, section(".sram1_data"), aligned(16))) = 0;
+
+typedef uint16_t PIXEL565; // BGR565像素类型，2字节
+
+/**
+ * 在同一块内存中对BGR565图像进行原地缩小
+ * 使用最邻近插值，从右下向左上遍历，避免数据覆盖问题。
+ *
+ * @param image      输入与输出的图像缓冲区
+ * @param orig_width 原始图像宽度
+ * @param orig_height原始图像高度
+ * @param new_width  缩小后的图像宽度
+ * @param new_height 缩小后的图像高度
+ * @return 0 表示成功，-1 表示失败
+ */
+int in_place_downscale_bgr565(PIXEL565* image,
+                              int orig_width, int orig_height,
+                              int new_width, int new_height) {
+    if (!image) {
+        return -1;
+    }
+
+    // 计算缩放比例
+    int scale_x = orig_width / new_width;
+    int scale_y = orig_height / new_height;
+
+    // 要求scale_x和scale_y为整数且>0
+    if (scale_x <= 0 || scale_y <= 0 ||
+        (orig_width % new_width != 0) ||
+        (orig_height % new_height != 0)) {
+        // 不满足整倍缩放要求
+        return -1;
+    }
+
+    // 从右下往左上遍历，防止数据被覆盖后还未读取
+    for (int y = new_height - 1; y >= 0; y--) {
+        for (int x = new_width - 1; x >= 0; x--) {
+            int src_x = x * scale_x;
+            int src_y = y * scale_y;
+            PIXEL565 pixel = image[src_y * orig_width + src_x];
+            image[y * new_width + x] = pixel;
+        }
+    }
+
+    return 0;
+}
+
 
 int main(void)
 {
@@ -108,6 +154,7 @@ int main(void)
     		if (times_count == 10000000)
     		{
     			REG32(DSP_MM_BASE + 0x70) = 1;
+    			REG32(DSP_MM_BASE + 0x1E0) = 1;
     		}
 //    		FaceRect *face_get = face_detect(NULL);
 //			if (face_get)
@@ -236,7 +283,7 @@ int main(void)
 //			rt_kprintf("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n", display_width, display_height, snapshot_width, snapshot_height);
 
 ////				cropAndConvertImage(bgr565Image, bgr320_buffer1, 160, 128, 120);
-
+			in_place_downscale_bgr565(wframe1_buffer, 320, 240, 160, 120);
 			FaceRect *face_get = face_detect(wframe1_buffer);
 			uint64_t *alpha1_buffer_addr = (uint64_t *)alpha1_buffer;
 			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
@@ -246,6 +293,10 @@ int main(void)
 			}
 			if (face_get)
 			{
+				face_get->x1 *= 2;
+				face_get->y1 *= 2;
+				face_get->x2 *= 2;
+				face_get->y2 *= 2;
 				rt_kprintf("wframe1 draw_red %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 				if (face_get->x1 < face_get->x2)
 				{

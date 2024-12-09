@@ -1462,7 +1462,7 @@ FaceRect *face_detect(const uint16_t *bgr565_image)
 //    timer_test();
     // 裁剪并转换图像
     rt_kprintf("cropAndConvertImage start\n");
-    cropAndConvertImage(bgr565_image, bgr320_buffer1, 160, 128, 120);
+    cropAndConvertImage(bgr565_image, bgr320_buffer1, 160, 120, 120);
     rt_kprintf("cropAndConvertImage finish\n");
     //===============
     rt_kprintf("face detect start\n");

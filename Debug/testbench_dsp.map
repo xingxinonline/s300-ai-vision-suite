@@ -489,7 +489,7 @@ Linker script and memory map
  *fill*         0x0000000000000076        0xa 
  *(.sinttbl)
 
-.text.internal  0x0000000000000080    0x14580
+.text.internal  0x0000000000000080    0x14880
                 [!provide]                        PROVIDE (__text_start, ABSOLUTE (.))
  *(.text.__call_saved*)
  *(.text .text.*)
@@ -680,960 +680,964 @@ Linker script and memory map
                 0x00000000000035c0       0xc2 ./src/face_detect.o
  .text          0x0000000000003682        0x0 ./src/testbench_dsp.o
  *fill*         0x0000000000003682       0x1e 
- .text.main     0x00000000000036a0      0x52e ./src/testbench_dsp.o
-                0x00000000000036a0                main
- *fill*         0x0000000000003bce       0x12 
+ .text.in_place_downscale_bgr565
+                0x00000000000036a0      0x32c ./src/testbench_dsp.o
+                0x00000000000036a0                in_place_downscale_bgr565
+ *fill*         0x00000000000039cc       0x14 
+ .text.main     0x00000000000039e0      0x58e ./src/testbench_dsp.o
+                0x00000000000039e0                main
+ *fill*         0x0000000000003f6e       0x12 
  .text._ZL3_in7_cpm_swi
-                0x0000000000003be0       0x50 ./src/testbench_dsp.o
- *fill*         0x0000000000003c30       0x10 
+                0x0000000000003f80       0x50 ./src/testbench_dsp.o
+ *fill*         0x0000000000003fd0       0x10 
  .text._ZL4_out7_cpm_swjj
-                0x0000000000003c40       0x54 ./src/testbench_dsp.o
- .text          0x0000000000003c94       0x3a ./src/tests_aux.o
-                0x0000000000003c94                __cxd_trap_handler
- *fill*         0x0000000000003cce       0x12 
+                0x0000000000003fe0       0x54 ./src/testbench_dsp.o
+ .text          0x0000000000004034       0x3a ./src/tests_aux.o
+                0x0000000000004034                __cxd_trap_handler
+ *fill*         0x000000000000406e       0x12 
  .text.reset_memory
-                0x0000000000003ce0       0x4c ./src/tests_aux.o
-                0x0000000000003ce0                reset_memory
- *fill*         0x0000000000003d2c       0x14 
+                0x0000000000004080       0x4c ./src/tests_aux.o
+                0x0000000000004080                reset_memory
+ *fill*         0x00000000000040cc       0x14 
  .text.set_memory_inc
-                0x0000000000003d40       0x7c ./src/tests_aux.o
-                0x0000000000003d40                set_memory_inc
- *fill*         0x0000000000003dbc        0x4 
+                0x00000000000040e0       0x7c ./src/tests_aux.o
+                0x00000000000040e0                set_memory_inc
+ *fill*         0x000000000000415c        0x4 
  .text.set_memory_dec
-                0x0000000000003dc0       0x7c ./src/tests_aux.o
-                0x0000000000003dc0                set_memory_dec
- *fill*         0x0000000000003e3c        0x4 
+                0x0000000000004160       0x7c ./src/tests_aux.o
+                0x0000000000004160                set_memory_dec
+ *fill*         0x00000000000041dc        0x4 
  .text.HW_EXCPTIONS_move_to_user_mode
-                0x0000000000003e40       0x54 ./src/tests_aux.o
-                0x0000000000003e40                HW_EXCPTIONS_move_to_user_mode
- *fill*         0x0000000000003e94        0xc 
+                0x00000000000041e0       0x54 ./src/tests_aux.o
+                0x00000000000041e0                HW_EXCPTIONS_move_to_user_mode
+ *fill*         0x0000000000004234        0xc 
  .text.HW_EXCPTIONS_move_to_supervisor_mode
-                0x0000000000003ea0       0x4c ./src/tests_aux.o
-                0x0000000000003ea0                HW_EXCPTIONS_move_to_supervisor_mode
- .text          0x0000000000003eec        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_xm_bc.c.obj)
- .text          0x0000000000003eec        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman.c.obj)
- .text          0x0000000000003eec        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_task_descriptor_v2.c.obj)
- *fill*         0x0000000000003eec       0x14 
+                0x0000000000004240       0x4c ./src/tests_aux.o
+                0x0000000000004240                HW_EXCPTIONS_move_to_supervisor_mode
+ .text          0x000000000000428c        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_xm_bc.c.obj)
+ .text          0x000000000000428c        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman.c.obj)
+ .text          0x000000000000428c        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_task_descriptor_v2.c.obj)
+ *fill*         0x000000000000428c       0x14 
  .text.QMAN_update_config_burst_size
-                0x0000000000003f00       0x4e D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_task_descriptor_v2.c.obj)
-                0x0000000000003f00                QMAN_update_config_burst_size
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_hw_exceptions.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_pmss.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_safety.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_config.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_timers.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_ctrl.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_icu.c.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_asm_aux.asm.obj)
- .text          0x0000000000003f4e        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
- *fill*         0x0000000000003f4e       0x12 
+                0x00000000000042a0       0x4e D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_task_descriptor_v2.c.obj)
+                0x00000000000042a0                QMAN_update_config_burst_size
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_hw_exceptions.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_pmss.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_safety.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_config.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_timers.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_ctrl.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_icu.c.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_asm_aux.asm.obj)
+ .text          0x00000000000042ee        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
+ *fill*         0x00000000000042ee       0x12 
  .text.CSL_set_power_save_mode
-                0x0000000000003f60       0x5e D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
-                0x0000000000003f60                CSL_set_power_save_mode
- *fill*         0x0000000000003fbe        0x2 
+                0x0000000000004300       0x5e D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
+                0x0000000000004300                CSL_set_power_save_mode
+ *fill*         0x000000000000435e        0x2 
  .text.CSL_btb_clear
-                0x0000000000003fc0       0x26 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
-                0x0000000000003fc0                CSL_btb_clear
- .text          0x0000000000003fe6       0x10 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_enqueue.asm.obj)
- .text          0x0000000000003ff6        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_assert.c.obj)
- .text          0x0000000000003ff6        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_dmss.c.obj)
- .text          0x0000000000003ff6       0xc2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib/crt0.o
-                0x0000000000003ff6                _start
-                0x0000000000004028                __init_hook_post_start_ret_label__
-                0x0000000000004068                __not_needed
- .text          0x00000000000040b8        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib/crtn.o
- .text          0x00000000000040b8        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abs.o)
- *fill*         0x00000000000040b8        0x8 
- .text.abs      0x00000000000040c0        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abs.o)
-                0x00000000000040c0                abs
- .text          0x00000000000040c6        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(snprintf.o)
- *fill*         0x00000000000040c6       0x1a 
+                0x0000000000004360       0x26 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
+                0x0000000000004360                CSL_btb_clear
+ .text          0x0000000000004386       0x10 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_enqueue.asm.obj)
+ .text          0x0000000000004396        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_assert.c.obj)
+ .text          0x0000000000004396        0x0 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_dmss.c.obj)
+ .text          0x0000000000004396       0xc2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib/crt0.o
+                0x0000000000004396                _start
+                0x00000000000043c8                __init_hook_post_start_ret_label__
+                0x0000000000004408                __not_needed
+ .text          0x0000000000004458        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib/crtn.o
+ .text          0x0000000000004458        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abs.o)
+ *fill*         0x0000000000004458        0x8 
+ .text.abs      0x0000000000004460        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abs.o)
+                0x0000000000004460                abs
+ .text          0x0000000000004466        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(snprintf.o)
+ *fill*         0x0000000000004466       0x1a 
  .text.snprintf
-                0x00000000000040e0       0x1a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(snprintf.o)
-                0x00000000000040e0                snprintf
- .text          0x00000000000040fa        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vsnprintf.o)
- *fill*         0x00000000000040fa        0x6 
+                0x0000000000004480       0x1a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(snprintf.o)
+                0x0000000000004480                snprintf
+ .text          0x000000000000449a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vsnprintf.o)
+ *fill*         0x000000000000449a        0x6 
  .text.vsnprintf
-                0x0000000000004100       0x88 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vsnprintf.o)
-                0x0000000000004100                vsnprintf
- *fill*         0x0000000000004188       0x18 
+                0x00000000000044a0       0x88 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vsnprintf.o)
+                0x00000000000044a0                vsnprintf
+ *fill*         0x0000000000004528       0x18 
  .text.sn_write
-                0x00000000000041a0       0x7e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vsnprintf.o)
- .text          0x000000000000421e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memcpy.o)
- *fill*         0x000000000000421e        0x2 
- .text.memcpy   0x0000000000004220       0xac C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memcpy.o)
-                0x0000000000004220                memcpy
- *fill*         0x00000000000042cc       0x14 
+                0x0000000000004540       0x7e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vsnprintf.o)
+ .text          0x00000000000045be        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memcpy.o)
+ *fill*         0x00000000000045be        0x2 
+ .text.memcpy   0x00000000000045c0       0xac C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memcpy.o)
+                0x00000000000045c0                memcpy
+ *fill*         0x000000000000466c       0x14 
  .text.memcpy64
-                0x00000000000042e0       0x74 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memcpy.o)
-                0x00000000000042e0                memcpy64
- .text          0x0000000000004354        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memset.o)
- *fill*         0x0000000000004354        0xc 
- .text.memset   0x0000000000004360      0x10c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memset.o)
-                0x0000000000004360                memset
- .text          0x000000000000446c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strlen.o)
- *fill*         0x000000000000446c       0x14 
- .text.strlen   0x0000000000004480      0x110 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strlen.o)
-                0x0000000000004480                strlen
- .text          0x0000000000004590        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(assert.o)
- *fill*         0x0000000000004590       0x10 
+                0x0000000000004680       0x74 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memcpy.o)
+                0x0000000000004680                memcpy64
+ .text          0x00000000000046f4        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memset.o)
+ *fill*         0x00000000000046f4        0xc 
+ .text.memset   0x0000000000004700      0x10c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memset.o)
+                0x0000000000004700                memset
+ .text          0x000000000000480c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strlen.o)
+ *fill*         0x000000000000480c       0x14 
+ .text.strlen   0x0000000000004820      0x110 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strlen.o)
+                0x0000000000004820                strlen
+ .text          0x0000000000004930        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(assert.o)
+ *fill*         0x0000000000004930       0x10 
  .text.__assert_fail
-                0x00000000000045a0       0x28 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(assert.o)
-                0x00000000000045a0                __assert_fail
- .text          0x00000000000045c8        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
- *fill*         0x00000000000045c8       0x18 
- .text.dummy    0x00000000000045e0        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
-                0x00000000000045e0                _fini
-                0x00000000000045e0                __funcs_on_exit
- *fill*         0x00000000000045e2       0x1e 
+                0x0000000000004940       0x28 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(assert.o)
+                0x0000000000004940                __assert_fail
+ .text          0x0000000000004968        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
+ *fill*         0x0000000000004968       0x18 
+ .text.dummy    0x0000000000004980        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
+                0x0000000000004980                _fini
+                0x0000000000004980                __funcs_on_exit
+ *fill*         0x0000000000004982       0x1e 
  .text.libc_exit_fini
-                0x0000000000004600       0x42 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
-                0x0000000000004600                __libc_exit_fini
- *fill*         0x0000000000004642       0x1e 
- .text.exit     0x0000000000004660       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
-                0x0000000000004660                exit
- .text          0x0000000000004680        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abort.o)
- .text.abort    0x0000000000004680       0x22 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abort.o)
-                0x0000000000004680                abort
- .text          0x00000000000046a2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(_Exit.o)
- *fill*         0x00000000000046a2       0x1e 
- .text._Exit    0x00000000000046c0       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(_Exit.o)
-                0x00000000000046c0                _Exit
- .text          0x00000000000046d8        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_hook_post_start.o)
-                0x00000000000046d8                __init_hook_post_start
- .text          0x00000000000046de        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_config_regs.o)
- *fill*         0x00000000000046de        0x2 
+                0x00000000000049a0       0x42 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
+                0x00000000000049a0                __libc_exit_fini
+ *fill*         0x00000000000049e2       0x1e 
+ .text.exit     0x0000000000004a00       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(exit.o)
+                0x0000000000004a00                exit
+ .text          0x0000000000004a20        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abort.o)
+ .text.abort    0x0000000000004a20       0x22 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(abort.o)
+                0x0000000000004a20                abort
+ .text          0x0000000000004a42        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(_Exit.o)
+ *fill*         0x0000000000004a42       0x1e 
+ .text._Exit    0x0000000000004a60       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(_Exit.o)
+                0x0000000000004a60                _Exit
+ .text          0x0000000000004a78        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_hook_post_start.o)
+                0x0000000000004a78                __init_hook_post_start
+ .text          0x0000000000004a7e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_config_regs.o)
+ *fill*         0x0000000000004a7e        0x2 
  .text.__init_config_regs
-                0x00000000000046e0        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_config_regs.o)
-                0x00000000000046e0                __init_config_regs
- .text          0x00000000000046e2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x0000000000004a80        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_config_regs.o)
+                0x0000000000004a80                __init_config_regs
+ .text          0x0000000000004a82        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
  .text.__cxd_call_saved_restore_interrupt_basic_nofloat_section
-                0x00000000000046e2      0x2e2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
-                0x00000000000046e2                __cxd_call_saved_restore_interrupt_basic_nofloat
-                0x00000000000047d8                __cxd_call_saved_restore_w_frame_interrupt_basic_nofloat
-                0x00000000000048d0                __cxd_call_saved_restore_w_frame_retreg_interrupt_basic_nofloat
+                0x0000000000004a82      0x2e2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x0000000000004a82                __cxd_call_saved_restore_interrupt_basic_nofloat
+                0x0000000000004b78                __cxd_call_saved_restore_w_frame_interrupt_basic_nofloat
+                0x0000000000004c70                __cxd_call_saved_restore_w_frame_retreg_interrupt_basic_nofloat
  .text.__cxd_call_saved_restore_interrupt_basic_16float_section
-                0x00000000000049c4      0x32a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
-                0x00000000000049c4                __cxd_call_saved_restore_interrupt_basic_16float
-                0x0000000000004ad2                __cxd_call_saved_restore_w_frame_interrupt_basic_16float
-                0x0000000000004be2                __cxd_call_saved_restore_w_frame_retreg_interrupt_basic_16float
+                0x0000000000004d64      0x32a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x0000000000004d64                __cxd_call_saved_restore_interrupt_basic_16float
+                0x0000000000004e72                __cxd_call_saved_restore_w_frame_interrupt_basic_16float
+                0x0000000000004f82                __cxd_call_saved_restore_w_frame_retreg_interrupt_basic_16float
  .text.__cxd_call_saved_restore_interrupt_basic_32float_section
-                0x0000000000004cee      0x372 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
-                0x0000000000004cee                __cxd_call_saved_restore_interrupt_basic_32float
-                0x0000000000004e14                __cxd_call_saved_restore_w_frame_interrupt_basic_32float
-                0x0000000000004f3c                __cxd_call_saved_restore_w_frame_retreg_interrupt_basic_32float
+                0x000000000000508e      0x372 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x000000000000508e                __cxd_call_saved_restore_interrupt_basic_32float
+                0x00000000000051b4                __cxd_call_saved_restore_w_frame_interrupt_basic_32float
+                0x00000000000052dc                __cxd_call_saved_restore_w_frame_retreg_interrupt_basic_32float
  .text.__cxd_call_saved_restore_interrupt_full_nofloat_section
-                0x0000000000005060      0x342 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
-                0x0000000000005060                __cxd_call_saved_restore_interrupt_full_nofloat
-                0x0000000000005176                __cxd_call_saved_restore_w_frame_interrupt_full_nofloat
-                0x000000000000528e                __cxd_call_saved_restore_w_frame_retreg_interrupt_full_nofloat
+                0x0000000000005400      0x342 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x0000000000005400                __cxd_call_saved_restore_interrupt_full_nofloat
+                0x0000000000005516                __cxd_call_saved_restore_w_frame_interrupt_full_nofloat
+                0x000000000000562e                __cxd_call_saved_restore_w_frame_retreg_interrupt_full_nofloat
  .text.__cxd_call_saved_restore_interrupt_full_16float_section
-                0x00000000000053a2      0x3d2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
-                0x00000000000053a2                __cxd_call_saved_restore_interrupt_full_16float
-                0x00000000000054e8                __cxd_call_saved_restore_w_frame_interrupt_full_16float
-                0x0000000000005630                __cxd_call_saved_restore_w_frame_retreg_interrupt_full_16float
+                0x0000000000005742      0x3d2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x0000000000005742                __cxd_call_saved_restore_interrupt_full_16float
+                0x0000000000005888                __cxd_call_saved_restore_w_frame_interrupt_full_16float
+                0x00000000000059d0                __cxd_call_saved_restore_w_frame_retreg_interrupt_full_16float
  .text.__cxd_call_saved_restore_interrupt_full_32float_section
-                0x0000000000005774      0x432 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
-                0x0000000000005774                __cxd_call_saved_restore_interrupt_full_32float
-                0x00000000000058da                __cxd_call_saved_restore_w_frame_interrupt_full_32float
-                0x0000000000005a42                __cxd_call_saved_restore_w_frame_retreg_interrupt_full_32float
- .text          0x0000000000005ba6       0x1a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_functions.o)
-                0x0000000000005ba6                __cxd_trape_precise_debug_handler
-                0x0000000000005bb0                __cxd_fade_handler
-                0x0000000000005bb8                __cxd_critical_handler
-                0x0000000000005bbc                __cxd_normal_handler
- .text          0x0000000000005bc0        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x0000000000005b14      0x432 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_epilogue.o)
+                0x0000000000005b14                __cxd_call_saved_restore_interrupt_full_32float
+                0x0000000000005c7a                __cxd_call_saved_restore_w_frame_interrupt_full_32float
+                0x0000000000005de2                __cxd_call_saved_restore_w_frame_retreg_interrupt_full_32float
+ .text          0x0000000000005f46       0x1a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_functions.o)
+                0x0000000000005f46                __cxd_trape_precise_debug_handler
+                0x0000000000005f50                __cxd_fade_handler
+                0x0000000000005f58                __cxd_critical_handler
+                0x0000000000005f5c                __cxd_normal_handler
+ .text          0x0000000000005f60        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
  .text.__cxd_call_saved_store_interrupt_basic_nofloat_section
-                0x0000000000005bc0       0xb8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
-                0x0000000000005bc0                __cxd_call_saved_store_interrupt_basic_nofloat
+                0x0000000000005f60       0xb8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x0000000000005f60                __cxd_call_saved_store_interrupt_basic_nofloat
  .text.__cxd_call_saved_store_interrupt_basic_16float_section
-                0x0000000000005c78       0xd6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
-                0x0000000000005c78                __cxd_call_saved_store_interrupt_basic_16float
+                0x0000000000006018       0xd6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x0000000000006018                __cxd_call_saved_store_interrupt_basic_16float
  .text.__cxd_call_saved_store_interrupt_basic_32float_section
-                0x0000000000005d4e       0xec C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
-                0x0000000000005d4e                __cxd_call_saved_store_interrupt_basic_32float
+                0x00000000000060ee       0xec C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x00000000000060ee                __cxd_call_saved_store_interrupt_basic_32float
  .text.__cxd_call_saved_store_interrupt_full_nofloat_section
-                0x0000000000005e3a       0xd8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
-                0x0000000000005e3a                __cxd_call_saved_store_interrupt_full_nofloat
+                0x00000000000061da       0xd8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x00000000000061da                __cxd_call_saved_store_interrupt_full_nofloat
  .text.__cxd_call_saved_store_interrupt_full_16float_section
-                0x0000000000005f12      0x10c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
-                0x0000000000005f12                __cxd_call_saved_store_interrupt_full_16float
+                0x00000000000062b2      0x10c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x00000000000062b2                __cxd_call_saved_store_interrupt_full_16float
  .text.__cxd_call_saved_store_interrupt_full_32float_section
-                0x000000000000601e      0x124 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
-                0x000000000000601e                __cxd_call_saved_store_interrupt_full_32float
- .text          0x0000000000006142        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_hook_pre_main.o)
- *fill*         0x0000000000006142       0x1e 
+                0x00000000000063be      0x124 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_interrupt_prologue.o)
+                0x00000000000063be                __cxd_call_saved_store_interrupt_full_32float
+ .text          0x00000000000064e2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_hook_pre_main.o)
+ *fill*         0x00000000000064e2       0x1e 
  .text.__init_hook_pre_main
-                0x0000000000006160        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_hook_pre_main.o)
-                0x0000000000006160                __init_hook_pre_main
- .text          0x0000000000006162        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
- *fill*         0x0000000000006162       0x1e 
+                0x0000000000006500        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_hook_pre_main.o)
+                0x0000000000006500                __init_hook_pre_main
+ .text          0x0000000000006502        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
+ *fill*         0x0000000000006502       0x1e 
  .text.is_buffer_initialized
-                0x0000000000006180       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
-                0x0000000000006180                is_buffer_initialized
+                0x0000000000006520       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
+                0x0000000000006520                is_buffer_initialized
  .text.are_buffers_equals
-                0x00000000000061a0       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
-                0x00000000000061a0                are_buffers_equals
- *fill*         0x00000000000061c4       0x1c 
+                0x0000000000006540       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
+                0x0000000000006540                are_buffers_equals
+ *fill*         0x0000000000006564       0x1c 
  .text.__init_data_sections
-                0x00000000000061e0      0x22c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
-                0x00000000000061e0                __init_data_sections
- .text          0x000000000000640c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_func_vec.o)
- *fill*         0x000000000000640c       0x14 
+                0x0000000000006580      0x22c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_data_sections.o)
+                0x0000000000006580                __init_data_sections
+ .text          0x00000000000067ac        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_func_vec.o)
+ *fill*         0x00000000000067ac       0x14 
  .text.__init_func_vec
-                0x0000000000006420       0x2a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_func_vec.o)
-                0x0000000000006420                __init_func_vec
- .text          0x000000000000644a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_libc_global.o)
- *fill*         0x000000000000644a       0x16 
+                0x00000000000067c0       0x2a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_init_func_vec.o)
+                0x00000000000067c0                __init_func_vec
+ .text          0x00000000000067ea        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_libc_global.o)
+ *fill*         0x00000000000067ea       0x16 
  .text.__init_libc_global
-                0x0000000000006460       0x76 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_libc_global.o)
-                0x0000000000006460                __init_libc_global
- .text          0x00000000000064d6        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__errno_location.o)
- *fill*         0x00000000000064d6        0xa 
+                0x0000000000006800       0x76 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_libc_global.o)
+                0x0000000000006800                __init_libc_global
+ .text          0x0000000000006876        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__errno_location.o)
+ *fill*         0x0000000000006876        0xa 
  .text.__errno_location
-                0x00000000000064e0        0xe C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__errno_location.o)
-                0x00000000000064e0                __errno_location
-                0x00000000000064e0                ___errno_location
- .text          0x00000000000064ee        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(libc.o)
- .text          0x00000000000064ee        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_trap_exit.o)
- *fill*         0x00000000000064ee       0x12 
+                0x0000000000006880        0xe C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__errno_location.o)
+                0x0000000000006880                __errno_location
+                0x0000000000006880                ___errno_location
+ .text          0x000000000000688e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(libc.o)
+ .text          0x000000000000688e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_trap_exit.o)
+ *fill*         0x000000000000688e       0x12 
  .text.__cxd_trap_exit
-                0x0000000000006500        0xe C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_trap_exit.o)
-                0x0000000000006500                __cxd_trap_exit
- .text          0x000000000000650e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__pthread_self.o)
- .text          0x000000000000650e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_malloc.o)
- *fill*         0x000000000000650e       0x12 
+                0x00000000000068a0        0xe C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_trap_exit.o)
+                0x00000000000068a0                __cxd_trap_exit
+ .text          0x00000000000068ae        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__pthread_self.o)
+ .text          0x00000000000068ae        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_malloc.o)
+ *fill*         0x00000000000068ae       0x12 
  .text.__init_malloc
-                0x0000000000006520       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_malloc.o)
-                0x0000000000006520                __init_malloc
- .text          0x000000000000653e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fprintf.o)
- *fill*         0x000000000000653e        0x2 
- .text.fprintf  0x0000000000006540       0x1a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fprintf.o)
-                0x0000000000006540                fprintf
- .text          0x000000000000655a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(stderr.o)
- .text          0x000000000000655a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_close.o)
- *fill*         0x000000000000655a        0x6 
- .text.dummy    0x0000000000006560        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_close.o)
-                0x0000000000006560                __aio_close
- *fill*         0x0000000000006562       0x1e 
+                0x00000000000068c0       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__init_malloc.o)
+                0x00000000000068c0                __init_malloc
+ .text          0x00000000000068de        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fprintf.o)
+ *fill*         0x00000000000068de        0x2 
+ .text.fprintf  0x00000000000068e0       0x1a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fprintf.o)
+                0x00000000000068e0                fprintf
+ .text          0x00000000000068fa        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(stderr.o)
+ .text          0x00000000000068fa        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_close.o)
+ *fill*         0x00000000000068fa        0x6 
+ .text.dummy    0x0000000000006900        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_close.o)
+                0x0000000000006900                __aio_close
+ *fill*         0x0000000000006902       0x1e 
  .text.__stdio_close
-                0x0000000000006580       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_close.o)
-                0x0000000000006580                __stdio_close
- .text          0x000000000000659e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_seek.o)
- *fill*         0x000000000000659e        0x2 
+                0x0000000000006920       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_close.o)
+                0x0000000000006920                __stdio_close
+ .text          0x000000000000693e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_seek.o)
+ *fill*         0x000000000000693e        0x2 
  .text.__stdio_seek
-                0x00000000000065a0        0xc C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_seek.o)
-                0x00000000000065a0                __stdio_seek
- .text          0x00000000000065ac        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_write.o)
- *fill*         0x00000000000065ac       0x14 
+                0x0000000000006940        0xc C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_seek.o)
+                0x0000000000006940                __stdio_seek
+ .text          0x000000000000694c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_write.o)
+ *fill*         0x000000000000694c       0x14 
  .text.__stdio_write
-                0x00000000000065c0       0xf2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_write.o)
-                0x00000000000065c0                __stdio_write
- .text          0x00000000000066b2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- *fill*         0x00000000000066b2        0xe 
+                0x0000000000006960       0xf2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_write.o)
+                0x0000000000006960                __stdio_write
+ .text          0x0000000000006a52        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ *fill*         0x0000000000006a52        0xe 
  .text.vfprintf
-                0x00000000000066c0      0x144 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
-                0x00000000000066c0                vfprintf
- *fill*         0x0000000000006804       0x1c 
+                0x0000000000006a60      0x144 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+                0x0000000000006a60                vfprintf
+ *fill*         0x0000000000006ba4       0x1c 
  .text.printf_core
-                0x0000000000006820     0x179a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- *fill*         0x0000000000007fba        0x6 
- .text.out      0x0000000000007fc0       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- *fill*         0x0000000000007fe4       0x1c 
- .text.getint   0x0000000000008000       0x5c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- *fill*         0x000000000000805c        0x4 
- .text.pop_arg  0x0000000000008060       0xe4 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- *fill*         0x0000000000008144       0x1c 
- .text.fmt_u    0x0000000000008160       0x78 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- *fill*         0x00000000000081d8        0x8 
- .text.pad      0x00000000000081e0       0x7c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
- .text          0x000000000000825c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strnlen.o)
- *fill*         0x000000000000825c        0x4 
- .text.strnlen  0x0000000000008260       0x22 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strnlen.o)
-                0x0000000000008260                strnlen
- .text          0x0000000000008282        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
- *fill*         0x0000000000008282       0x1e 
- .text.signal   0x00000000000082a0       0x7e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
-                0x00000000000082a0                signal
- *fill*         0x000000000000831e        0x2 
- .text.sigidx   0x0000000000008320       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
- *fill*         0x0000000000008334        0xc 
+                0x0000000000006bc0     0x179a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ *fill*         0x000000000000835a        0x6 
+ .text.out      0x0000000000008360       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ *fill*         0x0000000000008384       0x1c 
+ .text.getint   0x00000000000083a0       0x5c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ *fill*         0x00000000000083fc        0x4 
+ .text.pop_arg  0x0000000000008400       0xe4 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ *fill*         0x00000000000084e4       0x1c 
+ .text.fmt_u    0x0000000000008500       0x78 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ *fill*         0x0000000000008578        0x8 
+ .text.pad      0x0000000000008580       0x7c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(vfprintf.o)
+ .text          0x00000000000085fc        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strnlen.o)
+ *fill*         0x00000000000085fc        0x4 
+ .text.strnlen  0x0000000000008600       0x22 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strnlen.o)
+                0x0000000000008600                strnlen
+ .text          0x0000000000008622        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
+ *fill*         0x0000000000008622       0x1e 
+ .text.signal   0x0000000000008640       0x7e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
+                0x0000000000008640                signal
+ *fill*         0x00000000000086be        0x2 
+ .text.sigidx   0x00000000000086c0       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
+ *fill*         0x00000000000086d4        0xc 
  .text.default_handler
-                0x0000000000008340        0xc C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
- *fill*         0x000000000000834c       0x14 
+                0x00000000000086e0        0xc C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
+ *fill*         0x00000000000086ec       0x14 
  .text.ignore_handler
-                0x0000000000008360        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
- *fill*         0x0000000000008362       0x1e 
- .text.raise    0x0000000000008380       0x96 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
-                0x0000000000008380                raise
- .text          0x0000000000008416        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_construct_destruct_globals.o)
- *fill*         0x0000000000008416        0xa 
+                0x0000000000008700        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
+ *fill*         0x0000000000008702       0x1e 
+ .text.raise    0x0000000000008720       0x96 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(signal.o)
+                0x0000000000008720                raise
+ .text          0x00000000000087b6        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_construct_destruct_globals.o)
+ *fill*         0x00000000000087b6        0xa 
  .text.__init_construct_globals
-                0x0000000000008420       0x34 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_construct_destruct_globals.o)
-                0x0000000000008420                __init_construct_globals
- *fill*         0x0000000000008454        0xc 
+                0x00000000000087c0       0x34 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_construct_destruct_globals.o)
+                0x00000000000087c0                __init_construct_globals
+ *fill*         0x00000000000087f4        0xc 
  .text.__init_destruct_globals
-                0x0000000000008460       0xb6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_construct_destruct_globals.o)
-                0x0000000000008460                __init_destruct_globals
- .text          0x0000000000008516        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(lseek.o)
- *fill*         0x0000000000008516        0xa 
- .text.__lseek  0x0000000000008520       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(lseek.o)
-                0x0000000000008520                __lseek
-                0x0000000000008520                lseek64
-                0x0000000000008520                lseek
- .text          0x0000000000008544        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strerror.o)
- *fill*         0x0000000000008544       0x1c 
+                0x0000000000008800       0xb6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(crt0_construct_destruct_globals.o)
+                0x0000000000008800                __init_destruct_globals
+ .text          0x00000000000088b6        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(lseek.o)
+ *fill*         0x00000000000088b6        0xa 
+ .text.__lseek  0x00000000000088c0       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(lseek.o)
+                0x00000000000088c0                __lseek
+                0x00000000000088c0                lseek64
+                0x00000000000088c0                lseek
+ .text          0x00000000000088e4        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strerror.o)
+ *fill*         0x00000000000088e4       0x1c 
  .text.__strerror_l
-                0x0000000000008560       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strerror.o)
-                0x0000000000008560                __strerror_l
-                0x0000000000008560                strerror_l
- *fill*         0x000000000000858e       0x12 
+                0x0000000000008900       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strerror.o)
+                0x0000000000008900                __strerror_l
+                0x0000000000008900                strerror_l
+ *fill*         0x000000000000892e       0x12 
  .text.strerror
-                0x00000000000085a0       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strerror.o)
-                0x00000000000085a0                strerror
- .text          0x00000000000085b4        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(syscall_ret.o)
- *fill*         0x00000000000085b4        0xc 
+                0x0000000000008940       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strerror.o)
+                0x0000000000008940                strerror
+ .text          0x0000000000008954        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(syscall_ret.o)
+ *fill*         0x0000000000008954        0xc 
  .text.__syscall_ret
-                0x00000000000085c0       0x2a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(syscall_ret.o)
-                0x00000000000085c0                __syscall_ret
- .text          0x00000000000085ea        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
- *fill*         0x00000000000085ea       0x16 
+                0x0000000000008960       0x2a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(syscall_ret.o)
+                0x0000000000008960                __syscall_ret
+ .text          0x000000000000898a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+ *fill*         0x000000000000898a       0x16 
  .text.__cxd_sys_close
-                0x0000000000008600       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008600                __cxd_sys_close
- *fill*         0x000000000000863e        0x2 
+                0x00000000000089a0       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x00000000000089a0                __cxd_sys_close
+ *fill*         0x00000000000089de        0x2 
  .text.__cxd_sys_unlink
-                0x0000000000008640       0x6e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008640                __cxd_sys_unlink
- *fill*         0x00000000000086ae       0x12 
+                0x00000000000089e0       0x6e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x00000000000089e0                __cxd_sys_unlink
+ *fill*         0x0000000000008a4e       0x12 
  .text.__cxd_sys_fsync
-                0x00000000000086c0       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x00000000000086c0                __cxd_sys_fsync
- *fill*         0x00000000000086fe        0x2 
+                0x0000000000008a60       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008a60                __cxd_sys_fsync
+ *fill*         0x0000000000008a9e        0x2 
  .text.__cxd_sys_remove
-                0x0000000000008700       0x4e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008700                __cxd_sys_remove
- *fill*         0x000000000000874e       0x12 
+                0x0000000000008aa0       0x4e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008aa0                __cxd_sys_remove
+ *fill*         0x0000000000008aee       0x12 
  .text.__cxd_sys_rename
-                0x0000000000008760       0x4c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008760                __cxd_sys_rename
- *fill*         0x00000000000087ac       0x14 
+                0x0000000000008b00       0x4c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008b00                __cxd_sys_rename
+ *fill*         0x0000000000008b4c       0x14 
  .text.__cxd_sys_fopen
-                0x00000000000087c0       0x82 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x00000000000087c0                __cxd_sys_fopen
- *fill*         0x0000000000008842       0x1e 
+                0x0000000000008b60       0x82 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008b60                __cxd_sys_fopen
+ *fill*         0x0000000000008be2       0x1e 
  .text.cxd_io_fopen
-                0x0000000000008860       0x4e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
- *fill*         0x00000000000088ae       0x12 
+                0x0000000000008c00       0x4e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+ *fill*         0x0000000000008c4e       0x12 
  .text.__cxd_sys_readv
-                0x00000000000088c0       0x62 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x00000000000088c0                __cxd_sys_readv
- *fill*         0x0000000000008922       0x1e 
+                0x0000000000008c60       0x62 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008c60                __cxd_sys_readv
+ *fill*         0x0000000000008cc2       0x1e 
  .text.cxd_io_fread
-                0x0000000000008940       0x60 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008ce0       0x60 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
  .text.__cxd_sys_read
-                0x00000000000089a0       0x32 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x00000000000089a0                __cxd_sys_read
- *fill*         0x00000000000089d2        0xe 
+                0x0000000000008d40       0x32 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008d40                __cxd_sys_read
+ *fill*         0x0000000000008d72        0xe 
  .text.__cxd_sys_writev
-                0x00000000000089e0       0xba C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x00000000000089e0                __cxd_sys_writev
- *fill*         0x0000000000008a9a        0x6 
+                0x0000000000008d80       0xba C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008d80                __cxd_sys_writev
+ *fill*         0x0000000000008e3a        0x6 
  .text.__cxd_sys_write
-                0x0000000000008aa0       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008aa0                __cxd_sys_write
+                0x0000000000008e40       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008e40                __cxd_sys_write
  .text.__cxd_sys_lseek
-                0x0000000000008ac0       0x94 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008ac0                __cxd_sys_lseek
- *fill*         0x0000000000008b54        0xc 
+                0x0000000000008e60       0x94 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008e60                __cxd_sys_lseek
+ *fill*         0x0000000000008ef4        0xc 
  .text.__cxd_sys_freopen
-                0x0000000000008b60       0x50 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008b60                __cxd_sys_freopen
- *fill*         0x0000000000008bb0       0x10 
+                0x0000000000008f00       0x50 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008f00                __cxd_sys_freopen
+ *fill*         0x0000000000008f50       0x10 
  .text.syscall_handler
-                0x0000000000008bc0       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
-                0x0000000000008be8                syscall_handler_bp
-                0x0000000000008be8                __cxd_syscall_debug_handler_breakpoint
- .text          0x0000000000008bee        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
- *fill*         0x0000000000008bee       0x12 
- .text.dummy    0x0000000000008c00        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
-                0x0000000000008c00                __lctrans_impl
- *fill*         0x0000000000008c02       0x1e 
+                0x0000000000008f60       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__cxd_sys_io.o)
+                0x0000000000008f88                syscall_handler_bp
+                0x0000000000008f88                __cxd_syscall_debug_handler_breakpoint
+ .text          0x0000000000008f8e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
+ *fill*         0x0000000000008f8e       0x12 
+ .text.dummy    0x0000000000008fa0        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
+                0x0000000000008fa0                __lctrans_impl
+ *fill*         0x0000000000008fa2       0x1e 
  .text.__lctrans
-                0x0000000000008c20        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
-                0x0000000000008c20                __lctrans
- *fill*         0x0000000000008c26       0x1a 
+                0x0000000000008fc0        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
+                0x0000000000008fc0                __lctrans
+ *fill*         0x0000000000008fc6       0x1a 
  .text.__lctrans_cur
-                0x0000000000008c40       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
-                0x0000000000008c40                __lctrans_cur
- .text          0x0000000000008c58        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
- *fill*         0x0000000000008c58        0x8 
+                0x0000000000008fe0       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lctrans.o)
+                0x0000000000008fe0                __lctrans_cur
+ .text          0x0000000000008ff8        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+ *fill*         0x0000000000008ff8        0x8 
  .text.__libc_malloc
-                0x0000000000008c60       0x12 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008c60                __libc_malloc
-                0x0000000000008c60                malloc
- *fill*         0x0000000000008c72        0xe 
+                0x0000000000009000       0x12 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009000                __libc_malloc
+                0x0000000000009000                malloc
+ *fill*         0x0000000000009012        0xe 
  .text.__libc_realloc
-                0x0000000000008c80       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008c80                realloc
-                0x0000000000008c80                __libc_realloc
- *fill*         0x0000000000008c94        0xc 
+                0x0000000000009020       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009020                realloc
+                0x0000000000009020                __libc_realloc
+ *fill*         0x0000000000009034        0xc 
  .text.__libc_calloc
-                0x0000000000008ca0       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008ca0                __libc_calloc
-                0x0000000000008ca0                calloc
- *fill*         0x0000000000008cb4        0xc 
+                0x0000000000009040       0x14 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009040                __libc_calloc
+                0x0000000000009040                calloc
+ *fill*         0x0000000000009054        0xc 
  .text.__libc_free
-                0x0000000000008cc0       0x10 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008cc0                free
-                0x0000000000008cc0                __libc_free
- *fill*         0x0000000000008cd0       0x10 
+                0x0000000000009060       0x10 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009060                free
+                0x0000000000009060                __libc_free
+ *fill*         0x0000000000009070       0x10 
  .text.aligned_alloc
-                0x0000000000008ce0       0x36 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008ce0                aligned_alloc
- *fill*         0x0000000000008d16        0xa 
+                0x0000000000009080       0x36 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009080                aligned_alloc
+ *fill*         0x00000000000090b6        0xa 
  .text.posix_memalign
-                0x0000000000008d20       0x42 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008d20                posix_memalign
- *fill*         0x0000000000008d62       0x1e 
+                0x00000000000090c0       0x42 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x00000000000090c0                posix_memalign
+ *fill*         0x0000000000009102       0x1e 
  .text.__mem_fg_state_create
-                0x0000000000008d80       0x58 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008d80                __mem_fg_state_create
- *fill*         0x0000000000008dd8        0x8 
+                0x0000000000009120       0x58 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009120                __mem_fg_state_create
+ *fill*         0x0000000000009178        0x8 
  .text.__mem_fg_state_release
-                0x0000000000008de0       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008de0                __mem_fg_state_release
- *fill*         0x0000000000008df8        0x8 
+                0x0000000000009180       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009180                __mem_fg_state_release
+ *fill*         0x0000000000009198        0x8 
  .text.__mem_cg_state_create
-                0x0000000000008e00       0x58 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008e00                __mem_cg_state_create
- *fill*         0x0000000000008e58        0x8 
+                0x00000000000091a0       0x58 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x00000000000091a0                __mem_cg_state_create
+ *fill*         0x00000000000091f8        0x8 
  .text.__mem_cg_state_release
-                0x0000000000008e60       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
-                0x0000000000008e60                __mem_cg_state_release
- .text          0x0000000000008e78        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
- *fill*         0x0000000000008e78        0x8 
+                0x0000000000009200       0x18 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(malloc.o)
+                0x0000000000009200                __mem_cg_state_release
+ .text          0x0000000000009218        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+ *fill*         0x0000000000009218        0x8 
  .text.__mem_fg_init
-                0x0000000000008e80       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000008e80                __mem_fg_init
- *fill*         0x0000000000008ea4       0x1c 
+                0x0000000000009220       0x24 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009220                __mem_fg_init
+ *fill*         0x0000000000009244       0x1c 
  .text.__mem_fg_malloc
-                0x0000000000008ec0       0x30 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000008ec0                __mem_fg_malloc
- *fill*         0x0000000000008ef0       0x10 
+                0x0000000000009260       0x30 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009260                __mem_fg_malloc
+ *fill*         0x0000000000009290       0x10 
  .text.__mem_fg_malloc_imp
-                0x0000000000008f00      0x148 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
- *fill*         0x0000000000009048       0x18 
+                0x00000000000092a0      0x148 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+ *fill*         0x00000000000093e8       0x18 
  .text.__mem_fg_flush
-                0x0000000000009060       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000009060                __mem_fg_flush
- *fill*         0x000000000000909e        0x2 
+                0x0000000000009400       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009400                __mem_fg_flush
+ *fill*         0x000000000000943e        0x2 
  .text.__mem_fg_free
-                0x00000000000090a0       0x56 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x00000000000090a0                __mem_fg_free
- *fill*         0x00000000000090f6        0xa 
+                0x0000000000009440       0x56 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009440                __mem_fg_free
+ *fill*         0x0000000000009496        0xa 
  .text.__mem_fg_aligned_realloc
-                0x0000000000009100      0x100 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000009100                __mem_fg_aligned_realloc
+                0x00000000000094a0      0x100 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x00000000000094a0                __mem_fg_aligned_realloc
  .text.__mem_fg_aligned_alloc
-                0x0000000000009200       0x7a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000009200                __mem_fg_aligned_alloc
- *fill*         0x000000000000927a        0x6 
+                0x00000000000095a0       0x7a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x00000000000095a0                __mem_fg_aligned_alloc
+ *fill*         0x000000000000961a        0x6 
  .text.__mem_fg_realloc
-                0x0000000000009280        0xc C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000009280                __mem_fg_realloc
- *fill*         0x000000000000928c       0x14 
+                0x0000000000009620        0xc C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009620                __mem_fg_realloc
+ *fill*         0x000000000000962c       0x14 
  .text.__mem_fg_debug
-                0x00000000000092a0      0x140 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x00000000000092a0                __mem_fg_debug
+                0x0000000000009640      0x140 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009640                __mem_fg_debug
  .text.__mem_fg_calloc
-                0x00000000000093e0       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x00000000000093e0                __mem_fg_calloc
- *fill*         0x000000000000940e       0x12 
+                0x0000000000009780       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009780                __mem_fg_calloc
+ *fill*         0x00000000000097ae       0x12 
  .text.__mem_fg_aligned_calloc
-                0x0000000000009420       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000009420                __mem_fg_aligned_calloc
- *fill*         0x000000000000944e       0x12 
+                0x00000000000097c0       0x2e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x00000000000097c0                __mem_fg_aligned_calloc
+ *fill*         0x00000000000097ee       0x12 
  .text.__mem_fg_size
-                0x0000000000009460        0x8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
-                0x0000000000009460                __mem_fg_size
- .text          0x0000000000009468        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
- *fill*         0x0000000000009468       0x18 
+                0x0000000000009800        0x8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fine_grain.o)
+                0x0000000000009800                __mem_fg_size
+ .text          0x0000000000009808        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+ *fill*         0x0000000000009808       0x18 
  .text.__mem_cg_validate
-                0x0000000000009480        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x0000000000009480                __mem_cg_validate
- *fill*         0x0000000000009482       0x1e 
+                0x0000000000009820        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009820                __mem_cg_validate
+ *fill*         0x0000000000009822       0x1e 
  .text.__mem_cg_init
-                0x00000000000094a0       0x30 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x00000000000094a0                __mem_cg_init
- *fill*         0x00000000000094d0       0x10 
+                0x0000000000009840       0x30 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009840                __mem_cg_init
+ *fill*         0x0000000000009870       0x10 
  .text.__mem_cg_malloc
-                0x00000000000094e0       0x5e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x00000000000094e0                __mem_cg_malloc
- *fill*         0x000000000000953e        0x2 
+                0x0000000000009880       0x5e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009880                __mem_cg_malloc
+ *fill*         0x00000000000098de        0x2 
  .text.__mem_cg_find_free
-                0x0000000000009540       0x8a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
- *fill*         0x00000000000095ca       0x16 
+                0x00000000000098e0       0x8a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+ *fill*         0x000000000000996a       0x16 
  .text.__mem_cg_free
-                0x00000000000095e0       0x22 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x00000000000095e0                __mem_cg_free
- *fill*         0x0000000000009602       0x1e 
+                0x0000000000009980       0x22 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009980                __mem_cg_free
+ *fill*         0x00000000000099a2       0x1e 
  .text.__mem_cg_block_merge
-                0x0000000000009620       0x38 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
- *fill*         0x0000000000009658        0x8 
+                0x00000000000099c0       0x38 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+ *fill*         0x00000000000099f8        0x8 
  .text.__mem_cg_size
-                0x0000000000009660       0x26 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x0000000000009660                __mem_cg_size
- *fill*         0x0000000000009686       0x1a 
+                0x0000000000009a00       0x26 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009a00                __mem_cg_size
+ *fill*         0x0000000000009a26       0x1a 
  .text.__mem_cg_debug
-                0x00000000000096a0       0xf0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x00000000000096a0                __mem_cg_debug
- *fill*         0x0000000000009790       0x10 
+                0x0000000000009a40       0xf0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009a40                __mem_cg_debug
+ *fill*         0x0000000000009b30       0x10 
  .text.__mem_cg_block_end
-                0x00000000000097a0       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x00000000000097a0                __mem_cg_block_end
- *fill*         0x00000000000097be        0x2 
+                0x0000000000009b40       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009b40                __mem_cg_block_end
+ *fill*         0x0000000000009b5e        0x2 
  .text.__mem_cg_aligned_alloc
-                0x00000000000097c0       0x8e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
-                0x00000000000097c0                __mem_cg_aligned_alloc
- .text          0x000000000000984e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexpl.o)
- *fill*         0x000000000000984e       0x12 
- .text.frexpl   0x0000000000009860        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexpl.o)
-                0x0000000000009860                frexpl
- .text          0x0000000000009866        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wctomb.o)
- *fill*         0x0000000000009866       0x1a 
- .text.wctomb   0x0000000000009880       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wctomb.o)
-                0x0000000000009880                wctomb
- .text          0x000000000000989e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fwrite.o)
- *fill*         0x000000000000989e        0x2 
+                0x0000000000009b60       0x8e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(coarse_grain.o)
+                0x0000000000009b60                __mem_cg_aligned_alloc
+ .text          0x0000000000009bee        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexpl.o)
+ *fill*         0x0000000000009bee       0x12 
+ .text.frexpl   0x0000000000009c00        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexpl.o)
+                0x0000000000009c00                frexpl
+ .text          0x0000000000009c06        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wctomb.o)
+ *fill*         0x0000000000009c06       0x1a 
+ .text.wctomb   0x0000000000009c20       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wctomb.o)
+                0x0000000000009c20                wctomb
+ .text          0x0000000000009c3e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fwrite.o)
+ *fill*         0x0000000000009c3e        0x2 
  .text.__fwritex
-                0x00000000000098a0       0xd8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fwrite.o)
-                0x00000000000098a0                __fwritex
- *fill*         0x0000000000009978        0x8 
- .text.fwrite   0x0000000000009980       0x72 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fwrite.o)
-                0x0000000000009980                fwrite
-                0x0000000000009980                fwrite_unlocked
- .text          0x00000000000099f2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lockfile.o)
- *fill*         0x00000000000099f2        0xe 
+                0x0000000000009c40       0xd8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fwrite.o)
+                0x0000000000009c40                __fwritex
+ *fill*         0x0000000000009d18        0x8 
+ .text.fwrite   0x0000000000009d20       0x72 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(fwrite.o)
+                0x0000000000009d20                fwrite
+                0x0000000000009d20                fwrite_unlocked
+ .text          0x0000000000009d92        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lockfile.o)
+ *fill*         0x0000000000009d92        0xe 
  .text.__lockfile
-                0x0000000000009a00        0x4 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lockfile.o)
-                0x0000000000009a00                __lockfile
- *fill*         0x0000000000009a04       0x1c 
+                0x0000000000009da0        0x4 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lockfile.o)
+                0x0000000000009da0                __lockfile
+ *fill*         0x0000000000009da4       0x1c 
  .text.__unlockfile
-                0x0000000000009a20        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lockfile.o)
-                0x0000000000009a20                __unlockfile
- .text          0x0000000000009a22        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__towrite.o)
- *fill*         0x0000000000009a22       0x1e 
+                0x0000000000009dc0        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lockfile.o)
+                0x0000000000009dc0                __unlockfile
+ .text          0x0000000000009dc2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__towrite.o)
+ *fill*         0x0000000000009dc2       0x1e 
  .text.__towrite
-                0x0000000000009a40       0x4a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__towrite.o)
-                0x0000000000009a40                __towrite
- *fill*         0x0000000000009a8a       0x16 
+                0x0000000000009de0       0x4a C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__towrite.o)
+                0x0000000000009de0                __towrite
+ *fill*         0x0000000000009e2a       0x16 
  .text.__towrite_needs_stdio_exit
-                0x0000000000009aa0        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__towrite.o)
-                0x0000000000009aa0                __towrite_needs_stdio_exit
- .text          0x0000000000009aa6        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memchr.o)
- *fill*         0x0000000000009aa6       0x1a 
- .text.memchr   0x0000000000009ac0       0xc6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memchr.o)
-                0x0000000000009ac0                memchr
- .text          0x0000000000009b86        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchr.o)
- *fill*         0x0000000000009b86       0x1a 
- .text.strchr   0x0000000000009ba0       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchr.o)
-                0x0000000000009ba0                strchr
- .text          0x0000000000009bbe        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchrnul.o)
- *fill*         0x0000000000009bbe        0x2 
+                0x0000000000009e40        0x6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__towrite.o)
+                0x0000000000009e40                __towrite_needs_stdio_exit
+ .text          0x0000000000009e46        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memchr.o)
+ *fill*         0x0000000000009e46       0x1a 
+ .text.memchr   0x0000000000009e60       0xc6 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(memchr.o)
+                0x0000000000009e60                memchr
+ .text          0x0000000000009f26        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchr.o)
+ *fill*         0x0000000000009f26       0x1a 
+ .text.strchr   0x0000000000009f40       0x1e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchr.o)
+                0x0000000000009f40                strchr
+ .text          0x0000000000009f5e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchrnul.o)
+ *fill*         0x0000000000009f5e        0x2 
  .text.__strchrnul
-                0x0000000000009bc0       0xce C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchrnul.o)
-                0x0000000000009bc0                strchrnul
-                0x0000000000009bc0                __strchrnul
- .text          0x0000000000009c8e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strcpy.o)
- *fill*         0x0000000000009c8e       0x12 
- .text.strcpy   0x0000000000009ca0      0x124 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strcpy.o)
-                0x0000000000009ca0                strcpy
- .text          0x0000000000009dc4        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexp.o)
- *fill*         0x0000000000009dc4       0x1c 
- .text.frexp    0x0000000000009de0       0xaa C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexp.o)
-                0x0000000000009de0                frexp
- .text          0x0000000000009e8a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wcrtomb.o)
- *fill*         0x0000000000009e8a       0x16 
- .text.wcrtomb  0x0000000000009ea0      0x14e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wcrtomb.o)
-                0x0000000000009ea0                wcrtomb
- .text          0x0000000000009fee        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_exit.o)
- *fill*         0x0000000000009fee       0x12 
+                0x0000000000009f60       0xce C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strchrnul.o)
+                0x0000000000009f60                strchrnul
+                0x0000000000009f60                __strchrnul
+ .text          0x000000000000a02e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strcpy.o)
+ *fill*         0x000000000000a02e       0x12 
+ .text.strcpy   0x000000000000a040      0x124 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(strcpy.o)
+                0x000000000000a040                strcpy
+ .text          0x000000000000a164        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexp.o)
+ *fill*         0x000000000000a164       0x1c 
+ .text.frexp    0x000000000000a180       0xaa C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(frexp.o)
+                0x000000000000a180                frexp
+ .text          0x000000000000a22a        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wcrtomb.o)
+ *fill*         0x000000000000a22a       0x16 
+ .text.wcrtomb  0x000000000000a240      0x14e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(wcrtomb.o)
+                0x000000000000a240                wcrtomb
+ .text          0x000000000000a38e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_exit.o)
+ *fill*         0x000000000000a38e       0x12 
  .text.__stdio_exit
-                0x000000000000a000       0xa8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_exit.o)
-                0x000000000000a000                __stdio_exit_needed
-                0x000000000000a000                __stdio_exit
- *fill*         0x000000000000a0a8       0x18 
+                0x000000000000a3a0       0xa8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_exit.o)
+                0x000000000000a3a0                __stdio_exit_needed
+                0x000000000000a3a0                __stdio_exit
+ *fill*         0x000000000000a448       0x18 
  .text.close_file
-                0x000000000000a0c0       0x7c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_exit.o)
- .text          0x000000000000a13c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(ofl.o)
- *fill*         0x000000000000a13c        0x4 
+                0x000000000000a460       0x7c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__stdio_exit.o)
+ .text          0x000000000000a4dc        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(ofl.o)
+ *fill*         0x000000000000a4dc        0x4 
  .text.__ofl_lock
-                0x000000000000a140       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(ofl.o)
-                0x000000000000a140                __ofl_lock
+                0x000000000000a4e0       0x20 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(ofl.o)
+                0x000000000000a4e0                __ofl_lock
  .text.__ofl_unlock
-                0x000000000000a160        0xe C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(ofl.o)
-                0x000000000000a160                __ofl_unlock
- .text          0x000000000000a16e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lock.o)
- *fill*         0x000000000000a16e       0x12 
- .text.__lock   0x000000000000a180        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lock.o)
-                0x000000000000a180                __lock
- *fill*         0x000000000000a182       0x1e 
+                0x000000000000a500        0xe C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(ofl.o)
+                0x000000000000a500                __ofl_unlock
+ .text          0x000000000000a50e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lock.o)
+ *fill*         0x000000000000a50e       0x12 
+ .text.__lock   0x000000000000a520        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lock.o)
+                0x000000000000a520                __lock
+ *fill*         0x000000000000a522       0x1e 
  .text.__unlock
-                0x000000000000a1a0        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lock.o)
-                0x000000000000a1a0                __unlock
- .text          0x000000000000a1a2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
- *fill*         0x000000000000a1a2       0x1e 
- .text.__ledf2  0x000000000000a1c0       0x86 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
-                0x000000000000a1c0                __eqdf2
-                0x000000000000a1c0                __ltdf2
-                0x000000000000a1c0                __ledf2
-                0x000000000000a1c0                __nedf2
-                0x000000000000a1c0                __cmpdf2
- *fill*         0x000000000000a246       0x1a 
- .text.__gedf2  0x000000000000a260       0x86 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
-                0x000000000000a260                __gedf2
-                0x000000000000a260                __gtdf2
- *fill*         0x000000000000a2e6       0x1a 
+                0x000000000000a540        0x2 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libc.a(__lock.o)
+                0x000000000000a540                __unlock
+ .text          0x000000000000a542        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
+ *fill*         0x000000000000a542       0x1e 
+ .text.__ledf2  0x000000000000a560       0x86 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
+                0x000000000000a560                __eqdf2
+                0x000000000000a560                __ltdf2
+                0x000000000000a560                __ledf2
+                0x000000000000a560                __nedf2
+                0x000000000000a560                __cmpdf2
+ *fill*         0x000000000000a5e6       0x1a 
+ .text.__gedf2  0x000000000000a600       0x86 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
+                0x000000000000a600                __gedf2
+                0x000000000000a600                __gtdf2
+ *fill*         0x000000000000a686       0x1a 
  .text.__unorddf2
-                0x000000000000a300       0x42 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
-                0x000000000000a300                __unorddf2
- .text          0x000000000000a342        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divsf3.o)
- *fill*         0x000000000000a342       0x1e 
+                0x000000000000a6a0       0x42 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(comparedf2.o)
+                0x000000000000a6a0                __unorddf2
+ .text          0x000000000000a6e2        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divsf3.o)
+ *fill*         0x000000000000a6e2       0x1e 
  .text.__divsf3
-                0x000000000000a360      0x274 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divsf3.o)
-                0x000000000000a360                __divsf3
- .text          0x000000000000a5d4        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixdfsi.o)
- *fill*         0x000000000000a5d4        0xc 
+                0x000000000000a700      0x274 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divsf3.o)
+                0x000000000000a700                __divsf3
+ .text          0x000000000000a974        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixdfsi.o)
+ *fill*         0x000000000000a974        0xc 
  .text.__fixdfsi
-                0x000000000000a5e0       0x84 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixdfsi.o)
-                0x000000000000a5e0                __fixdfsi
- .text          0x000000000000a664        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixunsdfsi.o)
- *fill*         0x000000000000a664       0x1c 
+                0x000000000000a980       0x84 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixdfsi.o)
+                0x000000000000a980                __fixdfsi
+ .text          0x000000000000aa04        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixunsdfsi.o)
+ *fill*         0x000000000000aa04       0x1c 
  .text.__fixunsdfsi
-                0x000000000000a680       0x70 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixunsdfsi.o)
-                0x000000000000a680                __fixunsdfsi
- .text          0x000000000000a6f0        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatsidf.o)
- *fill*         0x000000000000a6f0       0x10 
+                0x000000000000aa20       0x70 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(fixunsdfsi.o)
+                0x000000000000aa20                __fixunsdfsi
+ .text          0x000000000000aa90        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatsidf.o)
+ *fill*         0x000000000000aa90       0x10 
  .text.__floatsidf
-                0x000000000000a700       0x4e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatsidf.o)
-                0x000000000000a700                __floatsidf
- .text          0x000000000000a74e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatunsidf.o)
- *fill*         0x000000000000a74e       0x12 
+                0x000000000000aaa0       0x4e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatsidf.o)
+                0x000000000000aaa0                __floatsidf
+ .text          0x000000000000aaee        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatunsidf.o)
+ *fill*         0x000000000000aaee       0x12 
  .text.__floatunsidf
-                0x000000000000a760       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatunsidf.o)
-                0x000000000000a760                __floatunsidf
- .text          0x000000000000a79e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivdi3.o)
- *fill*         0x000000000000a79e        0x2 
+                0x000000000000ab00       0x3e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(floatunsidf.o)
+                0x000000000000ab00                __floatunsidf
+ .text          0x000000000000ab3e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivdi3.o)
+ *fill*         0x000000000000ab3e        0x2 
  .text.__udivdi3
-                0x000000000000a7a0        0x8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivdi3.o)
-                0x000000000000a7a0                __udivdi3
- .text          0x000000000000a7a8        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmoddi4.o)
- *fill*         0x000000000000a7a8       0x18 
+                0x000000000000ab40        0x8 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivdi3.o)
+                0x000000000000ab40                __udivdi3
+ .text          0x000000000000ab48        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmoddi4.o)
+ *fill*         0x000000000000ab48       0x18 
  .text.__udivmoddi4
-                0x000000000000a7c0      0x440 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmoddi4.o)
-                0x000000000000a7c0                __udivmoddi4
- .text          0x000000000000ac00        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpsub.o)
+                0x000000000000ab60      0x440 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmoddi4.o)
+                0x000000000000ab60                __udivmoddi4
+ .text          0x000000000000afa0        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpsub.o)
  .text.dpfp_sub
-                0x000000000000ac00       0x80 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpsub.o)
-                0x000000000000ac00                dpfp_sub
- .text          0x000000000000ac80        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpcmpeq.o)
+                0x000000000000afa0       0x80 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpsub.o)
+                0x000000000000afa0                dpfp_sub
+ .text          0x000000000000b020        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpcmpeq.o)
  .text.dp_cmpeq
-                0x000000000000ac80       0x4c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpcmpeq.o)
-                0x000000000000ac80                dp_cmpeq
- .text          0x000000000000accc        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpmpy.o)
- *fill*         0x000000000000accc       0x14 
+                0x000000000000b020       0x4c C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpcmpeq.o)
+                0x000000000000b020                dp_cmpeq
+ .text          0x000000000000b06c        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpmpy.o)
+ *fill*         0x000000000000b06c       0x14 
  .text.dpfp_mpy
-                0x000000000000ace0       0x8e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpmpy.o)
-                0x000000000000ace0                dpfp_mpy
- .text          0x000000000000ad6e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpadd.o)
- *fill*         0x000000000000ad6e       0x12 
+                0x000000000000b080       0x8e C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpmpy.o)
+                0x000000000000b080                dpfp_mpy
+ .text          0x000000000000b10e        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpadd.o)
+ *fill*         0x000000000000b10e       0x12 
  .text.dpfp_add
-                0x000000000000ad80       0x80 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpadd.o)
-                0x000000000000ad80                dpfp_add
- .text          0x000000000000ae00        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divmodsi4_inreg.o)
+                0x000000000000b120       0x80 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(dpadd.o)
+                0x000000000000b120                dpfp_add
+ .text          0x000000000000b1a0        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divmodsi4_inreg.o)
  .text.__divmodsi4_inreg
-                0x000000000000ae00       0x60 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divmodsi4_inreg.o)
-                0x000000000000ae00                __divmodsi4_inreg
- .text          0x000000000000ae60        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmodsi4_inreg.o)
+                0x000000000000b1a0       0x60 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(divmodsi4_inreg.o)
+                0x000000000000b1a0                __divmodsi4_inreg
+ .text          0x000000000000b200        0x0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmodsi4_inreg.o)
  .text.__udivmodsi4_inreg
-                0x000000000000ae60       0x60 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmodsi4_inreg.o)
-                0x000000000000ae60                __udivmodsi4_inreg
- .text          0x000000000000aec0       0x10 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(barrier_elf.o)
-                0x000000000000aec0                __sync_synchronize
+                0x000000000000b200       0x60 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(udivmodsi4_inreg.o)
+                0x000000000000b200                __udivmodsi4_inreg
+ .text          0x000000000000b260       0x10 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(barrier_elf.o)
+                0x000000000000b260                __sync_synchronize
  *(CSL_CODE_SECTION CSL_CODE_SECTION.*)
- *fill*         0x000000000000aed0       0x10 
+ *fill*         0x000000000000b270       0x10 
  CSL_CODE_SECTION
-                0x000000000000aee0      0x704 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_xm_bc.c.obj)
-                0x000000000000aee0                ICU_IVA_allocate_bc
-                0x000000000000af20                ICU_interrupts_operation_bc
-                0x000000000000b0e6                TIMER_allocate_bc
-                0x000000000000b164                PMSS_set_region_attributes_bc
-                0x000000000000b268                PMSS_enable_global_program_cache_bc
-                0x000000000000b376                PMSS_set_pdma_task_bc
-                0x000000000000b3de                QMAN_allocate_bc
-                0x000000000000b458                QMAN_deallocate_bc
-                0x000000000000b4a0                QMAN_create_internal_message_task_bc
-                0x000000000000b4c6                QMAN_create_external_message_task_bc
-                0x000000000000b4ec                QMAN_create_linear_task_bc
-                0x000000000000b524                QMAN_create_multi_di_task_bc
-                0x000000000000b58a                dma_update_3d_desc_size
-                0x000000000000b5aa                dma_update_1d_desc_size
-                0x000000000000b5c0                dma_update_2d_desc_size
- *fill*         0x000000000000b5e4       0x1c 
+                0x000000000000b280      0x704 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_xm_bc.c.obj)
+                0x000000000000b280                ICU_IVA_allocate_bc
+                0x000000000000b2c0                ICU_interrupts_operation_bc
+                0x000000000000b486                TIMER_allocate_bc
+                0x000000000000b504                PMSS_set_region_attributes_bc
+                0x000000000000b608                PMSS_enable_global_program_cache_bc
+                0x000000000000b716                PMSS_set_pdma_task_bc
+                0x000000000000b77e                QMAN_allocate_bc
+                0x000000000000b7f8                QMAN_deallocate_bc
+                0x000000000000b840                QMAN_create_internal_message_task_bc
+                0x000000000000b866                QMAN_create_external_message_task_bc
+                0x000000000000b88c                QMAN_create_linear_task_bc
+                0x000000000000b8c4                QMAN_create_multi_di_task_bc
+                0x000000000000b92a                dma_update_3d_desc_size
+                0x000000000000b94a                dma_update_1d_desc_size
+                0x000000000000b960                dma_update_2d_desc_size
+ *fill*         0x000000000000b984       0x1c 
  CSL_CODE_SECTION
-                0x000000000000b600       0x8a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_task_descriptor_v2.c.obj)
-                0x000000000000b600                QMAN_update_linear_transfer_size
-                0x000000000000b62a                QMAN_update_multi_di_transfer_size
-                0x000000000000b668                QMAN_update_multi_di_stride
- *fill*         0x000000000000b68a       0x16 
+                0x000000000000b9a0       0x8a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_task_descriptor_v2.c.obj)
+                0x000000000000b9a0                QMAN_update_linear_transfer_size
+                0x000000000000b9ca                QMAN_update_multi_di_transfer_size
+                0x000000000000ba08                QMAN_update_multi_di_stride
+ *fill*         0x000000000000ba2a       0x16 
  CSL_CODE_SECTION
-                0x000000000000b6a0      0x5a2 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_hw_exceptions.c.obj)
-                0x000000000000b6a0                HW_EXCPTIONS_set_stack_limits
-                0x000000000000b6d0                HW_EXCPTIONS_set_dma_break_point
-                0x000000000000b760                HW_EXCPTIONS_clear_dma_break_point
-                0x000000000000b7c0                HW_EXCPTIONS_get_critical_irq_status
-                0x000000000000b7ee                HW_EXCPTIONS_clear_critical_irq_status
-                0x000000000000b844                HW_EXCPTIONS_get_normal_irq_status
-                0x000000000000b850                HW_EXCPTIONS_clear_normal_irq_status
-                0x000000000000b8b6                HW_EXCPTIONS_mask_normal_irq
-                0x000000000000b8ec                HW_EXCPTIONS_get_buffers_irq_status
-                0x000000000000b8f8                HW_EXCPTIONS_mask_buffers_irq
-                0x000000000000b92e                HW_EXCPTIONS_set_shadow_irq
-                0x000000000000b9c2                HW_EXCPTIONS_get_timers_irq_status
-                0x000000000000b9ce                HW_EXCPTIONS_clear_timers_irq_status
-                0x000000000000b9fe                HW_EXCPTIONS_mask_timers_irq
-                0x000000000000ba34                HW_EXCPTIONS_get_watchdog_irq_status
-                0x000000000000ba40                HW_EXCPTIONS_clear_watchdog_irq_status
-                0x000000000000ba72                HW_EXCPTIONS_get_ddma_irq_status
-                0x000000000000ba8c                HW_EXCPTIONS_clear_ddma_irq_status
-                0x000000000000baaa                HW_EXCPTIONS_get_pdma_irq_status
-                0x000000000000bac8                HW_EXCPTIONS_clear_pdma_irq_status
-                0x000000000000bae6                HW_EXCPTIONS_enable_posted_interrupt
-                0x000000000000bb1a                HW_EXCPTIONS_disable_posted_interrupt
-                0x000000000000bb5a                HW_EXCPTIONS_get_posted_interrupt_pending
-                0x000000000000bb84                HW_EXCPTIONS_clear_posted_interrupt_pending
-                0x000000000000bbc8                HW_EXCPTIONS_get_data_access_violation_address
-                0x000000000000bc02                HW_EXCPTIONS_clear_data_access_violation_address
- *fill*         0x000000000000bc42       0x1e 
+                0x000000000000ba40      0x5a2 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_hw_exceptions.c.obj)
+                0x000000000000ba40                HW_EXCPTIONS_set_stack_limits
+                0x000000000000ba70                HW_EXCPTIONS_set_dma_break_point
+                0x000000000000bb00                HW_EXCPTIONS_clear_dma_break_point
+                0x000000000000bb60                HW_EXCPTIONS_get_critical_irq_status
+                0x000000000000bb8e                HW_EXCPTIONS_clear_critical_irq_status
+                0x000000000000bbe4                HW_EXCPTIONS_get_normal_irq_status
+                0x000000000000bbf0                HW_EXCPTIONS_clear_normal_irq_status
+                0x000000000000bc56                HW_EXCPTIONS_mask_normal_irq
+                0x000000000000bc8c                HW_EXCPTIONS_get_buffers_irq_status
+                0x000000000000bc98                HW_EXCPTIONS_mask_buffers_irq
+                0x000000000000bcce                HW_EXCPTIONS_set_shadow_irq
+                0x000000000000bd62                HW_EXCPTIONS_get_timers_irq_status
+                0x000000000000bd6e                HW_EXCPTIONS_clear_timers_irq_status
+                0x000000000000bd9e                HW_EXCPTIONS_mask_timers_irq
+                0x000000000000bdd4                HW_EXCPTIONS_get_watchdog_irq_status
+                0x000000000000bde0                HW_EXCPTIONS_clear_watchdog_irq_status
+                0x000000000000be12                HW_EXCPTIONS_get_ddma_irq_status
+                0x000000000000be2c                HW_EXCPTIONS_clear_ddma_irq_status
+                0x000000000000be4a                HW_EXCPTIONS_get_pdma_irq_status
+                0x000000000000be68                HW_EXCPTIONS_clear_pdma_irq_status
+                0x000000000000be86                HW_EXCPTIONS_enable_posted_interrupt
+                0x000000000000beba                HW_EXCPTIONS_disable_posted_interrupt
+                0x000000000000befa                HW_EXCPTIONS_get_posted_interrupt_pending
+                0x000000000000bf24                HW_EXCPTIONS_clear_posted_interrupt_pending
+                0x000000000000bf68                HW_EXCPTIONS_get_data_access_violation_address
+                0x000000000000bfa2                HW_EXCPTIONS_clear_data_access_violation_address
+ *fill*         0x000000000000bfe2       0x1e 
  CSL_CODE_SECTION
-                0x000000000000bc60      0x35a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_pmss.c.obj)
-                0x000000000000bc60                PMSS_set_region_attributes
-                0x000000000000bca0                PMSS_get_region_attributes
-                0x000000000000bce0                PMSS_set_swop_address_based
-                0x000000000000bd20                PMSS_set_swop_entire_cache
-                0x000000000000bd48                PMSS_enable_global_program_cache
-                0x000000000000be2c                PMSS_set_pre_fetch_size
-                0x000000000000be7a                PMSS_set_pre_fetch
-                0x000000000000bec4                PMSS_set_way_prediction
-                0x000000000000bf0e                PMSS_is_cache_operation_active
-                0x000000000000bf2e                PMSS_set_pdma_task_pre_validation
-                0x000000000000bf32                PMSS_set_pdma_task
-                0x000000000000bf98                PMSS_is_pdma_busy
- *fill*         0x000000000000bfba        0x6 
+                0x000000000000c000      0x35a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_pmss.c.obj)
+                0x000000000000c000                PMSS_set_region_attributes
+                0x000000000000c040                PMSS_get_region_attributes
+                0x000000000000c080                PMSS_set_swop_address_based
+                0x000000000000c0c0                PMSS_set_swop_entire_cache
+                0x000000000000c0e8                PMSS_enable_global_program_cache
+                0x000000000000c1cc                PMSS_set_pre_fetch_size
+                0x000000000000c21a                PMSS_set_pre_fetch
+                0x000000000000c264                PMSS_set_way_prediction
+                0x000000000000c2ae                PMSS_is_cache_operation_active
+                0x000000000000c2ce                PMSS_set_pdma_task_pre_validation
+                0x000000000000c2d2                PMSS_set_pdma_task
+                0x000000000000c338                PMSS_is_pdma_busy
+ *fill*         0x000000000000c35a        0x6 
  CSL_CODE_SECTION
-                0x000000000000bfc0      0x360 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_safety.c.obj)
-                0x000000000000bfc0                SAFETY_write_wd_acs_code
-                0x000000000000bfdc                SAFETY_write_pmss_acs_code
-                0x000000000000bff8                SAFETY_write_dbg_acs_code
-                0x000000000000c014                SAFETY_arm_err_data_injection
-                0x000000000000c06e                SAFETY_arm_btb_err_injection
-                0x000000000000c0a6                SAFETY_arm_prog_cache_tag_err_injection
-                0x000000000000c0e0                SAFETY_arm_prog_err_injection
-                0x000000000000c13a                SAFETY_get_correctable_program_err_cnt
-                0x000000000000c146                SAFETY_clr_general_data_err_event
-                0x000000000000c176                SAFETY_clr_program_correctable_indication
-                0x000000000000c1a0                SAFETY_clear_program_uncorrectable_error
-                0x000000000000c1dc                SAFETY_clr_data_correctable_indication
-                0x000000000000c206                SAFETY_clr_data_uncorrectable_indication
-                0x000000000000c236                SAFETY_set_prefetch_way_selected
-                0x000000000000c26a                SAFETY_set_shadow_registers
+                0x000000000000c360      0x360 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_safety.c.obj)
+                0x000000000000c360                SAFETY_write_wd_acs_code
+                0x000000000000c37c                SAFETY_write_pmss_acs_code
+                0x000000000000c398                SAFETY_write_dbg_acs_code
+                0x000000000000c3b4                SAFETY_arm_err_data_injection
+                0x000000000000c40e                SAFETY_arm_btb_err_injection
+                0x000000000000c446                SAFETY_arm_prog_cache_tag_err_injection
+                0x000000000000c480                SAFETY_arm_prog_err_injection
+                0x000000000000c4da                SAFETY_get_correctable_program_err_cnt
+                0x000000000000c4e6                SAFETY_clr_general_data_err_event
+                0x000000000000c516                SAFETY_clr_program_correctable_indication
+                0x000000000000c540                SAFETY_clear_program_uncorrectable_error
+                0x000000000000c57c                SAFETY_clr_data_correctable_indication
+                0x000000000000c5a6                SAFETY_clr_data_uncorrectable_indication
+                0x000000000000c5d6                SAFETY_set_prefetch_way_selected
+                0x000000000000c60a                SAFETY_set_shadow_registers
  CSL_CODE_SECTION
-                0x000000000000c320      0x512 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_config.c.obj)
-                0x000000000000c320                QMAN_alloc_verify
-                0x000000000000c330                QMAN_alloc_reset_hw_config
-                0x000000000000c440                QMAN_alloc_reset_resource_data
-                0x000000000000c4b4                QMAN_allocate
-                0x000000000000c69c                QMAN_deallocate
-                0x000000000000c6f2                QMAN_enable
-                0x000000000000c726                QMAN_disable
-                0x000000000000c760                QMAN_set_chunk_size_config
-                0x000000000000c78e                QMAN_set_cont_frame
-                0x000000000000c7d0                QMAN_get_active_tasks_number
-                0x000000000000c804                QMAN_reset_sync_point
- *fill*         0x000000000000c832        0xe 
+                0x000000000000c6c0      0x512 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_config.c.obj)
+                0x000000000000c6c0                QMAN_alloc_verify
+                0x000000000000c6d0                QMAN_alloc_reset_hw_config
+                0x000000000000c7e0                QMAN_alloc_reset_resource_data
+                0x000000000000c854                QMAN_allocate
+                0x000000000000ca3c                QMAN_deallocate
+                0x000000000000ca92                QMAN_enable
+                0x000000000000cac6                QMAN_disable
+                0x000000000000cb00                QMAN_set_chunk_size_config
+                0x000000000000cb2e                QMAN_set_cont_frame
+                0x000000000000cb70                QMAN_get_active_tasks_number
+                0x000000000000cba4                QMAN_reset_sync_point
+ *fill*         0x000000000000cbd2        0xe 
  CSL_CODE_SECTION
-                0x000000000000c840      0x4fa D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_timers.c.obj)
-                0x000000000000c840                TIMER_find_available_timer
-                0x000000000000c88a                TIMER_latch
-                0x000000000000c8c0                TIMER_unlatch
-                0x000000000000c900                TIMER_allocate32
-                0x000000000000c9e0                TIMER_allocate64
-                0x000000000000cac0                TIMER_deallocate
-                0x000000000000cb20                TIMER_reset_pre_validation
-                0x000000000000cb46                TIMER_reset
-                0x000000000000cbc0                TIMER_resume
-                0x000000000000cc00                TIMER_pause
-                0x000000000000cc3a                TIMER_progress_counter
-                0x000000000000cc6c                TIMER_read32
-                0x000000000000cc82                TIMER_read64
-                0x000000000000cd00                TIMER_out_signal_clear
- *fill*         0x000000000000cd3a        0x6 
+                0x000000000000cbe0      0x4fa D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_timers.c.obj)
+                0x000000000000cbe0                TIMER_find_available_timer
+                0x000000000000cc2a                TIMER_latch
+                0x000000000000cc60                TIMER_unlatch
+                0x000000000000cca0                TIMER_allocate32
+                0x000000000000cd80                TIMER_allocate64
+                0x000000000000ce60                TIMER_deallocate
+                0x000000000000cec0                TIMER_reset_pre_validation
+                0x000000000000cee6                TIMER_reset
+                0x000000000000cf60                TIMER_resume
+                0x000000000000cfa0                TIMER_pause
+                0x000000000000cfda                TIMER_progress_counter
+                0x000000000000d00c                TIMER_read32
+                0x000000000000d022                TIMER_read64
+                0x000000000000d0a0                TIMER_out_signal_clear
+ *fill*         0x000000000000d0da        0x6 
  CSL_CODE_SECTION
-                0x000000000000cd40      0x37a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_ctrl.c.obj)
-                0x000000000000cd40                QMAN_start_continuous_execution_pre_validation
-                0x000000000000cd44                QMAN_start_continuous_execution
-                0x000000000000cdc0                QMAN_is_continuous_execution_started
-                0x000000000000ce00                QMAN_pause_continuous_execution
-                0x000000000000ce40                QMAN_is_continuous_execution_paused
-                0x000000000000ce72                QMAN_pause_all
-                0x000000000000ce8a                QMAN_resume_all
-                0x000000000000cea2                QMAN_is_all_paused
-                0x000000000000cecc                QMAN_is_queue_full
-                0x000000000000cf14                QMAN_mask_queue_full_interrupt
-                0x000000000000cf68                QMAN_mask_all_queue_full_interrupts
-                0x000000000000cf84                QMAN_is_idm_cross_violation
-                0x000000000000cfd6                QMAN_is_queue_empty_violation
-                0x000000000000d01e                QMAN_get_all_violations
-                0x000000000000d060                QMAN_clear_all_violations
-                0x000000000000d096                QMAN_is_active
- *fill*         0x000000000000d0ba        0x6 
+                0x000000000000d0e0      0x37a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_ctrl.c.obj)
+                0x000000000000d0e0                QMAN_start_continuous_execution_pre_validation
+                0x000000000000d0e4                QMAN_start_continuous_execution
+                0x000000000000d160                QMAN_is_continuous_execution_started
+                0x000000000000d1a0                QMAN_pause_continuous_execution
+                0x000000000000d1e0                QMAN_is_continuous_execution_paused
+                0x000000000000d212                QMAN_pause_all
+                0x000000000000d22a                QMAN_resume_all
+                0x000000000000d242                QMAN_is_all_paused
+                0x000000000000d26c                QMAN_is_queue_full
+                0x000000000000d2b4                QMAN_mask_queue_full_interrupt
+                0x000000000000d308                QMAN_mask_all_queue_full_interrupts
+                0x000000000000d324                QMAN_is_idm_cross_violation
+                0x000000000000d376                QMAN_is_queue_empty_violation
+                0x000000000000d3be                QMAN_get_all_violations
+                0x000000000000d400                QMAN_clear_all_violations
+                0x000000000000d436                QMAN_is_active
+ *fill*         0x000000000000d45a        0x6 
  CSL_CODE_SECTION
-                0x000000000000d0c0      0x3e2 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_icu.c.obj)
-                0x000000000000d0c0                ICU_set_interrupt_configuration
-                0x000000000000d142                ICU_mask_interrupt
-                0x000000000000d186                ICU_activation
-                0x000000000000d1ca                ICU_is_enabled
-                0x000000000000d1f0                ICU_lock_critical_interrupt_conf
-                0x000000000000d280                ICU_mask_interrupt_group
-                0x000000000000d2d4                ICU_set_group_mask
-                0x000000000000d2f0                ICU_generate_interrupt
-                0x000000000000d32a                ICU_clear_interrupt
-                0x000000000000d354                ICU_is_pending_interrupt
-                0x000000000000d3a0                ICU_IVA_allocate
-                0x000000000000d488                ICU_IVA_deallocate
- *fill*         0x000000000000d4a2       0x1e 
+                0x000000000000d460      0x3e2 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_icu.c.obj)
+                0x000000000000d460                ICU_set_interrupt_configuration
+                0x000000000000d4e2                ICU_mask_interrupt
+                0x000000000000d526                ICU_activation
+                0x000000000000d56a                ICU_is_enabled
+                0x000000000000d590                ICU_lock_critical_interrupt_conf
+                0x000000000000d620                ICU_mask_interrupt_group
+                0x000000000000d674                ICU_set_group_mask
+                0x000000000000d690                ICU_generate_interrupt
+                0x000000000000d6ca                ICU_clear_interrupt
+                0x000000000000d6f4                ICU_is_pending_interrupt
+                0x000000000000d740                ICU_IVA_allocate
+                0x000000000000d828                ICU_IVA_deallocate
+ *fill*         0x000000000000d842       0x1e 
  CSL_CODE_SECTION
-                0x000000000000d4c0      0x132 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_asm_aux.asm.obj)
-                0x000000000000d4c0                cpm_out1
-                0x000000000000d4ee                cpm_out2
-                0x000000000000d51c                cpm_out3
-                0x000000000000d54a                cpm_in
-                0x000000000000d578                ceva_ffb
-                0x000000000000d57e                get_csr
-                0x000000000000d5ac                HW_EXCPTIONS_DIV_0_V_clear_sticky_bits
-                0x000000000000d5d8                CSL_is_supervisor
- *fill*         0x000000000000d5f2        0xe 
+                0x000000000000d860      0x132 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_asm_aux.asm.obj)
+                0x000000000000d860                cpm_out1
+                0x000000000000d88e                cpm_out2
+                0x000000000000d8bc                cpm_out3
+                0x000000000000d8ea                cpm_in
+                0x000000000000d918                ceva_ffb
+                0x000000000000d91e                get_csr
+                0x000000000000d94c                HW_EXCPTIONS_DIV_0_V_clear_sticky_bits
+                0x000000000000d978                CSL_is_supervisor
+ *fill*         0x000000000000d992        0xe 
  CSL_CODE_SECTION
-                0x000000000000d600      0x36a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
-                0x000000000000d600                CSL_start
-                0x000000000000d704                CSL_stop
-                0x000000000000d870                CSL_is_it_iss
- *fill*         0x000000000000d96a       0x16 
+                0x000000000000d9a0      0x36a D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_csl.c.obj)
+                0x000000000000d9a0                CSL_start
+                0x000000000000daa4                CSL_stop
+                0x000000000000dc10                CSL_is_it_iss
+ *fill*         0x000000000000dd0a       0x16 
  CSL_CODE_SECTION
-                0x000000000000d980      0x4fa D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_enqueue.asm.obj)
-                0x000000000000d980                QMAN_is_sync_point_reached
-                0x000000000000d9ac                dma_wait_sync_point
-                0x000000000000d9d4                dma_enqueue_sync_point
-                0x000000000000da8a                QMAN_enqueue_sync_point
-                0x000000000000db38                QMAN_enqueue_task
-                0x000000000000dbb2                dma_enqueue_desc
-                0x000000000000dc46                QMAN_push_task
-                0x000000000000dcd0                QMAN_push_frame_start
-                0x000000000000dd7c                QMAN_push_frame_mid
-                0x000000000000de1c                QMAN_push_frame_end
-                0x000000000000de70                CSL_is_asm_assertions_enable
- *fill*         0x000000000000de7a        0x6 
+                0x000000000000dd20      0x4fa D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_qman_enqueue.asm.obj)
+                0x000000000000dd20                QMAN_is_sync_point_reached
+                0x000000000000dd4c                dma_wait_sync_point
+                0x000000000000dd74                dma_enqueue_sync_point
+                0x000000000000de2a                QMAN_enqueue_sync_point
+                0x000000000000ded8                QMAN_enqueue_task
+                0x000000000000df52                dma_enqueue_desc
+                0x000000000000dfe6                QMAN_push_task
+                0x000000000000e070                QMAN_push_frame_start
+                0x000000000000e11c                QMAN_push_frame_mid
+                0x000000000000e1bc                QMAN_push_frame_end
+                0x000000000000e210                CSL_is_asm_assertions_enable
+ *fill*         0x000000000000e21a        0x6 
  CSL_CODE_SECTION
-                0x000000000000de80       0x94 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_assert.c.obj)
-                0x000000000000de80                csl_enter_critical_section
-                0x000000000000dea2                csl_exit_critical_section
-                0x000000000000ded0                CSL_is_it_simulator
- *fill*         0x000000000000df14        0xc 
+                0x000000000000e220       0x94 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_assert.c.obj)
+                0x000000000000e220                csl_enter_critical_section
+                0x000000000000e242                csl_exit_critical_section
+                0x000000000000e270                CSL_is_it_simulator
+ *fill*         0x000000000000e2b4        0xc 
  CSL_CODE_SECTION
-                0x000000000000df20      0x364 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_dmss.c.obj)
-                0x000000000000df20                DMSS_set_port_rid
-                0x000000000000df38                DMSS_set_port_wid
-                0x000000000000df50                DMSS_set_ddma_global_max_outstanding
-                0x000000000000dfb8                DMSS_get_idm_base_address
-                0x000000000000dfc4                DMSS_set_idm_access_protection_level
-                0x000000000000dfe2                DMSS_get_idm_access_protection_level
-                0x000000000000dffc                DMSS_set_internal_barrier
-                0x000000000000e020                DMSS_set_region_attributes_pre_validation
-                0x000000000000e024                DMSS_set_region_attributes
-                0x000000000000e08a                DMSS_get_region_attributes
-                0x000000000000e0d8                DMSS_is_ddma_busy
-                0x000000000000e0f8                DMSS_get_idle_indication
-                0x000000000000e104                DMSS_is_ddma_queue_full
-                0x000000000000e122                DMSS_execute_ddma_task
-                0x000000000000e236                DMSS_pause_ddma
-                0x000000000000e24e                DMSS_unpause_ddma
-                0x000000000000e266                DMSS_is_ddma_paused
-                0x000000000000e2c0                . = ALIGN (0x40)
- *fill*         0x000000000000e284       0x3c 
+                0x000000000000e2c0      0x364 D:/Toolbox/workspace_dsp_next_fd/testbench_dsp/dsp_csl/lib/libcsl.a(ceva_dmss.c.obj)
+                0x000000000000e2c0                DMSS_set_port_rid
+                0x000000000000e2d8                DMSS_set_port_wid
+                0x000000000000e2f0                DMSS_set_ddma_global_max_outstanding
+                0x000000000000e358                DMSS_get_idm_base_address
+                0x000000000000e364                DMSS_set_idm_access_protection_level
+                0x000000000000e382                DMSS_get_idm_access_protection_level
+                0x000000000000e39c                DMSS_set_internal_barrier
+                0x000000000000e3c0                DMSS_set_region_attributes_pre_validation
+                0x000000000000e3c4                DMSS_set_region_attributes
+                0x000000000000e42a                DMSS_get_region_attributes
+                0x000000000000e478                DMSS_is_ddma_busy
+                0x000000000000e498                DMSS_get_idle_indication
+                0x000000000000e4a4                DMSS_is_ddma_queue_full
+                0x000000000000e4c2                DMSS_execute_ddma_task
+                0x000000000000e5d6                DMSS_pause_ddma
+                0x000000000000e5ee                DMSS_unpause_ddma
+                0x000000000000e606                DMSS_is_ddma_paused
+                0x000000000000e640                . = ALIGN (0x40)
+ *fill*         0x000000000000e624       0x1c 
                 [!provide]                        PROVIDE (__text_end, ABSOLUTE (.))
                 [!provide]                        PROVIDE (__text_fd_start, ABSOLUTE (.))
  *(.text_fd .text_fd.*)
- .text_fd       0x000000000000e2c0     0x5d7c ./src/face_detect.o
-                0x000000000000e2c0                my_expf
-                0x000000000000e398                my_softmax
-                0x000000000000e514                get_priorbox
-                0x000000000000e6b0                overlap
-                0x000000000000e984                nms
-                0x000000000000eb44                my_sqrtf
-                0x000000000000ecf0                objectdetect_cnn
-                0x000000000000f988                fd_run
-                0x0000000000010636                conv
-                0x00000000000112e4                conv_dp
-                0x0000000000011d32                conv_rgb
-                0x0000000000012ab6                conv1x1xn
-                0x0000000000013676                pooling
-                0x0000000000013cf6                cropAndConvertImage
-                0x0000000000013f16                face_detect
-                0x0000000000014040                . = ALIGN (0x20)
- *fill*         0x000000000001403c        0x4 
+ .text_fd       0x000000000000e640     0x5d7a ./src/face_detect.o
+                0x000000000000e640                my_expf
+                0x000000000000e718                my_softmax
+                0x000000000000e894                get_priorbox
+                0x000000000000ea30                overlap
+                0x000000000000ed04                nms
+                0x000000000000eec4                my_sqrtf
+                0x000000000000f070                objectdetect_cnn
+                0x000000000000fd08                fd_run
+                0x00000000000109b6                conv
+                0x0000000000011664                conv_dp
+                0x00000000000120b2                conv_rgb
+                0x0000000000012e36                conv1x1xn
+                0x00000000000139f6                pooling
+                0x0000000000014076                cropAndConvertImage
+                0x0000000000014296                face_detect
+                0x00000000000143c0                . = ALIGN (0x20)
+ *fill*         0x00000000000143ba        0x6 
                 [!provide]                        PROVIDE (__text_fd_end, ABSOLUTE (.))
-                0x0000000000014100                . = ALIGN (0x100)
- *fill*         0x0000000000014040       0xc0 
+                0x0000000000014400                . = ALIGN (0x100)
+ *fill*         0x00000000000143c0       0x40 
  *(.external_timer_interrupt)
-                0x0000000000014100                . = ALIGN (0x100)
+                0x0000000000014400                . = ALIGN (0x100)
  *(.external_mailbox_interrupt)
  .external_mailbox_interrupt
-                0x0000000000014100       0xea ./src/dsp_mailbox.o
-                0x0000000000014100                mailbox_isr_handler
-                0x0000000000014200                . = ALIGN (0x100)
- *fill*         0x00000000000141ea       0x16 
+                0x0000000000014400       0xea ./src/dsp_mailbox.o
+                0x0000000000014400                mailbox_isr_handler
+                0x0000000000014500                . = ALIGN (0x100)
+ *fill*         0x00000000000144ea       0x16 
  *(.external_wframe0_interrupt)
  .external_wframe0_interrupt
-                0x0000000000014200       0x54 ./src/dsp_mm.o
-                0x0000000000014200                wframe0_interrupt_hook
-                0x0000000000014300                . = ALIGN (0x100)
- *fill*         0x0000000000014254       0xac 
- *(.external_wframe1_interrupt)
- .external_wframe1_interrupt
-                0x0000000000014300       0x54 ./src/dsp_mm.o
-                0x0000000000014300                wframe1_interrupt_hook
-                0x0000000000014400                . = ALIGN (0x100)
- *fill*         0x0000000000014354       0xac 
- *(.external_rframe0_interrupt)
- .external_rframe0_interrupt
-                0x0000000000014400       0x54 ./src/dsp_mm.o
-                0x0000000000014400                rframe0_interrupt_hook
-                0x0000000000014500                . = ALIGN (0x100)
- *fill*         0x0000000000014454       0xac 
- *(.external_rframe1_interrupt)
- .external_rframe1_interrupt
                 0x0000000000014500       0x54 ./src/dsp_mm.o
-                0x0000000000014500                rframe1_interrupt_hook
+                0x0000000000014500                wframe0_interrupt_hook
                 0x0000000000014600                . = ALIGN (0x100)
  *fill*         0x0000000000014554       0xac 
+ *(.external_wframe1_interrupt)
+ .external_wframe1_interrupt
+                0x0000000000014600       0x54 ./src/dsp_mm.o
+                0x0000000000014600                wframe1_interrupt_hook
+                0x0000000000014700                . = ALIGN (0x100)
+ *fill*         0x0000000000014654       0xac 
+ *(.external_rframe0_interrupt)
+ .external_rframe0_interrupt
+                0x0000000000014700       0x54 ./src/dsp_mm.o
+                0x0000000000014700                rframe0_interrupt_hook
+                0x0000000000014800                . = ALIGN (0x100)
+ *fill*         0x0000000000014754       0xac 
+ *(.external_rframe1_interrupt)
+ .external_rframe1_interrupt
+                0x0000000000014800       0x54 ./src/dsp_mm.o
+                0x0000000000014800                rframe1_interrupt_hook
+                0x0000000000014900                . = ALIGN (0x100)
+ *fill*         0x0000000000014854       0xac 
 
 external_timer_interrupt
-                0x0000000000014600      0x136
+                0x0000000000014900      0x136
                 [!provide]                        PROVIDE (__start_external_timer_interrupt, .)
  external_timer_interrupt
-                0x0000000000014600      0x136 ./src/face_detect.o
-                0x0000000000014600                end_of_count_event_hook
+                0x0000000000014900      0x136 ./src/face_detect.o
+                0x0000000000014900                end_of_count_event_hook
                 [!provide]                        PROVIDE (__stop_external_timer_interrupt, .)
 
 .data.internal  0x0000000000000000    0x387c0
@@ -2618,25 +2622,25 @@ OUTPUT(testbench_dsp.elf elf32-ceva)
  .note.CEVA-arch
                 0x0000000000003960       0xa0 C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib\libcompiler-rt.a(barrier_elf.o)
 
-.debug_abbrev   0x0000000000000000      0x86e
+.debug_abbrev   0x0000000000000000      0x88c
  .debug_abbrev  0x0000000000000000      0x13e ./src/custom_printf.o
  .debug_abbrev  0x000000000000013e       0xa2 ./src/debug.o
  .debug_abbrev  0x00000000000001e0      0x14f ./src/dsp_mailbox.o
  .debug_abbrev  0x000000000000032f      0x113 ./src/dsp_mm.o
  .debug_abbrev  0x0000000000000442      0x277 ./src/face_detect.o
- .debug_abbrev  0x00000000000006b9       0xdb ./src/testbench_dsp.o
- .debug_abbrev  0x0000000000000794       0xda ./src/tests_aux.o
+ .debug_abbrev  0x00000000000006b9       0xf9 ./src/testbench_dsp.o
+ .debug_abbrev  0x00000000000007b2       0xda ./src/tests_aux.o
 
-.debug_info     0x0000000000000000     0x5029
+.debug_info     0x0000000000000000     0x5118
  .debug_info    0x0000000000000000      0x66b ./src/custom_printf.o
  .debug_info    0x000000000000066b      0x1f5 ./src/debug.o
  .debug_info    0x0000000000000860      0x552 ./src/dsp_mailbox.o
  .debug_info    0x0000000000000db2      0x6bd ./src/dsp_mm.o
  .debug_info    0x000000000000146f     0x3726 ./src/face_detect.o
- .debug_info    0x0000000000004b95      0x27c ./src/testbench_dsp.o
- .debug_info    0x0000000000004e11      0x218 ./src/tests_aux.o
+ .debug_info    0x0000000000004b95      0x36b ./src/testbench_dsp.o
+ .debug_info    0x0000000000004f00      0x218 ./src/tests_aux.o
 
-.debug_aranges  0x0000000000000000      0x288
+.debug_aranges  0x0000000000000000      0x290
  .debug_aranges
                 0x0000000000000000       0x88 ./src/custom_printf.o
  .debug_aranges
@@ -2648,19 +2652,20 @@ OUTPUT(testbench_dsp.elf elf32-ceva)
  .debug_aranges
                 0x00000000000001d8       0x50 ./src/face_detect.o
  .debug_aranges
-                0x0000000000000228       0x20 ./src/testbench_dsp.o
+                0x0000000000000228       0x28 ./src/testbench_dsp.o
  .debug_aranges
-                0x0000000000000248       0x40 ./src/tests_aux.o
+                0x0000000000000250       0x40 ./src/tests_aux.o
 
-.debug_ranges   0x0000000000000000      0x208
+.debug_ranges   0x0000000000000000      0x220
  .debug_ranges  0x0000000000000000       0x68 ./src/custom_printf.o
  .debug_ranges  0x0000000000000068       0x58 ./src/debug.o
  .debug_ranges  0x00000000000000c0       0x80 ./src/dsp_mailbox.o
  .debug_ranges  0x0000000000000140       0x40 ./src/dsp_mm.o
  .debug_ranges  0x0000000000000180       0x58 ./src/face_detect.o
- .debug_ranges  0x00000000000001d8       0x30 ./src/tests_aux.o
+ .debug_ranges  0x00000000000001d8       0x18 ./src/testbench_dsp.o
+ .debug_ranges  0x00000000000001f0       0x30 ./src/tests_aux.o
 
-.debug_str      0x0000000000000000     0x38c4
+.debug_str      0x0000000000000000     0x392e
  .debug_str     0x0000000000000000      0x4cf ./src/custom_printf.o
                                         0x531 (size before relaxing)
  .debug_str     0x00000000000004cf      0x347 ./src/debug.o
@@ -2669,30 +2674,30 @@ OUTPUT(testbench_dsp.elf elf32-ceva)
                                         0xc11 (size before relaxing)
  .debug_str     0x00000000000013a9      0x47a ./src/dsp_mm.o
                                         0xc15 (size before relaxing)
- .debug_str     0x0000000000001823     0x19e8 ./src/face_detect.o
+ .debug_str     0x0000000000001823     0x19e1 ./src/face_detect.o
                                        0x1e9d (size before relaxing)
- .debug_str     0x000000000000320b      0x356 ./src/testbench_dsp.o
-                                        0x44c (size before relaxing)
- .debug_str     0x0000000000003561      0x363 ./src/tests_aux.o
+ .debug_str     0x0000000000003204      0x3c7 ./src/testbench_dsp.o
+                                        0x4c7 (size before relaxing)
+ .debug_str     0x00000000000035cb      0x363 ./src/tests_aux.o
                                         0x63f (size before relaxing)
 
-.debug_line     0x0000000000000000     0x8861
+.debug_line     0x0000000000000000     0x8af3
  .debug_line    0x0000000000000000     0x172e ./src/custom_printf.o
  .debug_line    0x000000000000172e      0x43b ./src/debug.o
  .debug_line    0x0000000000001b69      0x52b ./src/dsp_mailbox.o
  .debug_line    0x0000000000002094      0x9e6 ./src/dsp_mm.o
  .debug_line    0x0000000000002a7a     0x5611 ./src/face_detect.o
- .debug_line    0x000000000000808b      0x555 ./src/testbench_dsp.o
- .debug_line    0x00000000000085e0      0x281 ./src/tests_aux.o
+ .debug_line    0x000000000000808b      0x7e7 ./src/testbench_dsp.o
+ .debug_line    0x0000000000008872      0x281 ./src/tests_aux.o
 
-.debug_frame    0x0000000000000000      0x69c
+.debug_frame    0x0000000000000000      0x6b0
  .debug_frame   0x0000000000000000      0x100 ./src/custom_printf.o
  .debug_frame   0x0000000000000100       0xd8 ./src/debug.o
  .debug_frame   0x00000000000001d8      0x13c ./src/dsp_mailbox.o
  .debug_frame   0x0000000000000314       0x9c ./src/dsp_mm.o
  .debug_frame   0x00000000000003b0      0x22c ./src/face_detect.o
- .debug_frame   0x00000000000005dc       0x4c ./src/testbench_dsp.o
- .debug_frame   0x0000000000000628       0x74 ./src/tests_aux.o
+ .debug_frame   0x00000000000005dc       0x60 ./src/testbench_dsp.o
+ .debug_frame   0x000000000000063c       0x74 ./src/tests_aux.o
 
 .debug_loc      0x0000000000000000       0x2a
  .debug_loc     0x0000000000000000       0x2a ./src/face_detect.o
