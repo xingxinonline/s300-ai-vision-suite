@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ASCII"?>
+<spoc:Target xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:spoc="http://www.ceva-dsp.com/spocModel">
+  <core name="SensPro250">
+    <rtl name="1.0.x">
+      <categories xsi:type="spoc:Core">
+        <attributes xsi:type="spoc:EnumAttribute" name="Scalar Processing Units (SPUs)" value="2"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Instructions Fetch-Line Size" value="256"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="General Registers File Size" value="32"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Core Memory Bandwidth" value="128"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="SPU0 Type" value="RSPU"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="SPU1 Type" value="RSPU"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Loop Buffer size " value="20"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="BTB - number of ways" value="4"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="BTB - number of entries" value="256"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Vector Units" value="1"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Number of Vectors" value="32"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Vector Width" value="256"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Number of Vector Predicates" value="32"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Vector Predicate Width" value="32"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="VPU0 - fixed point MPY" value="Enabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="VPU0 - fixed point MPY extend" value="Enabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="VPU0 - non-linear instructions" value="Enabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="VPU0 - BNN" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Histogram" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="FAST9 Support" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="LVPU" value="Enabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Multi-Core Communication Interface" value="8"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="ICU - number of 32 interrupt groups" value="1x32"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Timers" value="4"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Safety (Memory ECC and enhanced features)" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Getbits" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Security" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Real-Time-Trace Configuration" value="Internal"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Debug Unit" value="Big"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="APB interface (CoreSight)" value="Enabled"/>
+      </categories>
+      <categories xsi:type="spoc:PMSS">
+        <attributes xsi:type="spoc:EnumAttribute" name="Instruction TCM Size (KB)" value="128"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Instruction Cache Size (KB)" value="128"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Instruction Cache - Number of Ways" value="4"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Instruction Cache replacment policy" value="PLRU"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="External Program Port (EPP) Width (bit)" value="128"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Cache Line Buffers (CLB) " value="4"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Configurable IACU memory regions " value="8"/>
+      </categories>
+      <categories xsi:type="spoc:DMSS">
+        <attributes xsi:type="spoc:EnumAttribute" name="Data TCM - Size (KB)" value="256"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Data TCM - Number of Blocks" value="2"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Date TCM banks per block" value="8"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Date TCM bank width (bits)" value="64"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="4-Vector Memory Load" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Data Cache - Size (KB)" value="0"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Configurable Data Memory Regions" value="8"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="External Data Port (EDP) Width (bit)" value="128"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="External Device Access Port (EDAP) Width (bit)" value="128"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Auxiliary AXI Master Port - Master0 (bit)" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Auxiliary AXI Master Port - Master1 (bit)" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Auxiliary AXI Slave Port - Slave0 (bit)" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Auxiliary AXI Slave Port - Slave1 (bit)" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="Auxiliary AXI Slave Port - Slave2 (bit)" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="AXI Bus ECC" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="DMAN Configuration - Queue Managers" value="4"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="DMAN Configuration - Buffer Managers" value="0"/>
+      </categories>
+      <categories xsi:type="spoc:SFLP">
+        <attributes xsi:type="spoc:EnumAttribute" name="Core Floating-Point type SPU0" value="Single Precision"/>
+      </categories>
+      <categories xsi:type="spoc:VFLP">
+        <attributes xsi:type="spoc:EnumAttribute" name="VPU0 - SP FP" value="Disabled"/>
+        <attributes xsi:type="spoc:EnumAttribute" name="VPU0 - HP FP" value="Disabled"/>
+      </categories>
+      <categories xsi:type="spoc:Xtend">
+        <attributes xsi:type="spoc:BooleanAttribute" name="CEVA-Xtend-SP"/>
+        <attributes xsi:type="spoc:TextAttribute" name="CEVA-Xtend Project" value="" regex=""/>
+      </categories>
+      <categories xsi:type="spoc:ExternalMemory"/>
+    </rtl>
+  </core>
+  <externalMemories>
+    <attributes xsi:type="spoc:EnumAttribute" name="Type" value="Shared"/>
+    <attributes xsi:type="spoc:TextAttribute" name="Block Name" value="EXTERNAL" regex="^[_a-zA-Z][\w\W\d\s]*"/>
+    <attributes xsi:type="spoc:TextAttribute" name="Base Address" value="0x44000000" regex="\b(0x[0-9a-fA-F]+|0X[0-9a-fA-F]+|[0-9]+)\b"/>
+    <attributes xsi:type="spoc:TextAttribute" name="Size (bytes)" value="0x80000" regex="\b(0x[0-9a-fA-F]+|0X[0-9a-fA-F]+|[0-9]+)\b"/>
+    <attributes xsi:type="spoc:TextAttribute" name="Latency (cycles)" value="0" regex="^(0|([1-9]([0-9]*)))$"/>
+    <attributes xsi:type="spoc:TextAttribute" name="Middle Access Latency (cycles)" value="0" regex="^(0|([1-9]([0-9]*)))$"/>
+    <attributes xsi:type="spoc:BooleanAttribute" name="Read Only"/>
+    <attributes xsi:type="spoc:BooleanAttribute" name="16 Byte Alignment"/>
+  </externalMemories>
+</spoc:Target>

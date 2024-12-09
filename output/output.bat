@@ -1,2 +1,2 @@
-python ./fenlei.py
 python ./combine.py
+python ./fenlei.py

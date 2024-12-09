@@ -12,82 +12,141 @@ Copyright (c) 2023 by xinhao.pan@pimchip.cn, All Rights Reserved.
 
 import os
 
-def read_file(file_path):
-    """Function to read file content."""
+def read_file_to_dict(file_path):
+    """Read file content into a dictionary keyed by the address."""
+    content_dict = {}
     with open(file_path, 'r') as file:
-        return file.readlines()
+        for line in file:
+            if line.strip():
+                address, content = line.strip().split(' ')
+                content_dict[address] = content
+    return content_dict
 
-def merge_lines_adjusted(line_bnk0, line_bnk1):
-    """Function to merge two lines with bnk1 as high bits, handling empty lines."""
-    try:
-        address_bnk0, content_bnk0 = line_bnk0.strip().split(' ')
-    except ValueError:
-        address_bnk0, content_bnk0 = line_bnk0.strip(), "0000000000000000"  # Default content for empty lines
+def check_for_duplicate_addresses(dict1, dict2):
+    """Check for duplicate addresses in two dictionaries."""
+    common_addresses = set(dict1.keys()) & set(dict2.keys())
+    if common_addresses:
+        raise ValueError(f"Duplicate addresses found: {common_addresses}")
 
-    try:
-        _, content_bnk1 = line_bnk1.strip().split(' ')
-    except ValueError:
-        content_bnk1 = "0000000000000000"  # Default content for empty lines
+def merge_dicts(dict1, dict2):
+    """Merge two dictionaries, combining and sorting by keys."""
+    merged_dict = {}
+    for address in sorted(set(dict1.keys()) | set(dict2.keys())):
+        content1 = dict1.get(address, "")
+        content2 = dict2.get(address, "")
+        merged_content = content2 + content1
+        merged_dict[address] = merged_content
+    return merged_dict
 
-    # Replace @44 with @00 in the address
-    address_bnk0 = address_bnk0.replace("@44", "@00")
+def write_merged_content(merged_dict, output_path):
+    """Write the merged content to a file, replacing addresses."""
+    with open(output_path, 'w') as file:
+        for address in merged_dict:
+            new_address = address.replace("@44", "@00")
+            file.write(f"{new_address} {merged_dict[address]}\n")
 
-    merged_content = content_bnk1 + content_bnk0
-    return address_bnk0 + ' ' + merged_content + '\n'
+def fill_missing_addresses(output_path):
+    """Fill missing addresses with zeros."""
+    temp_path = output_path + ".temp"
+    with open(output_path, 'r') as file, open(temp_path, 'w') as temp_file:
+        prev_address = None
+        for line in file:
+            address, content = line.strip().split(' ', 1)
+            address_int = int(address.replace('@', ''), 16)
 
-# Function to check if required files exist in a directory
-def required_files_exist(directory, base_name):
-    required_files = [
-        f'{base_name}_ext_prog_blk0_bnk0.mem',
-        f'{base_name}_ext_prog_blk0_bnk1.mem',
-        f'{base_name}_edp_ext_data_blk0_bnk0.mem',
-        f'{base_name}_edp_ext_data_blk0_bnk1.mem'
+            # If there is a previous address and a gap exists, fill the gap with zeros
+            if prev_address is not None and address_int != prev_address + 1:
+                for missing_address in range(prev_address + 1, address_int):
+                    temp_file.write(f"@{missing_address:07X} {'0'*len(content)}\n")
+
+            temp_file.write(line)
+            prev_address = address_int
+
+    # Replace the original file with the temp file
+    os.replace(temp_path, output_path) 
+            
+def write_data_parts_from_file(output_path, directory, base_name):
+    """从更新后的文件中读取内容，并将数据四等分逆序写入四个新文件"""
+    # 从更新后的文件中读取数据
+    with open(output_path, 'r') as file:
+        lines = file.readlines()
+
+    # 确保有数据行可供处理
+    if not lines:
+        print("No data available in the file.")
+        return
+
+    # 定义目标文件名，包含base_name前缀
+    part_file_names = [
+        f'{base_name}_ext_blk0_16k0.mem',
+        f'{base_name}_ext_blk0_16k1.mem',
+        f'{base_name}_ext_blk0_16k2.mem',
+        f'{base_name}_ext_blk0_16k3.mem',
     ]
-    exists = all(os.path.exists(os.path.join(directory, file)) for file in required_files)
-    if not exists:
-        print(f"Required files for {base_name} are not all present in {directory}")
-    return exists
 
-# Function to merge files in a given directory
-def merge_files_in_directory(directory, base_name):
-    print(f"Processing project: {base_name} in directory: {directory}")
+    # 分割并逆序写入数据
+    part_files = [open(os.path.join(directory, name), 'w') for name in part_file_names]
+    for line in lines:
+        _, data = line.strip().split(' ', 1)
+        # 分割数据
+        parts = [data[i:i + len(data) // 4] for i in range(0, len(data), len(data) // 4)]
+        # 逆序并写入到对应的文件
+        for part_file, part_data in zip(part_files, parts[::-1]):  # 注意逆序处理
+            part_file.write(f"{part_data}\n")
 
-    prog_bnk0_path = os.path.join(directory, f'{base_name}_ext_prog_blk0_bnk0.mem')
-    prog_bnk1_path = os.path.join(directory, f'{base_name}_ext_prog_blk0_bnk1.mem')
-    data_bnk0_path = os.path.join(directory, f'{base_name}_edp_ext_data_blk0_bnk0.mem')
-    data_bnk1_path = os.path.join(directory, f'{base_name}_edp_ext_data_blk0_bnk1.mem')
+    # 关闭所有文件
+    for file in part_files:
+        file.close()
 
-    # Read and merge contents
-    prog_bnk0_content = read_file(prog_bnk0_path)
-    prog_bnk1_content = read_file(prog_bnk1_path)
-    data_bnk0_content = read_file(data_bnk0_path)
-    data_bnk1_content = read_file(data_bnk1_path)
+    print(f"Data divided and written to files with base_name prefix: {', '.join(part_file_names)}")
 
-    if len(data_bnk0_content) > len(data_bnk1_content):
-        data_bnk1_content.append('\n')
+def process_files(base_name, directory, suffixes):
+    # Read file contents into dictionaries
+    file_dicts = [read_file_to_dict(os.path.join(directory, f'{base_name}_{suffix}.mem')) for suffix in suffixes]
 
-    merged_prog = [merge_lines_adjusted(bnk0, bnk1) for bnk0, bnk1 in zip(prog_bnk0_content, prog_bnk1_content)]
-    merged_data = [merge_lines_adjusted(bnk0, bnk1) for bnk0, bnk1 in zip(data_bnk0_content, data_bnk1_content)]
+    # Check for duplicate addresses and merge prog and data banks separately
+    check_for_duplicate_addresses(file_dicts[0], file_dicts[2]) # prog_blk0 vs data_blk0
+    check_for_duplicate_addresses(file_dicts[1], file_dicts[3]) # prog_blk1 vs data_blk1
 
-    combined_content = merged_prog + merged_data
+    merged_bnk0 = merge_dicts(file_dicts[0], file_dicts[2])
+    merged_bnk1 = merge_dicts(file_dicts[1], file_dicts[3])
 
-    combined_file_path = os.path.join(directory, f'{base_name}_ext_blk0.mem')
+    # Ensure both banks have the same addresses
+    final_addresses = sorted(set(merged_bnk0.keys()) | set(merged_bnk1.keys()))
+    final_merged = {addr: merged_bnk1.get(addr, "0000000000000000") + merged_bnk0.get(addr, "0000000000000000") for addr in final_addresses}
 
-    with open(combined_file_path, 'w') as file:
-        file.writelines(combined_content)
-    print(f"Merging complete for {base_name}. Combined file saved at: {combined_file_path}")
+    # Write final merged content to a file
+    output_path = os.path.join(directory, f'{base_name}_ext_blk0.mem')
+    write_merged_content(final_merged, output_path)
+    
+    # Then, fill missing addresses
+    fill_missing_addresses(output_path)
 
-# Main function to iterate through subdirectories and merge files
+    print(f"File merged and saved at: {output_path}")
+
+    # 新增：仅将数据段四等分并写入四个新文件
+    write_data_parts_from_file(output_path, directory, base_name)
+
 def main():
     print("Starting the merging process.")
     current_directory = os.getcwd()
-    for item in os.listdir(current_directory):
-        subdirectory = os.path.join(current_directory, item)
-        if os.path.isdir(subdirectory):
-            base_name = os.path.basename(subdirectory)
-            if required_files_exist(subdirectory, base_name):
-                merge_files_in_directory(subdirectory, base_name)
+    suffixes = ['ext_prog_blk0_bnk0', 'ext_prog_blk0_bnk1', 'edp_ext_data_blk0_bnk0', 'edp_ext_data_blk0_bnk1']
+    base_names = set()
+
+    # Identify unique base names based on the suffix
+    for file in os.listdir(current_directory):
+        for suffix in suffixes:
+            if file.endswith(suffix + '.mem'):
+                base_name = file[:-len(suffix) - 4].rstrip('_') # 4 for '.mem'
+                base_names.add(base_name)
+                break
+
+    for base_name in base_names:
+        process_files(base_name, current_directory, suffixes)
+
     print("Merging process complete.")
+    
+
 
 if __name__ == "__main__":
     main()

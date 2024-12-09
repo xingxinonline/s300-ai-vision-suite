@@ -1,8 +1,21 @@
 {
   "files.associations": {
+    "*.S": "arm",
     "dsp_mailbox.h": "c",
     "debug.h": "c",
     "kernel.h": "c",
-    "dsp_pmss.h": "c"
+    "dsp_pmss.h": "c",
+    "dsp_edap.h": "c",
+    "ceva_csl.h": "c",
+    "csl_test.h": "c",
+    "csl.h": "c",
+    "reg.h": "c",
+    "aon.h": "c",
+    "psram.h": "c",
+    "dsp_sctrl.h": "c",
+    "security.h": "c",
+    "hash.h": "c",
+    "face_detect.h": "c",
+    "*.cbak": "cpp"
   }
 }
