@@ -54,6 +54,10 @@
 #define TEST_ASSERT_NOT_EQUAL(expected, actual)    TestAssertNotEqualNumber((expected),(actual), __LINE__)
 #define TEST_ASSERT_EQUAL(expected, actual)        TestAssertEqualNumber((expected), (actual), __LINE__)
 
+uint32_t get_cycles(void);
+uint32_t get_cycles_start(void);
+uint32_t get_cycles_end(void);
+uint32_t calculate_cycles(uint32_t start, uint32_t end);
 int case_finish(void);
 int debug_init(int case_num);
 int debug_finish(void);

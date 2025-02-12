@@ -30,6 +30,10 @@
 								</option>
 								<option id="elf.compiler.dialect.std.c.343645441" name="C language standard" superClass="elf.compiler.dialect.std.c" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<option id="elf.compiler.dialect.std.cpp.1276277593" name="C++ language standard" superClass="elf.compiler.dialect.std.cpp" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<option id="com.ceva.toolchain.elf.exe.compiler.c.option.cycle_count_optimization_level.debug.2029095359" name="Optimization level" superClass="com.ceva.toolchain.elf.exe.compiler.c.option.cycle_count_optimization_level.debug" useByScannerDiscovery="false" value="elf.compiler.cycle_count_optimization_level.-Os" valueType="enumerated"/>
+								<option id="elf.compiler.code_generation.disable_autovec.816762353" name="Disable auto-vectorization (-fno-vectorize)" superClass="elf.compiler.code_generation.disable_autovec" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="elf.compiler.code_generation.disable_inline.953998761" name="Disable inlining (-fno-inline)" superClass="elf.compiler.code_generation.disable_inline" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option id="elf.compiler.optimization.-fsave-optimization-record.2052118472" name="Save optimizations records (-fsave-optimization-record)" superClass="elf.compiler.optimization.-fsave-optimization-record" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<inputType id="com.ceva.toolchain.elf.compiler.c.input.186845442" superClass="com.ceva.toolchain.elf.compiler.c.input"/>
 							</tool>
 							<tool id="com.ceva.toolchain.elf.exe.compiler.cpp.debug.2098532715" name="CEVA-ELF C/C++ Compiler" superClass="com.ceva.toolchain.elf.exe.compiler.cpp.debug"/>

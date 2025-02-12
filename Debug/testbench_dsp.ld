@@ -132,7 +132,7 @@ SECTIONS {
         PROVIDE(__bss_size = ABSOLUTE(+__bss_end - __bss_start));
     } >INTERNAL_DATA
 
-   
+    
     
     __MALLOC_SECT (NOLOAD) : ALIGN(0x10) {
         PROVIDE(__malloc_start = ABSOLUTE(.));
@@ -140,11 +140,33 @@ SECTIONS {
         PROVIDE(__malloc_end = ABSOLUTE(.));
     } >INTERNAL_DATA
     
-     __STACK_SECT (NOLOAD) : ALIGN(0x10) {
-        __stack_start = ABSOLUTE(.);
-        . = . + __stack_size;
-        __stack_end = ABSOLUTE(.);
+
+    .text.external : ALIGN(0x20) {
+        
     } >SRAM0
+
+    __STACK_SECT (NOLOAD) : ALIGN(0x10) {
+        PROVIDE(__stack_start = ABSOLUTE(.));
+        . = . + __stack_size;
+        PROVIDE(__stack_end = ABSOLUTE(.));
+    } >SRAM0
+
+    .bss1 (NOLOAD) : ALIGN(0x20) {
+        /**
+         * `.bss1` is for large zero-initialized symbols that do not fit in
+         * internal data
+         */
+        PROVIDE(__bss1_start = ABSOLUTE(.));
+        *(.bss1 .bss1.*)
+        PROVIDE(__large_common_start = ABSOLUTE(.));
+        *(LARGE_COMMON)
+        PROVIDE(__large_common_end = ABSOLUTE(.));
+        PROVIDE(__large_common_size = ABSOLUTE(+__large_common_end - __large_common_start));
+        PROVIDE(__bss1_end = ABSOLUTE(.));
+        PROVIDE(__bss1_size = ABSOLUTE(+__bss1_end - __bss1_start));
+    } >SRAM0
+    
+    
     
      /* Program arguments are loaded by `_start` routine from `__arg_sect_start`.
      * When the user has set a zero size for the section, argc, and argv
@@ -153,13 +175,9 @@ SECTIONS {
      * go at the end of external memory
      */
     __ARG_SECT (NOLOAD) : ALIGN(0x10) {
-        __arg_sect_start = .;
+        PROVIDE(__arg_sect_start = ABSOLUTE(.));
         . = . + (__arg_sect_size ? __arg_sect_size + 4 : 0);
-        __arg_sect_end = .;
-    } >SRAM0
-
-    .text.external : ALIGN(0x20) {
-        
+        PROVIDE(__arg_sect_end = ABSOLUTE(.));
     } >SRAM0
 
     .data.external : ALIGN(0x20) {
@@ -198,24 +216,14 @@ SECTIONS {
         KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array*) SORT_BY_INIT_PRIORITY(.dtors*)));
         PROVIDE(__fini_array_end = ABSOLUTE(.));
 
+        PROVIDE(__face_data_start = ABSOLUTE(.));
+        *(.face_data .face_data.*)
+        PROVIDE(__face_data_end = ABSOLUTE(.));
+
         PROVIDE(__data_external_end = ABSOLUTE(.));
         PROVIDE(__data_external_size = ABSOLUTE(__data_external_end - __data_external_start));
     } >SRAM0
-
-    .bss1 (NOLOAD) : ALIGN(0x20) {
-        /**
-         * `.bss1` is for large zero-initialized symbols that do not fit in
-         * internal data
-         */
-        PROVIDE(__bss1_start = ABSOLUTE(.));
-        *(.bss1 .bss1.*)
-        PROVIDE(__large_common_start = ABSOLUTE(.));
-        *(LARGE_COMMON)
-        PROVIDE(__large_common_end = ABSOLUTE(.));
-        PROVIDE(__large_common_size = ABSOLUTE(+__large_common_end - __large_common_start));
-        PROVIDE(__bss1_end = ABSOLUTE(.));
-        PROVIDE(__bss1_size = ABSOLUTE(+__bss1_end - __bss1_start));
-    } >SRAM0
+    
 
 
     data_internal_loadable_addr = LOADADDR(.data.internal);

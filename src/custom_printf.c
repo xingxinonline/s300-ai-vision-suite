@@ -29,7 +29,7 @@ void rt_kprintf(const char *fmt, ...);
 /* use precision */
 #define RT_USING_CONSOLE
 #define RT_PRINTF_PRECISION
-//#define RT_PRINTF_LONGLONG
+#define RT_PRINTF_LONGLONG
 #define RT_PRINTF_SPECIAL
 #define RT_CONSOLEBUF_SIZE          128
 /* private function */

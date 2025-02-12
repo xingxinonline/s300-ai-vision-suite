@@ -7,7 +7,64 @@
 
 #include "debug.h"
 #include "uart.h"
+#include "reg.h"
+#include "kernel.h"
 #include "custom_printf.h"
+#include "vec-c.h"
+#include <stdint.h>
+
+// 定义 FRCC 的最大值（32 位计数器）
+#define FRCC_MAX 0xFFFFFF00U
+
+uint32_t get_cycles(void)
+{
+	return WATCHDOG_get_counter_value();
+}
+
+uint32_t get_cycles_start(void)
+{
+	WATCHDOG_set_threshold(1, 0xFFFFFFFE);
+	WATCHDOG_enable();
+	return WATCHDOG_get_counter_value();
+}
+
+uint32_t get_cycles_end(void)
+{
+	WATCHDOG_disable();
+	return WATCHDOG_get_counter_value();
+}
+
+
+/**
+ * @brief 计算 FRCC 计数器的周期数
+ * @param start 初始计数值（FRCC_start）
+ * @param end   结束计数值（FRCC_end）
+ * @return      总周期数
+ */
+uint32_t calculate_cycles(uint32_t start, uint32_t end) {
+    uint32_t total_cycles = 0;
+
+    if (end >= start) {
+        // 未发生溢出
+        total_cycles = (end - start);
+    } else {
+        // 发生溢出
+        total_cycles = (uint64_t)((FRCC_MAX) - start + 1) + end;
+    }
+
+    return total_cycles;
+}
+
+/**
+ * @brief 将周期数转换为时间（秒）
+ * @param cycles      总周期数
+ * @param clock_freq  核心时钟频率（Hz）
+ * @return            耗时（秒）
+ */
+float cycles_to_time(uint64_t cycles, float clock_freq) {
+    return cycles / clock_freq;
+}
+
 
 int debug_init(int case_num)
 {

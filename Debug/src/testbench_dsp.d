@@ -38,7 +38,7 @@ src/testbench_dsp.o: ..\src\testbench_dsp.c ..\src\reg.h ..\src\kernel.h \
   D:\Toolbox\workspace_dsp_next_fd\testbench_dsp\dsp_csl\include\timers.h \
   ..\src\csl_test.h \
   D:\Toolbox\workspace_dsp_next_fd\testbench_dsp\dsp_csl\include\ceva_xm_bc\csl.h \
-  ..\src\custom_printf.h ..\src\debug.h ..\src\dsp_mm.h \
+  ..\src\custom_printf.h ..\src\debug.h ..\src\dsp_mm.h ..\src\axi_dma.h \
   ..\src\face_detect.h ..\src\dsp_mailbox.h
 
 ..\src\reg.h:
@@ -128,6 +128,8 @@ D:\Toolbox\workspace_dsp_next_fd\testbench_dsp\dsp_csl\include\ceva_xm_bc\csl.h:
 ..\src\debug.h:
 
 ..\src\dsp_mm.h:
+
+..\src\axi_dma.h:
 
 ..\src\face_detect.h:
 
