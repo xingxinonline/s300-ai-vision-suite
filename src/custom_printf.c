@@ -12,7 +12,7 @@
 
 #include "uart.h"
 
-#define DSP_DBG_UART UART2
+#define DSP_DBG_UART UART3
 
 void rt_kprintf(const char *fmt, ...);
 
@@ -88,6 +88,7 @@ static __inline int skip_atoi(const char **s)
 #define LARGE       (1 << 6)    /* use 'ABCDEF' instead of 'abcdef' */
 
 #ifdef RT_PRINTF_PRECISION
+__attribute__((optnone, noinline))
 static char *print_number(char *buf,
                           char *end,
 #ifdef RT_PRINTF_LONGLONG
@@ -243,6 +244,7 @@ static char *print_number(char *buf,
     return buf;
 }
 
+__attribute__((optnone, noinline))
 int32_t rt_vsnprintf(char       *buf,
                      size_t   size,
                      const char *fmt,
@@ -487,6 +489,7 @@ int32_t rt_vsnprintf(char       *buf,
  * @param size the size of buffer
  * @param fmt the format
  */
+__attribute__((optnone, noinline))
 int32_t rt_snprintf(char *buf, size_t size, const char *fmt, ...)
 {
     int32_t n;
@@ -504,6 +507,7 @@ int32_t rt_snprintf(char *buf, size_t size, const char *fmt, ...)
  * @param arg_ptr the arg_ptr
  * @param format the format
  */
+__attribute__((optnone, noinline))
 int32_t rt_vsprintf(char *buf, const char *format, va_list arg_ptr)
 {
     return rt_vsnprintf(buf, (size_t) - 1, format, arg_ptr);
@@ -515,6 +519,7 @@ int32_t rt_vsprintf(char *buf, const char *format, va_list arg_ptr)
  * @param buf the buffer to save formatted string
  * @param format the format
  */
+__attribute__((optnone, noinline))
 int32_t rt_sprintf(char *buf, const char *format, ...)
 {
     int32_t n;

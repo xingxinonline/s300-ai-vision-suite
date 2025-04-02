@@ -332,29 +332,33 @@ float overlap(FaceRect  *face1, FaceRect  *face2)
     return overlap_area / (float)(area1 + area2 - overlap_area);
 }
 
-int nms(FaceRect *faces, FaceRect *faces_result, int face_count, int threshold)
-{
-    // NOT really nms, just return max score face
-    float max_score = 0;
-    int index = 0;
-    if (face_count == 0) return 0;
-    for (int i = 0; i < face_count; i++)
-    {
-        if (faces[i].score > max_score)
-        {
-            max_score = faces[i].score;
-            index = i;
-        }
+
+int nms(FaceRect* faces, FaceRect* faces_result, int face_count, float threshold) {
+    if (face_count <= 0) return 0;
+
+    int suppressed[face_count];
+    for (int i = 0; i < face_count; i++) {
+        suppressed[i] = 0;
     }
-    faces_result[0].score = faces[index].score;
-    faces_result[0].x1 = faces[index].x1;
-    faces_result[0].y1 = faces[index].y1;
-    faces_result[0].x2 = faces[index].x2;
-    faces_result[0].y2 = faces[index].y2;
-//    rt_kprintf("faces[%d].score = %s, x1 = %d, y1 = %d, x2 = %d, y2 = %d\n", index, float_to_string_simple(faces[index].score), faces[index].x1, faces[index].y1, faces[index].x2, faces[index].y2);
-    return 1;
-    // 这要重写
-    // return MIN(face_count,10);
+
+    int result_count = 0;
+    for (int i = 0; i < face_count; i++) {
+        if (suppressed[i] > 0) continue;
+
+        faces_result[result_count++] = faces[i];
+
+        for (int j = i + 1; j < face_count; j++) {
+            if (suppressed[j] > 0) continue;
+
+            //printf("%d, %d, %f\n",i,j,overlap(&faces[i], &faces[j]));
+            if (overlap(&faces[i], &faces[j]) > threshold) {
+                suppressed[j] = 1;
+            }
+        }
+        if (result_count == 3)break;
+    }
+
+    return result_count;
 }
 
 FaceRect faces[100];
@@ -485,8 +489,12 @@ int objectdetect_cnn(const unsigned char *rgb_image_data, int width, int height,
             //rt_kprintf("face box = %d,%d,%d,%d,%f\n", faces[face_count-1].x1, faces[face_count-1].y1, faces[face_count-1].x2, faces[face_count-1].y2, faces[face_count-1].score);
         }
     }
-    int face = nms(faces, faces_temp, face_count, 100);
-    rt_kprintf("face = %d\n", face);
+    int face = nms(faces, faces_temp, face_count, 0.5);
+    if (face > 0)
+    {
+    	rt_kprintf("face = %d\n", face);
+    }
+
     return face;
 }
 
@@ -1528,26 +1536,28 @@ void cropAndConvertImage(const uint16_t *srcImage, uint8_t *dstImage, int srcWid
 }
 
 
-FaceRect *face_detect(const uint16_t *bgr565_image)
+FaceRect faces_result[3];
+int face_detect(const uint16_t *bgr565_image)
 {
-    FaceRect *face_detect = NULL;
-    static FaceRect faces[2];
+//	int *a = NULL;
+//    FaceRect *face_detect = NULL;
+//    int b[3];
     // 裁剪并转换图像
 //    uint32_t start = get_cycles_start();
 //    rt_kprintf("cropAndConvertImage start %d\n", start);
-    cropAndConvertImage(bgr565_image, bgr320_buffer1, 160, 120, 120);
+    cropAndConvertImage(bgr565_image, bgr320_buffer1, 128, 128, 120);
 //    uint32_t end = get_cycles_end();
 //    rt_kprintf("cropAndConvertImage finish %d, cost %d cycles\n", end, calculate_cycles(start, end));
     //===============
 //    start = get_cycles_start();
-//    rt_kprintf("face detect start %d\n", start);
-    int face_count = objectdetect_cnn(bgr320_buffer1, 160, 120, faces);
+    rt_kprintf("face detect start\n");
+    int face_count = objectdetect_cnn(bgr320_buffer1, 160, 120, faces_result);
 //    end = get_cycles_end();
 //    rt_kprintf("face count is %d, end cycles %d, cost %d\n", face_count, end, calculate_cycles(start, end));
-    if (face_count)
+    for (int i = 0; i < face_count; i++)
     {
-        face_detect = &faces[0];
-        rt_kprintf("%d, %d, %d, %d\n", faces[0].x1, faces[0].x2, faces[0].y1, faces[0].y2);
+//        face_detect = &faces[i];
+        rt_kprintf("%d, %d, %d, %d\n", faces_result[i].x1, faces_result[i].x2, faces_result[i].y1, faces_result[i].y2);
     }
-    return face_detect;
+    return face_count;
 }

@@ -57,19 +57,10 @@ enum MAILBOX_REG_OFFSETS {
 #define CTRL_CRF_FLAG (1 << 1) // Clear Receive FIFO
 #define CTRL_CSF_FLAG (1 << 0) // Clear Send FIFO
 
-
-// Unique identifiers to prevent accidental triggering in task communication
-#define MAILBOX_TASK_ID_1 0xA5A50001 // Unique ID for Task 1
-#define MAILBOX_TASK_ID_2 0xA5A50002 // Unique ID for Task 2
-#define MAILBOX_TASK_ID_3 0xA5A50003 // Unique ID for Task 3
-#define MAILBOX_TASK_ID_MASK 0xFFFFFFFF // Mask to check ID validity
-
-
-extern int mailbox_recv;
-
 // Function Prototypes
 void mailbox_write(uint32_t data);
 uint32_t mailbox_read_data(void);
+uint32_t mailbox_read(void);
 uint32_t mailbox_get_status(void);
 uint32_t mailbox_get_error(void);
 void mailbox_clear_receive_fifo(void);
@@ -77,6 +68,6 @@ void mailbox_clear_send_fifo(void);
 void mailbox_enable_interrupt(uint32_t interrupt_flags);
 void mailbox_disable_interrupt(uint32_t interrupt_flags);
 void mailbox_clear_interrupt(uint32_t interrupt_flags);
-int mailbox_isr_enable(void);
+bool mailbox_is_empty(void) ;
 
 #endif // __DSP_MAILBOX_H__

@@ -17,6 +17,7 @@
 #define UART0                           UART0_BASE
 #define UART1                           UART1_BASE
 #define UART2                           UART2_BASE
+#define UART3                           UART3_BASE
 
 
 /* registers definitions */

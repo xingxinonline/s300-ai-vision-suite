@@ -27,20 +27,9 @@ extern volatile uint8_t rframe1_ready;
 extern volatile uint8_t rframe0_flag;
 extern volatile uint8_t rframe1_flag;
 
-extern volatile uint64_t wframe0_addr;
-extern volatile uint64_t wframe1_addr;
-extern volatile uint64_t rframe0_addr;
-extern volatile uint64_t rframe1_addr;
-extern volatile uint64_t alpha0_addr;
-extern volatile uint64_t alpha1_addr;
-
-extern volatile uint16_t snapshot_width;
-extern volatile uint16_t snapshot_height;
-extern volatile uint16_t display_width;
-extern volatile uint16_t display_height;
-
 int debug_test_dsp_mm(void);
-void draw_green_box(uint16_t *img_data, uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2);
+void draw_green_box(uint16_t *img_data, int width, int height, int x1, int y1, int x2, int y2);
+void draw_alpha_box(uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2);
 void draw_red_box(uint16_t *img_data, uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2);
 
 #endif /* DSP_MM_H_ */

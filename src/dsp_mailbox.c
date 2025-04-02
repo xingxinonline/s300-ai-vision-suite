@@ -1,10 +1,4 @@
 #include "dsp_mailbox.h"
-#include "debug.h"
-
-#include "kernel.h"
-
-
-int mailbox_recv = 0;
 
 // Function to write data to the mailbox
 void mailbox_write_data(uint32_t data) {
@@ -42,7 +36,6 @@ void mailbox_enable_interrupts(uint32_t interrupt_flags) {
 // Function to disable specified interrupts
 void mailbox_disable_interrupts(uint32_t interrupt_flags) {
     IE_REG &= ~interrupt_flags;
-    rt_kprintf("IE_REG \r\n");
 }
 
 // Function to clear specified interrupts
@@ -82,24 +75,19 @@ void mailbox_clear_send_fifo(void) {
     CTRL_REG = CTRL_CSF_FLAG;
 }
 
-static volatile uint32_t allocated_ivi = 0;
-void mailbox_isr_handler() PRAGMA_CSECT(".external_mailbox_interrupt") __attribute__((interrupt));
-
 // Interrupt Service Routine (ISR) to handle mailbox interrupts
 void mailbox_isr_handler(void) {
     uint32_t interrupt_status = IIS_REG;
-//    rt_kprintf("mailbox_isr_handler\r\n");
+
     // Handle send threshold interrupt
     if (interrupt_status & IIS_SIT_FLAG) {
         // Custom code to handle send threshold interrupt
         mailbox_clear_interrupts(IIS_SIT_FLAG);
-        rt_kprintf("IIS_SIT_FLAG\r\n");
     }
 
     // Handle receive threshold interrupt
     if (interrupt_status & IIS_RIT_FLAG) {
         // Custom code to handle receive threshold interrupt
-    	mailbox_recv = 1;
         mailbox_clear_interrupts(IIS_RIT_FLAG);
     }
 
@@ -107,32 +95,5 @@ void mailbox_isr_handler(void) {
     if (interrupt_status & IIS_ERR_FLAG) {
         // Custom code to handle error interrupt
         mailbox_clear_interrupts(IIS_ERR_FLAG);
-        rt_kprintf("IIS_ERR_FLAG\r\n");
     }
-}
-
-int mailbox_isr_enable(void)
-{
-	TEST_ASSERT_EQUAL(CSL_SUCCESS, ICU_Disable());
-	__asm__ volatile("dint\n"
-					 "nop");
-	rt_kprintf("mailbox_isr_enable\r\n");
-	T_Internal_Interrupt_Configuration interrupt_config = { 0 };
-	allocated_ivi = ICU_IVA_Allocate((uint32_t) mailbox_isr_handler);
-	rt_kprintf("ICU_IVA_Allocate\r\n");
-	interrupt_config.priority = 6;
-	interrupt_config.ivi = allocated_ivi;
-	ICU_Configure_External_Int(&interrupt_config, ICU_EXT_MAILBOX);
-	rt_kprintf("ICU_Configure_External_Int\r\n");
-
-	TEST_ASSERT_EQUAL(CSL_SUCCESS, ICU_Enable());
-	int icu_enabled = ICU_Is_Enabled();
-	rt_kprintf("ICU_Enable %d\r\n", icu_enabled);
-	__asm__ volatile("eint\n"
-	                         "nop");
-	rt_kprintf("nop\r\n");
-	mailbox_enable_interrupts(IE_RIT_FLAG);
-	rt_kprintf("mailbox_enable_interrupts %d\r\n", IE_RIT_FLAG);
-
-	return 0;
 }

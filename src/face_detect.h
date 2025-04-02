@@ -96,14 +96,14 @@ struct ConvParameter
     const int8_t *bias_offset_per_channel;
 };
 
-
+FaceRect faces_result[3];
 
 void conv(struct Uint8Tensor *input, struct Uint8Tensor *output, struct Structure *conv_params, struct ConvParameter *weight);
 
 void pooling(struct Uint8Tensor *input, struct Uint8Tensor *output, struct Structure *pooling_params);
 
 int fd_run(struct FloatTensor *result, const unsigned char *bgr_data);
-FaceRect *face_detect(const uint16_t *bgr565_image);
+int face_detect(const uint16_t *bgr565_image);
 void cropAndConvertImage(const uint16_t *srcImage, uint8_t *dstImage, int srcWidth, int srcHeight, int cropHeight);
 
 #endif

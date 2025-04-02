@@ -45,7 +45,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_csl/lib/libcsl.a}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_lib/lib/ceva_dsp_lib.a}&quot;"/>
 								</option>
-								<option id="elf.linker.build_options.lnkfile.1527138247" name="Linker memory mapping script:" superClass="elf.linker.build_options.lnkfile" useByScannerDiscovery="false" value="D:\Toolbox\workspace_dsp_next_fd\testbench_dsp\Debug\testbench_dsp.ld" valueType="string"/>
+								<option id="elf.linker.build_options.lnkfile.1527138247" name="Linker memory mapping script:" superClass="elf.linker.build_options.lnkfile" useByScannerDiscovery="false" value="D:\Toolbox\workspace_dsp_next_fd_app\testbench_dsp\Debug\testbench_dsp.ld" valueType="string"/>
 								<option id="elf.linker.build_options.relax.485214526" name="Target specific global optimizations" superClass="elf.linker.build_options.relax" useByScannerDiscovery="false" value="elf.linker.build_options.relax.--no-relax" valueType="enumerated"/>
 								<option id="elf.linker.build_options.gc.2093793119" name="Remove unused sections" superClass="elf.linker.build_options.gc" useByScannerDiscovery="false" value="elf.linker.build_options.gc.keep" valueType="enumerated"/>
 								<option id="elf.linker.build_options.-Map.695932565" name="Create map file" superClass="elf.linker.build_options.-Map" useByScannerDiscovery="false" value="true" valueType="boolean"/>

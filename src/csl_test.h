@@ -52,10 +52,10 @@ No part of this document may be reproduced, photocopied, or translated into anot
 
 
 
-#define MEM_BUFF_INTERNAL_SIZE          0x100
-#define MEM_BUFF_EXTERNAL_SIZE          0x100
-#define MEM_BUFF_EXTERNAL_DBG_SIZE      0x100
-#define MEM_BUFF_EXTERNAL_CACHE_SIZE    0x80
+#define MEM_BUFF_INTERNAL_SIZE          0x1
+#define MEM_BUFF_EXTERNAL_SIZE          0x1
+#define MEM_BUFF_EXTERNAL_DBG_SIZE      0x1
+#define MEM_BUFF_EXTERNAL_CACHE_SIZE    0x8
 
 
 // Number of banks per block in the IDM

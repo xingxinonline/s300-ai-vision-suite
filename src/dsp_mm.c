@@ -52,7 +52,7 @@ void rframe1_interrupt_hook()
 #define RED_RGB565    0xF800  // 与BGR565不同，因为红色和蓝色的位位置相同
 
 // 绘制绿色方框函数，使用 16-bit 存储两个 8-bit Alpha 值
-void draw_green_box(uint16_t *img_data, uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2) {
+void draw_green_box(uint16_t *img_data, int width, int height, int x1, int y1, int x2, int y2) {
     if (img_data == NULL) {
     	rt_kprintf("Error: Image data is NULL.\n");
         return;
@@ -62,22 +62,44 @@ void draw_green_box(uint16_t *img_data, uint8_t *alphaImage, int width, int heig
     for (int x = x1; x <= x2; x++) {
         if (y1 >= 0 && y1 < height) {
             img_data[y1 * width + x] = GREEN_RGB565;  // 上边缘
-            alphaImage[y1 * width + x] = 0xFF;
         }
         if (y2 >= 0 && y2 < height) {
             img_data[y2 * width + x] = GREEN_RGB565;  // 下边缘
-            alphaImage[y2 * width + x] = 0xFF;
         }
     }
     // 绘制左边缘和右边缘
     for (int y = y1; y <= y2; y++) {
         if (x1 >= 0 && x1 < width) {
             img_data[y * width + x1] = GREEN_RGB565;  // 左边缘
-            alphaImage[y * width + x1] = 0xFF;
         }
         if (x2 >= 0 && x2 < width) {
             img_data[y * width + x2] = GREEN_RGB565;  // 右边缘
-            alphaImage[y * width + x2] = 0xFF;
+        }
+    }
+}
+
+void draw_alpha_box(uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2) {
+    if (alphaImage == NULL) {
+    	rt_kprintf("Error: alphaImage data is NULL.\n");
+        return;
+    }
+
+    // 绘制上边缘和下边缘
+    for (int x = x1; x <= x2; x++) {
+        if (y1 >= 0 && y1 < height) {
+        	alphaImage[y1 * width + x] = 0xFF;  // 上边缘
+        }
+        if (y2 >= 0 && y2 < height) {
+        	alphaImage[y2 * width + x] = 0xFF;  // 下边缘
+        }
+    }
+    // 绘制左边缘和右边缘
+    for (int y = y1; y <= y2; y++) {
+        if (x1 >= 0 && x1 < width) {
+        	alphaImage[y * width + x1] = 0xFF;  // 左边缘
+        }
+        if (x2 >= 0 && x2 < width) {
+        	alphaImage[y * width + x2] = 0xFF;  // 右边缘
         }
     }
 }
@@ -113,18 +135,6 @@ void draw_red_box(uint16_t *img_data, uint8_t *alphaImage, int width, int height
 		}
 	}
 }
-
-volatile uint64_t wframe0_addr = (uint64_t)0x80000000;
-volatile uint64_t wframe1_addr = (uint64_t)0x80100000;
-volatile uint64_t rframe0_addr = (uint64_t)0x80200000;
-volatile uint64_t rframe1_addr = (uint64_t)0x80300000;
-volatile uint64_t alpha0_addr = (uint64_t)0x80250000;
-volatile uint64_t alpha1_addr = (uint64_t)0x80350000;
-
-volatile uint16_t snapshot_width = 0;
-volatile uint16_t snapshot_height = 0;
-volatile uint16_t display_width = 0;
-volatile uint16_t display_height = 0;
 
 size_t process_pic_max = 1;
 
