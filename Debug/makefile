@@ -43,7 +43,7 @@ all: testbench_dsp.elf
 testbench_dsp.elf: $(OBJS) D:/Toolbox/workspace_dsp_next_fd_app/testbench_dsp/Debug/testbench_dsp.ld $(LIBS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: CEVA-ELF Linker'
-	C:\CEVA-ToolBox\V22\SensPro\toolbox\../cevatools/bin/ceva-elf-ld -defsym __internal_code_size=128k -defsym __internal_data_size=256k -L"C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib"  -T D:\Toolbox\workspace_dsp_next_fd_app\testbench_dsp\Debug\testbench_dsp.ld --no-relax --no-gc-sections --no-rstr-check -Map=testbench_dsp.map $(OBJS) $(USER_OBJS) --start-group $(LIBS) --end-group -o  "testbench_dsp.elf"
+	C:\CEVA-ToolBox\V22\SensPro\toolbox\../cevatools/bin/ceva-elf-ld -defsym __internal_code_size=128k -defsym __internal_data_size=256k -L"C:/CEVA-ToolBox/V22/SensPro/cevatools/lib/clang/14.0.6/cevasp-unknown-unknown-elf/rtlv1.2.0-fp2-dpfp2/lib"  -T D:\Toolbox\workspace_dsp_next_fd_app\testbench_dsp\Debug\testbench_dsp.ld --no-relax --gc-sections --no-rstr-check -Map=testbench_dsp.map $(OBJS) $(USER_OBJS) --start-group $(LIBS) --end-group -o  "testbench_dsp.elf"
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build

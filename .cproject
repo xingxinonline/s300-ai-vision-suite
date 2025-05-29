@@ -34,6 +34,7 @@
 								<option id="elf.compiler.code_generation.disable_autovec.816762353" name="Disable auto-vectorization (-fno-vectorize)" superClass="elf.compiler.code_generation.disable_autovec" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="elf.compiler.code_generation.disable_inline.953998761" name="Disable inlining (-fno-inline)" superClass="elf.compiler.code_generation.disable_inline" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<option id="elf.compiler.optimization.-fsave-optimization-record.2052118472" name="Save optimizations records (-fsave-optimization-record)" superClass="elf.compiler.optimization.-fsave-optimization-record" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option id="elf.compiler.general.advanced_options.2098068782" name="Advanced options" superClass="elf.compiler.general.advanced_options" useByScannerDiscovery="true" value="-ffunction-sections -fdata-sections" valueType="string"/>
 								<inputType id="com.ceva.toolchain.elf.compiler.c.input.186845442" superClass="com.ceva.toolchain.elf.compiler.c.input"/>
 							</tool>
 							<tool id="com.ceva.toolchain.elf.exe.compiler.cpp.debug.2098532715" name="CEVA-ELF C/C++ Compiler" superClass="com.ceva.toolchain.elf.exe.compiler.cpp.debug"/>
@@ -46,8 +47,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_lib/lib/ceva_dsp_lib.a}&quot;"/>
 								</option>
 								<option id="elf.linker.build_options.lnkfile.1527138247" name="Linker memory mapping script:" superClass="elf.linker.build_options.lnkfile" useByScannerDiscovery="false" value="D:\Toolbox\workspace_dsp_next_fd_app\testbench_dsp\Debug\testbench_dsp.ld" valueType="string"/>
-								<option id="elf.linker.build_options.relax.485214526" name="Target specific global optimizations" superClass="elf.linker.build_options.relax" useByScannerDiscovery="false" value="elf.linker.build_options.relax.--no-relax" valueType="enumerated"/>
-								<option id="elf.linker.build_options.gc.2093793119" name="Remove unused sections" superClass="elf.linker.build_options.gc" useByScannerDiscovery="false" value="elf.linker.build_options.gc.keep" valueType="enumerated"/>
+								<option id="elf.linker.build_options.relax.485214526" name="Target specific global optimizations" superClass="elf.linker.build_options.relax" useByScannerDiscovery="false" value="elf.linker.build_options.relax.--relax" valueType="enumerated"/>
+								<option id="elf.linker.build_options.gc.2093793119" name="Remove unused sections" superClass="elf.linker.build_options.gc" useByScannerDiscovery="false" value="elf.linker.build_options.gc.remove" valueType="enumerated"/>
 								<option id="elf.linker.build_options.-Map.695932565" name="Create map file" superClass="elf.linker.build_options.-Map" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 							</tool>
 							<tool id="com.ceva.toolchain.elf.libmanager.1378902638" name="CEVA Archiver" superClass="com.ceva.toolchain.elf.libmanager"/>

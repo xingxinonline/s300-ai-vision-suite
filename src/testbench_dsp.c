@@ -213,6 +213,16 @@ void restore_coordinates(int* original_x1, int* original_y1, int* original_x2, i
     *original_y2 = rotated_x2;
 }
 
+void restore_pixel(int* original_x, int* original_y) {
+    // 坐标逆变换（顺时针旋转90度）
+	int rotated_x = *original_x;
+	int rotated_y = *original_y;
+
+	// 宽高交换
+    *original_x = 128 - 1 - rotated_y;
+    *original_y = rotated_x; // 旋转后图像高度=128
+}
+
 int main(void)
 {
 
@@ -329,16 +339,16 @@ int main(void)
 
 				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 				{
-					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
 				}
-				clamp_face_rect(face_get);
+//				clamp_face_rect(face_get);
 
 //				face_get->x1 *= 2;
 //				face_get->y1 *= 2;
 //				face_get->x2 *= 2;
 //				face_get->y2 *= 2;
-				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 				if (face_get->x1 < face_get->x2)
 				{
 					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
@@ -348,6 +358,19 @@ int main(void)
 				{
 					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
 					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+				}
+				for (int p = 0; p < 5; p++)
+				{
+					int x = (int)face_get->lm[2 * p];
+					int y = (int)face_get->lm[2 * p + 1];
+					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+					{
+//						rt_kprintf("restore_pixel %d, %d\n", x, y);
+						restore_pixel(&x, &y);
+					}
+
+					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
+					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
 				}
 			}
 			if (rframe0_ready)
@@ -365,12 +388,12 @@ int main(void)
 			int face_count = 0;
 			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 			{
-				rotate_ccw90(wframe0_buffer, bgr565_buffer1);
+				rotate_ccw90(wframe1_buffer, bgr565_buffer1);
 				face_count = face_detect(bgr565_buffer1);
 			}
 			else
 			{
-				face_count = face_detect(wframe0_buffer);
+				face_count = face_detect(wframe1_buffer);
 			}
 
 			uint64_t *alpha1_buffer_addr = (uint64_t *)alpha1_buffer;
@@ -385,15 +408,15 @@ int main(void)
 
 				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 				{
-					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
 				}
-				clamp_face_rect(face_get);
+//				clamp_face_rect(face_get);
 //				face_get->x1 *= 2;
 //				face_get->y1 *= 2;
 //				face_get->x2 *= 2;
 //				face_get->y2 *= 2;
-				rt_kprintf("wframe1 draw_red %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//				rt_kprintf("wframe1 draw_red %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 				if (face_get->x1 < face_get->x2)
 				{
 					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
@@ -403,6 +426,19 @@ int main(void)
 				{
 					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
 					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+				}
+				for (int p = 0; p < 5; p++)
+				{
+					int x = (int)face_get->lm[2 * p];
+					int y = (int)face_get->lm[2 * p + 1];
+					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+					{
+//						rt_kprintf("restore_pixel %d, %d\n", x, y);
+						restore_pixel(&x, &y);
+					}
+
+					draw_green_3x3(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
+					draw_alpha_3x3(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
 				}
 			}
 			if (rframe1_ready)

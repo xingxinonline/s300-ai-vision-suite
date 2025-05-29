@@ -51,31 +51,88 @@ void rframe1_interrupt_hook()
 #define GREEN_RGB565  0x07E0  // 与BGR565相同，因为绿色部分不变
 #define RED_RGB565    0xF800  // 与BGR565不同，因为红色和蓝色的位位置相同
 
-// 绘制绿色方框函数，使用 16-bit 存储两个 8-bit Alpha 值
+///​*​
+// * @brief 绘制绿色方框（优化版，支持自动裁剪越界区域）
+// * @param img_data 图像数据（16-bit RGB565）
+// * @param width    图像宽度
+// * @param height   图像高度
+// * @param x1       方框左上角x坐标
+// * @param y1       方框左上角y坐标
+// * @param x2       方框右下角x坐标
+// * @param y2       方框右下角y坐标
+// */
 void draw_green_box(uint16_t *img_data, int width, int height, int x1, int y1, int x2, int y2) {
     if (img_data == NULL) {
-    	rt_kprintf("Error: Image data is NULL.\n");
+        rt_kprintf("Error: Image data is NULL.\n");
         return;
     }
 
-    // 绘制上边缘和下边缘
+    // ---------------------- 坐标裁剪与排序 ----------------------
+    // 确保 x1 <= x2, y1 <= y2
+    if (x1 > x2) { int tmp = x1; x1 = x2; x2 = tmp; }
+    if (y1 > y2) { int tmp = y1; y1 = y2; y2 = tmp; }
+
+    // 限制坐标在图像范围内
+    x1 = (x1 < 0) ? 0 : (x1 >= width) ? width - 1 : x1;
+    x2 = (x2 < 0) ? 0 : (x2 >= width) ? width - 1 : x2;
+    y1 = (y1 < 0) ? 0 : (y1 >= height) ? height - 1 : y1;
+    y2 = (y2 < 0) ? 0 : (y2 >= height) ? height - 1 : y2;
+
+    // 检查是否无需绘制（裁剪后区域无效）
+    if (x1 > x2 || y1 > y2) return;
+
+    // ---------------------- 绘制上下边缘 ----------------------
+    uint16_t *top_row = img_data + y1 * width;    // 上边缘行指针
+    uint16_t *bottom_row = img_data + y2 * width; // 下边缘行指针
     for (int x = x1; x <= x2; x++) {
-        if (y1 >= 0 && y1 < height) {
-            img_data[y1 * width + x] = GREEN_RGB565;  // 上边缘
-        }
-        if (y2 >= 0 && y2 < height) {
-            img_data[y2 * width + x] = GREEN_RGB565;  // 下边缘
+        top_row[x] = GREEN_RGB565;
+        bottom_row[x] = GREEN_RGB565;
+    }
+
+    // ---------------------- 绘制左右边缘（跳过上下角点） ----------------------
+    if (y2 - y1 >= 2) { // 仅当高度 >= 3 时需要绘制中间部分
+        for (int y = y1 + 1; y < y2; y++) {
+            uint16_t *row = img_data + y * width;
+            row[x1] = GREEN_RGB565; // 左边缘
+            row[x2] = GREEN_RGB565; // 右边缘
         }
     }
-    // 绘制左边缘和右边缘
-    for (int y = y1; y <= y2; y++) {
-        if (x1 >= 0 && x1 < width) {
-            img_data[y * width + x1] = GREEN_RGB565;  // 左边缘
-        }
-        if (x2 >= 0 && x2 < width) {
-            img_data[y * width + x2] = GREEN_RGB565;  // 右边缘
-        }
-    }
+}
+
+void draw_green_pixel(uint16_t *img_data, int width, int height, int x, int y) {
+	if (img_data == NULL) {
+		rt_kprintf("Error: Image data is NULL.\n");
+		return;
+	}
+
+	// 直接裁剪坐标后操作
+	x = (x < 0) ? 0 : (x >= width) ? width - 1 : x;
+	y = (y < 0) ? 0 : (y >= height) ? height - 1 : y;
+	img_data[y * width + x] = GREEN_RGB565;
+}
+
+void draw_green_3x3(uint16_t *img_data, int width, int height, int x, int y) {
+	if (img_data == NULL) {
+		rt_kprintf("Error: Image data is NULL.\n");
+		return;
+	}
+
+	// 裁剪中心点坐标
+	int cx = (x < 0) ? 0 : (x >= width) ? width - 1 : x;
+	int cy = (y < 0) ? 0 : (y >= height) ? height - 1 : y;
+
+	// 计算有效偏移范围
+	int dx_start = (cx == 0) ? 0 : -1;
+	int dx_end = (cx == width - 1) ? 0 : 1;
+	int dy_start = (cy == 0) ? 0 : -1;
+	int dy_end = (cy == height - 1) ? 0 : 1;
+
+	// 遍历有效区域
+	for (int dy = dy_start; dy <= dy_end; dy++) {
+		for (int dx = dx_start; dx <= dx_end; dx++) {
+			img_data[(cy + dy) * width + (cx + dx)] = GREEN_RGB565;
+		}
+	}
 }
 
 void draw_alpha_box(uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2) {
@@ -84,24 +141,63 @@ void draw_alpha_box(uint8_t *alphaImage, int width, int height, int x1, int y1, 
         return;
     }
 
-    // 绘制上边缘和下边缘
-    for (int x = x1; x <= x2; x++) {
-        if (y1 >= 0 && y1 < height) {
-        	alphaImage[y1 * width + x] = 0xFF;  // 上边缘
-        }
-        if (y2 >= 0 && y2 < height) {
-        	alphaImage[y2 * width + x] = 0xFF;  // 下边缘
-        }
+    // 复用坐标处理逻辑
+	if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
+	if (y1 > y2) { int t = y1; y1 = y2; y2 = t; }
+	x1 = (x1 < 0) ? 0 : (x1 >= width) ? width - 1 : x1;
+	x2 = (x2 < 0) ? 0 : (x2 >= width) ? width - 1 : x2;
+	y1 = (y1 < 0) ? 0 : (y1 >= height) ? height - 1 : y1;
+	y2 = (y2 < 0) ? 0 : (y2 >= height) ? height - 1 : y2;
+	if (x1 > x2 || y1 > y2) return;
+
+	// 绘制上下边缘
+	uint8_t *top = alphaImage + y1 * width;
+	uint8_t *bottom = alphaImage + y2 * width;
+	for (int x = x1; x <= x2; x++) {
+		top[x] = 0xFF;
+		bottom[x] = 0xFF;
+	}
+
+	// 绘制左右边缘
+	if (y2 - y1 > 1) {
+		for (int y = y1 + 1; y < y2; y++) {
+			uint8_t *row = alphaImage + y * width;
+			row[x1] = 0xFF;
+			row[x2] = 0xFF;
+		}
+	}
+}
+
+void draw_alpha_pixel(uint8_t *alphaImage, int width, int height, int x, int y) {
+    if (alphaImage == NULL) {
+        rt_kprintf("Error: alphaImage data is NULL.\n");
+        return;
     }
-    // 绘制左边缘和右边缘
-    for (int y = y1; y <= y2; y++) {
-        if (x1 >= 0 && x1 < width) {
-        	alphaImage[y * width + x1] = 0xFF;  // 左边缘
-        }
-        if (x2 >= 0 && x2 < width) {
-        	alphaImage[y * width + x2] = 0xFF;  // 右边缘
-        }
+
+    x = (x < 0) ? 0 : (x >= width) ? width - 1 : x;
+	y = (y < 0) ? 0 : (y >= height) ? height - 1 : y;
+	alphaImage[y * width + x] = 0xFF;
+}
+
+void draw_alpha_3x3(uint8_t *alphaImage, int width, int height, int x, int y) {
+    if (alphaImage == NULL) {
+        rt_kprintf("Error: alphaImage data is NULL.\n");
+        return;
     }
+
+    int cx = (x < 0) ? 0 : (x >= width) ? width - 1 : x;
+	int cy = (y < 0) ? 0 : (y >= height) ? height - 1 : y;
+
+	int dx_start = (cx == 0) ? 0 : -1;
+	int dx_end = (cx == width - 1) ? 0 : 1;
+	int dy_start = (cy == 0) ? 0 : -1;
+	int dy_end = (cy == height - 1) ? 0 : 1;
+
+	for (int dy = dy_start; dy <= dy_end; dy++) {
+		for (int dx = dx_start; dx <= dx_end; dx++) {
+			alphaImage[(cy + dy) * width + (cx + dx)] = 0xFF;
+		}
+	}
 }
 
 // 绘制红色方框函数

@@ -29,7 +29,11 @@ extern volatile uint8_t rframe1_flag;
 
 int debug_test_dsp_mm(void);
 void draw_green_box(uint16_t *img_data, int width, int height, int x1, int y1, int x2, int y2);
+void draw_green_pixel(uint16_t *img_data, int width, int height, int x, int y) ;
+void draw_green_3x3(uint16_t *img_data, int width, int height, int x, int y) ;
 void draw_alpha_box(uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2);
+void draw_alpha_pixel(uint8_t *alphaImage, int width, int height, int x, int y);
+void draw_alpha_3x3(uint8_t *alphaImage, int width, int height, int x, int y);
 void draw_red_box(uint16_t *img_data, uint8_t *alphaImage, int width, int height, int x1, int y1, int x2, int y2);
 
 #endif /* DSP_MM_H_ */

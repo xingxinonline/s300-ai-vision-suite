@@ -1558,6 +1558,10 @@ int face_detect(const uint16_t *bgr565_image)
     {
 //        face_detect = &faces[i];
         rt_kprintf("%d, %d, %d, %d\n", faces_result[i].x1, faces_result[i].x2, faces_result[i].y1, faces_result[i].y2);
+        for (int j = 0; j < 5; j++)
+        {
+			rt_kprintf("landmark[%d] %d, %d\n", j, (int)faces_result[i].lm[2 * j], (int)faces_result[i].lm[2 * j + 1]);
+        }
     }
     return face_count;
 }
