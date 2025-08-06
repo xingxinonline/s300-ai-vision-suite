@@ -12,7 +12,7 @@
 
 #include "uart.h"
 
-#define DSP_DBG_UART UART3
+#define DSP_DBG_UART UART2
 
 void rt_kprintf(const char *fmt, ...);
 
