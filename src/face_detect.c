@@ -1545,7 +1545,7 @@ int face_detect(const uint16_t *bgr565_image)
     // 裁剪并转换图像
 //    uint32_t start = get_cycles_start();
 //    rt_kprintf("cropAndConvertImage start %d\n", start);
-    cropAndConvertImage(bgr565_image, bgr320_buffer1, 128, 128, 120);
+    cropAndConvertImage(bgr565_image, bgr320_buffer1, 160, 128, 120);
 //    uint32_t end = get_cycles_end();
 //    rt_kprintf("cropAndConvertImage finish %d, cost %d cycles\n", end, calculate_cycles(start, end));
     //===============

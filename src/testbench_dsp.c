@@ -268,7 +268,7 @@ int main(void)
 					alpha0_addr = REG32(DSP_MM_BASE + 0x48);
 					alpha1_addr = REG32(DSP_MM_BASE + 0x4C);
 					rt_kprintf("wframe0_addr = 0x%p, rframe0_addr = 0x%p, alpha0_addr = 0x%p\n", wframe0_addr, rframe0_addr, alpha0_addr);
-					rt_kprintf("wframe1_addr = 0x%p, rframe1_addr = 0x%xp, alpha1_addr = 0x%p\n", wframe1_addr, rframe1_addr, alpha1_addr);
+					rt_kprintf("wframe1_addr = 0x%p, rframe1_addr = 0x%p, alpha1_addr = 0x%p\n", wframe1_addr, rframe1_addr, alpha1_addr);
 
 					wframe0_buffer = (uint16_t *)wframe0_addr;
 					wframe1_buffer = (uint16_t *)wframe1_addr;
