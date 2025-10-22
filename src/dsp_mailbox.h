@@ -58,7 +58,7 @@ enum MAILBOX_REG_OFFSETS {
 #define CTRL_CSF_FLAG (1 << 0) // Clear Send FIFO
 
 // Function Prototypes
-void mailbox_write(uint32_t data);
+void mailbox_write_data(uint32_t data);
 uint32_t mailbox_read_data(void);
 uint32_t mailbox_read(void);
 uint32_t mailbox_get_status(void);

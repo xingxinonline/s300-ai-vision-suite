@@ -1550,18 +1550,18 @@ int face_detect(const uint16_t *bgr565_image)
 //    rt_kprintf("cropAndConvertImage finish %d, cost %d cycles\n", end, calculate_cycles(start, end));
     //===============
 //    start = get_cycles_start();
-    rt_kprintf("face detect start\n");
+//    rt_kprintf("face detect start\n");
     int face_count = objectdetect_cnn(bgr320_buffer1, 160, 120, faces_result);
 //    end = get_cycles_end();
 //    rt_kprintf("face count is %d, end cycles %d, cost %d\n", face_count, end, calculate_cycles(start, end));
-    for (int i = 0; i < face_count; i++)
-    {
-//        face_detect = &faces[i];
-        rt_kprintf("%d, %d, %d, %d\n", faces_result[i].x1, faces_result[i].x2, faces_result[i].y1, faces_result[i].y2);
-        for (int j = 0; j < 5; j++)
-        {
-			rt_kprintf("landmark[%d] %d, %d\n", j, (int)faces_result[i].lm[2 * j], (int)faces_result[i].lm[2 * j + 1]);
-        }
-    }
+//    for (int i = 0; i < face_count; i++)
+//    {
+////        face_detect = &faces[i];
+//        rt_kprintf("%d, %d, %d, %d\n", faces_result[i].x1, faces_result[i].x2, faces_result[i].y1, faces_result[i].y2);
+//        for (int j = 0; j < 5; j++)
+//        {
+//			rt_kprintf("landmark[%d] %d, %d\n", j, (int)faces_result[i].lm[2 * j], (int)faces_result[i].lm[2 * j + 1]);
+//        }
+//    }
     return face_count;
 }

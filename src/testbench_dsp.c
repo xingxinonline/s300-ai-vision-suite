@@ -50,6 +50,9 @@ uint32_t times_cycles = 0;
 uint32_t times_count = 0;
 uint32_t face_detect_count  __attribute__((used, section(".sram1_data"), aligned(16))) = 0;
 
+int32_t face_pos = 80;
+int32_t face_pos_last = 80;
+
 typedef uint16_t PIXEL565; // BGR565像素类型，2字节
 
 PIXEL565 bgr565_buffer1[160 * 128] __attribute__((used, section(".face_data"), aligned(16))) ;
@@ -284,25 +287,28 @@ int main(void)
 
 					rt_kprintf("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n", display_width, display_height, snapshot_width, snapshot_height);
 
-					for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT); i++)
-					{
-						/* code */
-						alpha0_buffer[i] = 0x00;
-						alpha1_buffer[i] = 0x00;
-					}
+//					for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT); i++)
+//					{
+//						/* code */
+//						alpha0_buffer[i] = 0x00;
+//						alpha1_buffer[i] = 0x00;
+//					}
 					for (size_t i = 0; i < (SNAP_IMAGE_WIDTH * SNAP_IMAGE_HEIGHT); i++)
 					{
 						/* code */
 						wframe0_buffer[i] = 0xFFFF;
 						wframe1_buffer[i] = 0xFFFF;
-						rframe0_buffer[i] = 0xFFFF;
-						rframe1_buffer[i] = 0xFFFF;
+//						rframe0_buffer[i] = 0xFFFF;
+//						rframe1_buffer[i] = 0xFFFF;
 					}
 					rt_kprintf("init mm memory\n");
 
 					debug_test_dsp_mm();
     				REG32(DSP_MM_BASE + 0x70) = 1;
 					REG32(DSP_MM_BASE + 0x1E0) = 1;
+					face_pos_last = face_pos = 80;
+					mailbox_write_data(face_pos);
+
     			}
     		}
 //    		else
@@ -327,56 +333,80 @@ int main(void)
 				face_count = face_detect(wframe0_buffer);
 			}
 
-			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
-			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+//			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
+//			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+//			{
+//				/* code */
+//				alpha0_buffer_addr[i] = 0x00;
+//			}
+			face_pos = 80;
+			if (face_count)
 			{
-				/* code */
-				alpha0_buffer_addr[i] = 0x00;
-			}
-			for (int i = 0; i < face_count; i++)
-			{
-				FaceRect *face_get = &faces_result[i];
+				FaceRect *face_get = &faces_result[0];
 
 				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 				{
-//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 				}
-//				clamp_face_rect(face_get);
-
-//				face_get->x1 *= 2;
-//				face_get->y1 *= 2;
-//				face_get->x2 *= 2;
-//				face_get->y2 *= 2;
-//				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-				if (face_get->x1 < face_get->x2)
-				{
-					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-				}
-				else
-				{
-					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-				}
-				for (int p = 0; p < 5; p++)
-				{
-					int x = (int)face_get->lm[2 * p];
-					int y = (int)face_get->lm[2 * p + 1];
-					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-					{
-//						rt_kprintf("restore_pixel %d, %d\n", x, y);
-						restore_pixel(&x, &y);
-					}
-
-					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
-					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
-				}
+				face_pos = (face_get->y1 + face_get->y2) / 2;
 			}
-			if (rframe0_ready)
+			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
 			{
-				REG32(DSP_MM_BASE + 0x50) = 1;
+				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
+				mailbox_write_data(face_pos);
+				face_pos_last = face_pos;
 			}
+//			for (int i = 0; i < face_count; i++)
+//			{
+//				FaceRect *face_get = &faces_result[i];
+//
+//				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+//				{
+//					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+//				}
+//				face_pos = (face_get->y1 + face_get->y2) / 2;
+//				if (abs(face_pos - face_pos_last) >= 16)
+//				{
+//					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
+//					mailbox_write_data(face_pos);
+//					face_pos_last = face_pos;
+//				}
+////				clamp_face_rect(face_get);
+//
+////				face_get->x1 *= 2;
+////				face_get->y1 *= 2;
+////				face_get->x2 *= 2;
+////				face_get->y2 *= 2;
+////				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+////				if (face_get->x1 < face_get->x2)
+////				{
+////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+////				}
+////				else
+////				{
+////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+////				}
+////				for (int p = 0; p < 5; p++)
+////				{
+////					int x = (int)face_get->lm[2 * p];
+////					int y = (int)face_get->lm[2 * p + 1];
+////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+////					{
+//////						rt_kprintf("restore_pixel %d, %d\n", x, y);
+////						restore_pixel(&x, &y);
+////					}
+////
+////					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
+////					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
+////				}
+//			}
+//			if (rframe0_ready)
+//			{
+//				REG32(DSP_MM_BASE + 0x50) = 1;
+//			}
 
 			REG32(DSP_MM_BASE + 0x38) = 1;
 		}
@@ -396,55 +426,80 @@ int main(void)
 				face_count = face_detect(wframe1_buffer);
 			}
 
-			uint64_t *alpha1_buffer_addr = (uint64_t *)alpha1_buffer;
-			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+//			uint64_t *alpha1_buffer_addr = (uint64_t *)alpha1_buffer;
+//			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+//			{
+//				/* code */
+//				alpha1_buffer_addr[i] = 0x00;
+//			}
+			face_pos = 80;
+			if (face_count)
 			{
-				/* code */
-				alpha1_buffer_addr[i] = 0x00;
-			}
-			for (int i = 0; i < face_count; i++)
-			{
-				FaceRect *face_get = &faces_result[i];
+				FaceRect *face_get = &faces_result[0];
 
 				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 				{
-//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 				}
-//				clamp_face_rect(face_get);
-//				face_get->x1 *= 2;
-//				face_get->y1 *= 2;
-//				face_get->x2 *= 2;
-//				face_get->y2 *= 2;
-//				rt_kprintf("wframe1 draw_red %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-				if (face_get->x1 < face_get->x2)
-				{
-					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-				}
-				else
-				{
-					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-				}
-				for (int p = 0; p < 5; p++)
-				{
-					int x = (int)face_get->lm[2 * p];
-					int y = (int)face_get->lm[2 * p + 1];
-					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-					{
-//						rt_kprintf("restore_pixel %d, %d\n", x, y);
-						restore_pixel(&x, &y);
-					}
-
-					draw_green_3x3(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
-					draw_alpha_3x3(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
-				}
+				face_pos = (face_get->y1 + face_get->y2) / 2;
 			}
-			if (rframe1_ready)
+			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
 			{
-				REG32(DSP_MM_BASE + 0x54) = 1;
+				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
+				mailbox_write_data(face_pos);
+				face_pos_last = face_pos;
 			}
+//			for (int i = 0; i < face_count; i++)
+//			{
+//				FaceRect *face_get = &faces_result[i];
+//
+//				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+//				{
+//					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+////					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//				}
+//				face_pos = (face_get->y1 + face_get->y2) / 2;
+//				if (abs(face_pos - face_pos_last) >= 16)
+//				{
+//					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
+//					mailbox_write_data(face_pos);
+//					face_pos_last = face_pos;
+//				}
+////				clamp_face_rect(face_get);
+////				face_get->x1 *= 2;
+////				face_get->y1 *= 2;
+////				face_get->x2 *= 2;
+////				face_get->y2 *= 2;
+////				rt_kprintf("wframe1 draw_red %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+////				if (face_get->x1 < face_get->x2)
+////				{
+////					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+////					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+////				}
+////				else
+////				{
+////					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+////					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+////				}
+////				for (int p = 0; p < 5; p++)
+////				{
+////					int x = (int)face_get->lm[2 * p];
+////					int y = (int)face_get->lm[2 * p + 1];
+////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+////					{
+//////						rt_kprintf("restore_pixel %d, %d\n", x, y);
+////						restore_pixel(&x, &y);
+////					}
+////
+////					draw_green_3x3(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
+////					draw_alpha_3x3(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
+////				}
+//			}
+//			if (rframe1_ready)
+//			{
+//				REG32(DSP_MM_BASE + 0x54) = 1;
+//			}
 
 			REG32(DSP_MM_BASE + 0x3C) = 1;
 		}
