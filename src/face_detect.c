@@ -1539,29 +1539,17 @@ void cropAndConvertImage(const uint16_t *srcImage, uint8_t *dstImage, int srcWid
 FaceRect faces_result[3];
 int face_detect(const uint16_t *bgr565_image)
 {
-//	int *a = NULL;
-//    FaceRect *face_detect = NULL;
-//    int b[3];
-    // 裁剪并转换图像
-//    uint32_t start = get_cycles_start();
-//    rt_kprintf("cropAndConvertImage start %d\n", start);
+
     cropAndConvertImage(bgr565_image, bgr320_buffer1, 160, 128, 120);
-//    uint32_t end = get_cycles_end();
-//    rt_kprintf("cropAndConvertImage finish %d, cost %d cycles\n", end, calculate_cycles(start, end));
-    //===============
-//    start = get_cycles_start();
-//    rt_kprintf("face detect start\n");
+
     int face_count = objectdetect_cnn(bgr320_buffer1, 160, 120, faces_result);
-//    end = get_cycles_end();
-//    rt_kprintf("face count is %d, end cycles %d, cost %d\n", face_count, end, calculate_cycles(start, end));
-//    for (int i = 0; i < face_count; i++)
-//    {
-////        face_detect = &faces[i];
-//        rt_kprintf("%d, %d, %d, %d\n", faces_result[i].x1, faces_result[i].x2, faces_result[i].y1, faces_result[i].y2);
-//        for (int j = 0; j < 5; j++)
-//        {
-//			rt_kprintf("landmark[%d] %d, %d\n", j, (int)faces_result[i].lm[2 * j], (int)faces_result[i].lm[2 * j + 1]);
-//        }
-//    }
+
     return face_count;
+}
+
+// 新增：当RGB888(160x120x3)已准备好时，直接运行推理
+int face_detect_rgb(const uint8_t *rgb_image_160x120)
+{
+    // 直接进入CNN，faces_result作为全局输出
+    return objectdetect_cnn(rgb_image_160x120, 160, 120, faces_result);
 }

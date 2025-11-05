@@ -106,5 +106,8 @@ int fd_run(struct FloatTensor *result, const unsigned char *bgr_data);
 int face_detect(const uint16_t *bgr565_image);
 void cropAndConvertImage(const uint16_t *srcImage, uint8_t *dstImage, int srcWidth, int srcHeight, int cropHeight);
 
+// 新增：当预处理已在接收图像阶段完成时，直接用160x120x3(RGB888)做推理
+int face_detect_rgb(const uint8_t *rgb_image_160x120);
+
 #endif
 

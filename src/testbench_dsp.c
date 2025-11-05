@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "reg.h"
 #include "kernel.h"
@@ -56,6 +57,29 @@ int32_t face_pos_last = 80;
 typedef uint16_t PIXEL565; // BGR565像素类型，2字节
 
 PIXEL565 bgr565_buffer1[160 * 128] __attribute__((used, section(".face_data"), aligned(16))) ;
+
+// 运行期上下文：集中管理缓冲区指针与分辨率参数，便于模块化
+typedef struct {
+    uint16_t *wframe0_buffer;
+    uint16_t *wframe1_buffer;
+    uint16_t *rframe0_buffer;
+    uint16_t *rframe1_buffer;
+    uint8_t  *alpha0_buffer;
+    uint8_t  *alpha1_buffer;
+    uint16_t display_width;
+    uint16_t display_height;
+    uint16_t snapshot_width;
+    uint16_t snapshot_height;
+} PipelineContext;
+
+// 记录前处理的几何变换，用于通用坐标逆变换
+typedef struct {
+    int srcW, srcH;     // 原图尺寸
+    int preW, preH;     // 旋转前的目标预处理尺寸（横屏:160x120，竖屏:120x160）
+    int cropOx, cropOy; // 在原图中的裁剪偏移（相对原图左上角）
+    int cropW, cropH;   // 裁剪后的区域尺寸（作为缩放输入尺寸）
+    int rotated;        // 是否做了 CCW90 旋转（1竖屏，0横屏）
+} Transform;
 
 /**
  * 在同一块内存中对BGR565图像进行原地缩小
@@ -172,6 +196,21 @@ void rotate_ccw90(uint16_t *src, uint16_t *dst) {
 }
 
 /**
+ * @brief 通用逆时针旋转90度（RGB565），支持任意 WxH -> HxW
+ */
+static void rotate_ccw90_generic(const uint16_t *src, int srcW, int srcH, uint16_t *dst) {
+    for (int y = 0; y < srcH; y++) {
+        for (int x = 0; x < srcW; x++) {
+            int dstX = y;
+            int dstY = srcW - 1 - x;
+            int dstIdx = dstY * srcH + dstX; // 目标宽度=srcH
+            int srcIdx = y * srcW + x;
+            dst[dstIdx] = src[srcIdx];
+        }
+    }
+}
+
+/**
  * @brief 顺时针旋转90度还原（适用于RGB565格式）
  * @param src 旋转后的图像数据指针（160 * 128）
  * @param dst 还原后的图像数据指针（128 * 160）
@@ -226,9 +265,305 @@ void restore_pixel(int* original_x, int* original_y) {
     *original_y = rotated_x; // 旋转后图像高度=128
 }
 
+// ==== 565 -> 888 (160x120) 最终转换，供推理直接使用 ====
+static inline void unpack_rgb565(uint16_t p, uint8_t* r, uint8_t* g, uint8_t* b) {
+    // 注意：硬件帧为RGB565还是BGR565需以实际为准；当前解码与face_detect中的BGR565ToRGB888一致
+    uint8_t blue  = (p & 0xF800) >> 11;
+    uint8_t green = (p & 0x07E0) >> 5;
+    uint8_t red   = (p & 0x001F);
+    *r = (red << 3) | (red >> 2);
+    *g = (green << 2) | (green >> 4);
+    *b = (blue << 3) | (blue >> 2);
+}
+
+static void convert_565_to_888_160x120(const uint16_t* src160x120, uint8_t* dst888 /*bgr320_buffer1*/) {
+    for (int y = 0; y < 120; ++y) {
+        for (int x = 0; x < 160; ++x) {
+            uint8_t r,g,b;
+            unpack_rgb565(src160x120[y*160 + x], &r, &g, &b);
+            int o = (y*160 + x)*3;
+            dst888[o+0] = r;
+            dst888[o+1] = g;
+            dst888[o+2] = b;
+        }
+    }
+}
+
+
+// 任意RGB565缩放（最近邻，定点步进）+ ROI 支持，srcStride 为源整图行步长
+static void resize_bgr565_nn_roi(const uint16_t *src, int srcStride,
+                                 int roiX, int roiY, int roiW, int roiH,
+                                 uint16_t *dst, int dstW, int dstH) {
+    uint32_t stepX = ((uint32_t)roiW << 16) / (uint32_t)dstW;
+    uint32_t stepY = ((uint32_t)roiH << 16) / (uint32_t)dstH;
+    uint32_t sy_fp = 0;
+    for (int y = 0; y < dstH; ++y) {
+        int sy = (int)(sy_fp >> 16);
+        if (sy >= roiH) sy = roiH - 1;
+        const uint16_t* srcRow = src + (roiY + sy) * srcStride + roiX;
+        uint32_t sx_fp = 0;
+        for (int x = 0; x < dstW; ++x) {
+            int sx = (int)(sx_fp >> 16);
+            if (sx >= roiW) sx = roiW - 1;
+            dst[y*dstW + x] = srcRow[sx];
+            sx_fp += stepX;
+        }
+        sy_fp += stepY;
+    }
+}
+
+// 整倍缩小的真实 binning（均值聚合），对 ROI 做 kx*ky 块平均后写入 dst
+static void binning_downscale_bgr565_roi(const uint16_t *src, int srcStride,
+                                         int roiX, int roiY, int roiW, int roiH,
+                                         uint16_t *dst, int dstW, int dstH) {
+    // 需要整除
+    if (roiW % dstW != 0 || roiH % dstH != 0 || dstW <= 0 || dstH <= 0) {
+        // 回退：直接最近邻
+        resize_bgr565_nn_roi(src, srcStride, roiX, roiY, roiW, roiH, dst, dstW, dstH);
+        return;
+    }
+    int fx = roiW / dstW; // 水平bin尺寸
+    int fy = roiH / dstH; // 垂直bin尺寸
+    int blockSize = fx * fy;
+    for (int dy = 0; dy < dstH; ++dy) {
+        int sy0 = roiY + dy * fy;
+        for (int dx = 0; dx < dstW; ++dx) {
+            int sx0 = roiX + dx * fx;
+            int sumR = 0, sumG = 0, sumB = 0;
+            for (int by = 0; by < fy; ++by) {
+                const uint16_t* srow = src + (sy0 + by) * srcStride + sx0;
+                for (int bx = 0; bx < fx; ++bx) {
+                    uint16_t p = srow[bx];
+                    int r5 = (p & 0x001F);
+                    int g6 = (p >> 5) & 0x003F;
+                    int b5 = (p >> 11);
+                    sumR += r5; sumG += g6; sumB += b5;
+                }
+            }
+            // 四舍五入
+            int r5 = (sumR + (blockSize >> 1)) / blockSize;
+            int g6 = (sumG + (blockSize >> 1)) / blockSize;
+            int b5 = (sumB + (blockSize >> 1)) / blockSize;
+            if (r5 > 31) r5 = 31; if (b5 > 31) b5 = 31; if (g6 > 63) g6 = 63;
+            dst[dy * dstW + dx] = (uint16_t)((b5 << 11) | (g6 << 5) | r5);
+        }
+    }
+}
+
+// 统一前处理：任意 >=160x120(横) 或 >=120x160(竖) 的RGB565输入 -> 160x120 RGB888 输出
+static void preprocess_to_160x120_rgb(const uint16_t* src, int srcW, int srcH, uint8_t* outRgb888, Transform* tfm)
+{
+    int portrait = (srcW < srcH);
+    tfm->srcW = srcW; tfm->srcH = srcH;
+    tfm->preW = portrait ? 120 : 160;
+    tfm->preH = portrait ? 160 : 120;
+    tfm->rotated = portrait ? 1 : 0;
+
+    // 计算尽可能大的整数倍下采样比例，并做最小化对称裁剪
+    int kx = srcW / tfm->preW;
+    int ky = srcH / tfm->preH;
+    if (kx < 1) kx = 1; if (ky < 1) ky = 1; // 理论上不会出现<1（根据输入约束），防御性处理
+    int k = (kx < ky) ? kx : ky; // 选最小的整数倍缩放比例
+    int roiW = tfm->preW * k;
+    int roiH = tfm->preH * k;
+    int roiX = (srcW - roiW) / 2; // 居中裁剪，尽量保留全局内容
+    int roiY = (srcH - roiH) / 2;
+    if (roiX < 0) roiX = 0; if (roiY < 0) roiY = 0;
+
+    tfm->cropOx = roiX; tfm->cropOy = roiY;
+    tfm->cropW = roiW; tfm->cropH = roiH;
+
+    const uint16_t* scaled565 = NULL;
+    if (k >= 2) {
+        // 优先使用真实 binning（均值聚合）获得更好画质
+        binning_downscale_bgr565_roi(src, srcW, roiX, roiY, roiW, roiH, bgr565_buffer1, tfm->preW, tfm->preH);
+        scaled565 = bgr565_buffer1;
+    } else {
+        // k == 1：仅裁剪，无缩放；复制ROI为紧凑缓冲，保持接口一致
+        resize_bgr565_nn_roi(src, srcW, roiX, roiY, roiW, roiH, bgr565_buffer1, tfm->preW, tfm->preH);
+        scaled565 = bgr565_buffer1;
+    }
+
+    // 竖屏需要再旋转；横屏则直接转换
+    if (portrait) {
+        // 现在 scaled565 始终在 bgr565_buffer1，旋转输出到 wframe1 或反之均可
+        rotate_ccw90_generic(scaled565, 120, 160, wframe1_buffer);
+        convert_565_to_888_160x120((const uint16_t*)wframe1_buffer, outRgb888);
+    } else {
+        convert_565_to_888_160x120((const uint16_t*)scaled565, outRgb888);
+    }
+}
+
+// ============ 通用坐标逆变换：从CNN(160x120)坐标还原到原图(srcW x srcH) ============
+static inline int clampi(int v, int lo, int hi) {
+    if (v < lo) return lo; if (v > hi) return hi; return v;
+}
+
+static inline float clampf(float v, float lo, float hi) {
+    if (v < lo) return lo; if (v > hi) return hi; return v;
+}
+
+// 将 CNN(160x120) 坐标点映射回原图坐标（浮点版）
+static inline void map_point_cnn_to_original_float(const Transform* tfm,
+                                                   float xc, float yc,
+                                                   float* xo, float* yo) {
+    // 1) CNN -> 预处理域（可能逆旋转）
+    float xq, yq;
+    if (tfm->rotated) {
+        // 逆时针旋转过，需做顺时针逆变换
+        xq = (float)(tfm->preW - 1) - yc;
+        yq = xc;
+    } else {
+        xq = xc; yq = yc;
+    }
+    // 2) 预处理域 -> 裁剪域（缩放）
+    float sx = (float)tfm->cropW / (float)tfm->preW;
+    float sy = (float)tfm->cropH / (float)tfm->preH;
+    float xcrop = xq * sx;
+    float ycrop = yq * sy;
+    // 3) 裁剪域 -> 原图（偏移）
+    *xo = (float)tfm->cropOx + xcrop;
+    *yo = (float)tfm->cropOy + ycrop;
+}
+
+// 将CNN坐标点(xc,yc)映射回原图坐标(xo,yo)
+static void restore_faces_with_transform(FaceRect* faces, int count, const Transform* tfm) {
+    const int srcW = tfm->srcW, srcH = tfm->srcH;
+    // 其余变换参数直接通过 tfm 在映射函数中使用，无需在此展开
+    for (int i = 0; i < count; ++i) {
+        FaceRect* r = &faces[i];
+        // 1) 映射四角为浮点，再用 floor/ceil 构出包围盒（避免缩水）
+        float fx[4], fy[4];
+        int xcnn[4] = { r->x1, r->x2, r->x1, r->x2 };
+        int ycnn[4] = { r->y1, r->y1, r->y2, r->y2 };
+        for (int k = 0; k < 4; ++k) {
+            float xo, yo;
+            map_point_cnn_to_original_float(tfm, (float)xcnn[k], (float)ycnn[k], &xo, &yo);
+            fx[k] = clampf(xo, 0.0f, (float)(srcW - 1));
+            fy[k] = clampf(yo, 0.0f, (float)(srcH - 1));
+        }
+        float xminf = fx[0], xmaxf = fx[0];
+        float yminf = fy[0], ymaxf = fy[0];
+        for (int k = 1; k < 4; ++k) {
+            if (fx[k] < xminf) xminf = fx[k]; if (fx[k] > xmaxf) xmaxf = fx[k];
+            if (fy[k] < yminf) yminf = fy[k]; if (fy[k] > ymaxf) ymaxf = fy[k];
+        }
+        int xmin = clampi((int)floorf(xminf), 0, srcW - 1);
+        int xmax = clampi((int)ceilf(xmaxf), 0, srcW - 1);
+        int ymin = clampi((int)floorf(yminf), 0, srcH - 1);
+        int ymax = clampi((int)ceilf(ymaxf), 0, srcH - 1);
+        if (xmax <= xmin) xmax = clampi(xmin + 1, 1, srcW - 1);
+        if (ymax <= ymin) ymax = clampi(ymin + 1, 1, srcH - 1);
+        r->x1 = xmin; r->y1 = ymin; r->x2 = xmax; r->y2 = ymax;
+
+        // 2) 同步还原landmarks（5点），按浮点坐标回贴
+        for (int p = 0; p < 5; ++p) {
+            float xc = r->lm[2*p];
+            float yc = r->lm[2*p + 1];
+            float xo, yo;
+            map_point_cnn_to_original_float(tfm, xc, yc, &xo, &yo);
+            r->lm[2*p]     = clampf(xo, 0.0f, (float)(srcW - 1));
+            r->lm[2*p + 1] = clampf(yo, 0.0f, (float)(srcH - 1));
+        }
+    }
+}
+
+// ==================== 业务流程拆分：模块化辅助函数 ====================
+
+// 根据mailbox握手初始化地址、缓冲指针与分辨率
+static void mailbox_setup_if_needed(PipelineContext* ctx) {
+    if (mailbox_is_empty() == false) {
+        uint32_t recv_data = mailbox_read_data();
+        rt_kprintf("mailbox_recv = 0x%x\n", recv_data);
+        if (recv_data == 0x5A5A5A5A) {
+            wframe0_addr = REG32(DSP_MM_BASE + 0x30);
+            wframe1_addr = REG32(DSP_MM_BASE + 0x34);
+            rframe0_addr = REG32(DSP_MM_BASE + 0x40);
+            rframe1_addr = REG32(DSP_MM_BASE + 0x44);
+            alpha0_addr  = REG32(DSP_MM_BASE + 0x48);
+            alpha1_addr  = REG32(DSP_MM_BASE + 0x4C);
+            rt_kprintf("wframe0_addr = 0x%p, rframe0_addr = 0x%p, alpha0_addr = 0x%p\n", wframe0_addr, rframe0_addr, alpha0_addr);
+            rt_kprintf("wframe1_addr = 0x%p, rframe1_addr = 0x%p, alpha1_addr = 0x%p\n", wframe1_addr, rframe1_addr, alpha1_addr);
+
+            // 写全局地址与本地上下文
+            wframe0_buffer = (uint16_t *)wframe0_addr;
+            wframe1_buffer = (uint16_t *)wframe1_addr;
+            rframe0_buffer = (uint16_t *)rframe0_addr;
+            rframe1_buffer = (uint16_t *)rframe1_addr;
+            alpha0_buffer  = (uint8_t  *)alpha0_addr;
+            alpha1_buffer  = (uint8_t  *)alpha1_addr;
+
+            display_width  = REG32(DSP_MM_BASE + 0x20) & 0x7FF;
+            display_height = (REG32(DSP_MM_BASE + 0x20) & 0x3FF0000) >> 16;
+            snapshot_width  = REG32(DSP_MM_BASE + 0x28) & 0x7FF;
+            snapshot_height = (REG32(DSP_MM_BASE + 0x28) & 0x3FF0000) >> 16;
+
+            // 同步到上下文（避免后续传参再次依赖全局）
+            ctx->wframe0_buffer = wframe0_buffer;
+            ctx->wframe1_buffer = wframe1_buffer;
+            ctx->rframe0_buffer = rframe0_buffer;
+            ctx->rframe1_buffer = rframe1_buffer;
+            ctx->alpha0_buffer  = alpha0_buffer;
+            ctx->alpha1_buffer  = alpha1_buffer;
+            ctx->display_width  = display_width;
+            ctx->display_height = display_height;
+            ctx->snapshot_width  = snapshot_width;
+            ctx->snapshot_height = snapshot_height;
+
+            rt_kprintf("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n",
+                       display_width, display_height, snapshot_width, snapshot_height);
+
+            // 清屏为白色，避免残影
+            size_t pix_count = (size_t)ctx->snapshot_width * (size_t)ctx->snapshot_height;
+            for (size_t i = 0; i < pix_count; ++i) {
+                ctx->wframe0_buffer[i] = 0xFFFF;
+                ctx->wframe1_buffer[i] = 0xFFFF;
+            }
+            rt_kprintf("init mm memory\n");
+
+            debug_test_dsp_mm();
+            REG32(DSP_MM_BASE + 0x70) = 1;
+            REG32(DSP_MM_BASE + 0x1E0) = 1;
+        }
+    }
+}
+
+// 处理一帧：前处理->推理->坐标还原->通知
+static void process_wframe1_if_flagged(PipelineContext* ctx) {
+    if (wframe1_flag) {
+        rt_kprintf("wframe1 read start\n");
+        wframe1_flag = 0;
+
+        // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
+        Transform tfm;
+        preprocess_to_160x120_rgb(ctx->wframe1_buffer,
+                                  ctx->snapshot_width,
+                                  ctx->snapshot_height,
+                                  bgr320_buffer1,
+                                  &tfm);
+
+        int face_count = face_detect_rgb(bgr320_buffer1);
+        if (face_count) {
+            // 使用通用逆变换还原所有检测框到原图坐标
+            restore_faces_with_transform(faces_result, face_count, &tfm);
+            FaceRect *face_get = &faces_result[0];
+            rt_kprintf("restored face[0]: %d,%d,%d,%d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+            mailbox_write_data((uint32_t)face_get);
+        }
+
+        // 可选：处理wframe0标志
+        if (wframe0_flag) {
+            rt_kprintf("wframe0 read start\n");
+            wframe0_flag = 0;
+            REG32(DSP_MM_BASE + 0x38) = 1;
+        }
+
+        REG32(DSP_MM_BASE + 0x3C) = 1;
+    }
+}
+
 int main(void)
 {
-
     /* Test start */
     uint32_t dd = _in(_cpm, 0x924);
     REG32(0x44040000) = dd;
@@ -246,356 +581,23 @@ int main(void)
 
     rt_kprintf("This program was compiled on %s at %s\n", __DATE__, __TIME__);
 
-//    face_detect(wframe1_buffer);
+    // 运行期上下文
+    PipelineContext ctx = {0};
 
-//    REG32(DSP_MM_BASE + 0x1E0) = 1;
     while (1)
     {
-    	/* code */
+        // 心跳打印与握手检测
+        if (times_cycles % 10000000 == 0) {
+            times_count++;
+            times_cycles = 0;
+            rt_kprintf("times_count = %ld\n", times_count);
+            mailbox_setup_if_needed(&ctx);
+        }
 
-    	if (times_cycles % 10000000 == 0)
-    	{
-    		times_count++;
-    		times_cycles = 0;
-    		rt_kprintf("times_count = %ld\n", times_count);
-    		if (mailbox_is_empty() == false)
-    		{
-    			uint32_t recv_data = mailbox_read_data();
-    			rt_kprintf("mailbox_recv = 0x%x\n", recv_data);
-    			if (recv_data == 0x5A5A5A5A)
-    			{
-    				wframe0_addr = REG32(DSP_MM_BASE + 0x30);
-					wframe1_addr = REG32(DSP_MM_BASE + 0x34);
-					rframe0_addr = REG32(DSP_MM_BASE + 0x40);
-					rframe1_addr = REG32(DSP_MM_BASE + 0x44);
-					alpha0_addr = REG32(DSP_MM_BASE + 0x48);
-					alpha1_addr = REG32(DSP_MM_BASE + 0x4C);
-					rt_kprintf("wframe0_addr = 0x%p, rframe0_addr = 0x%p, alpha0_addr = 0x%p\n", wframe0_addr, rframe0_addr, alpha0_addr);
-					rt_kprintf("wframe1_addr = 0x%p, rframe1_addr = 0x%p, alpha1_addr = 0x%p\n", wframe1_addr, rframe1_addr, alpha1_addr);
+        // 帧处理
+        process_wframe1_if_flagged(&ctx);
 
-					wframe0_buffer = (uint16_t *)wframe0_addr;
-					wframe1_buffer = (uint16_t *)wframe1_addr;
-					rframe0_buffer = (uint16_t *)rframe0_addr;
-					rframe1_buffer = (uint16_t *)rframe1_addr;
-					alpha0_buffer = (uint8_t *)alpha0_addr;
-					alpha1_buffer = (uint8_t *)alpha1_addr;
-
-					display_width = REG32(DSP_MM_BASE + 0x20) & 0x7FF;
-					display_height = (REG32(DSP_MM_BASE + 0x20) & 0x3FF0000) >> 16;
-					snapshot_width = REG32(DSP_MM_BASE + 0x28) & 0x7FF;
-					snapshot_height = (REG32(DSP_MM_BASE + 0x28) & 0x3FF0000) >> 16;
-
-					rt_kprintf("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n", display_width, display_height, snapshot_width, snapshot_height);
-
-//					for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT); i++)
-//					{
-//						/* code */
-//						alpha0_buffer[i] = 0x00;
-//						alpha1_buffer[i] = 0x00;
-//					}
-					for (size_t i = 0; i < (SNAP_IMAGE_WIDTH * SNAP_IMAGE_HEIGHT); i++)
-					{
-						/* code */
-						wframe0_buffer[i] = 0xFFFF;
-						wframe1_buffer[i] = 0xFFFF;
-//						rframe0_buffer[i] = 0xFFFF;
-//						rframe1_buffer[i] = 0xFFFF;
-					}
-					rt_kprintf("init mm memory\n");
-
-					debug_test_dsp_mm();
-    				REG32(DSP_MM_BASE + 0x70) = 1;
-					REG32(DSP_MM_BASE + 0x1E0) = 1;
-//					face_pos_last = face_pos = 80;
-//					mailbox_write_data(face_pos);
-
-    			}
-    		}
-//    		else
-//    		{
-//    			rt_kprintf("mailbox_is_empty\n");
-//    		}
-    	}
-    	times_cycles++;
-//    	if (wframe0_flag)
-//		{
-//			/* code */
-//			rt_kprintf("wframe0 read start\n");
-//			wframe0_flag = 0;
-//			int face_count = 0;
-//			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-//			{
-//				rotate_ccw90(wframe0_buffer, bgr565_buffer1);
-//				face_count = face_detect(bgr565_buffer1);
-//			}
-//			else
-//			{
-//				face_count = face_detect(wframe0_buffer);
-//			}
-//
-////			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
-////			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
-////			{
-////				/* code */
-////				alpha0_buffer_addr[i] = 0x00;
-////			}
-//			face_pos = 80;
-//			FaceRect *face_get = &faces_result[0];
-//			if (face_count)
-//			{
-//				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-//				{
-//					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-//				}
-////				face_pos = (face_get->y1 + face_get->y2) / 2;
-//			}
-//			mailbox_write_data((uint32_t)face_get);
-////			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
-////			{
-////				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
-////				mailbox_write_data(face_pos);
-////				face_pos_last = face_pos;
-////			}
-////			for (int i = 0; i < face_count; i++)
-////			{
-////				FaceRect *face_get = &faces_result[i];
-////
-////				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-////				{
-////					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-////				}
-////				face_pos = (face_get->y1 + face_get->y2) / 2;
-////				if (abs(face_pos - face_pos_last) >= 16)
-////				{
-////					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
-////					mailbox_write_data(face_pos);
-////					face_pos_last = face_pos;
-////				}
-//////				clamp_face_rect(face_get);
-////
-//////				face_get->x1 *= 2;
-//////				face_get->y1 *= 2;
-//////				face_get->x2 *= 2;
-//////				face_get->y2 *= 2;
-//////				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-//////				if (face_get->x1 < face_get->x2)
-//////				{
-//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-//////				}
-//////				else
-//////				{
-//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-//////				}
-//////				for (int p = 0; p < 5; p++)
-//////				{
-//////					int x = (int)face_get->lm[2 * p];
-//////					int y = (int)face_get->lm[2 * p + 1];
-//////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-//////					{
-////////						rt_kprintf("restore_pixel %d, %d\n", x, y);
-//////						restore_pixel(&x, &y);
-//////					}
-//////
-//////					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
-//////					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
-//////				}
-////			}
-////			if (rframe0_ready)
-////			{
-////				REG32(DSP_MM_BASE + 0x50) = 1;
-////			}
-//
-//			REG32(DSP_MM_BASE + 0x38) = 1;
-//		}
-		if (wframe1_flag)
-		{
-			rt_kprintf("wframe1 read start\n");
-			wframe1_flag = 0;
-
-			int face_count = 0;
-			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-			{
-				rotate_ccw90(wframe1_buffer, bgr565_buffer1);
-				face_count = face_detect(bgr565_buffer1);
-			}
-			else
-			{
-				face_count = face_detect(wframe1_buffer);
-			}
-
-//			uint64_t *alpha1_buffer_addr = (uint64_t *)alpha1_buffer;
-//			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
-//			{
-//				/* code */
-//				alpha1_buffer_addr[i] = 0x00;
-//			}
-			face_pos = 80;
-			FaceRect *face_get = &faces_result[0];
-			if (face_count)
-			{
-				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-				{
-					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-				}
-				face_pos = (face_get->y1 + face_get->y2) / 2;
-				mailbox_write_data((uint32_t)face_get);
-			}
-//			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
-//			{
-//				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
-//				mailbox_write_data(face_pos);
-//				face_pos_last = face_pos;
-//			}
-//			for (int i = 0; i < face_count; i++)
-//			{
-//				FaceRect *face_get = &faces_result[i];
-//
-//				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-//				{
-//					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-////					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-//				}
-//				face_pos = (face_get->y1 + face_get->y2) / 2;
-//				if (abs(face_pos - face_pos_last) >= 16)
-//				{
-//					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
-//					mailbox_write_data(face_pos);
-//					face_pos_last = face_pos;
-//				}
-////				clamp_face_rect(face_get);
-////				face_get->x1 *= 2;
-////				face_get->y1 *= 2;
-////				face_get->x2 *= 2;
-////				face_get->y2 *= 2;
-////				rt_kprintf("wframe1 draw_red %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-////				if (face_get->x1 < face_get->x2)
-////				{
-////					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-////					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-////				}
-////				else
-////				{
-////					draw_green_box(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-////					draw_alpha_box(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-////				}
-////				for (int p = 0; p < 5; p++)
-////				{
-////					int x = (int)face_get->lm[2 * p];
-////					int y = (int)face_get->lm[2 * p + 1];
-////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-////					{
-//////						rt_kprintf("restore_pixel %d, %d\n", x, y);
-////						restore_pixel(&x, &y);
-////					}
-////
-////					draw_green_3x3(rframe1_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
-////					draw_alpha_3x3(alpha1_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
-////				}
-//			}
-//			if (rframe1_ready)
-//			{
-//				REG32(DSP_MM_BASE + 0x54) = 1;
-//			}
-			if (wframe0_flag)
-					{
-						/* code */
-						rt_kprintf("wframe0 read start\n");
-						wframe0_flag = 0;
-			//			int face_count = 0;
-			//			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-			//			{
-			//				rotate_ccw90(wframe0_buffer, bgr565_buffer1);
-			//				face_count = face_detect(bgr565_buffer1);
-			//			}
-			//			else
-			//			{
-			//				face_count = face_detect(wframe0_buffer);
-			//			}
-			//
-			////			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
-			////			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
-			////			{
-			////				/* code */
-			////				alpha0_buffer_addr[i] = 0x00;
-			////			}
-			//			face_pos = 80;
-			//			FaceRect *face_get = &faces_result[0];
-			//			if (face_count)
-			//			{
-			//				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-			//				{
-			//					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-			//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-			//				}
-			////				face_pos = (face_get->y1 + face_get->y2) / 2;
-			//			}
-			//			mailbox_write_data((uint32_t)face_get);
-			////			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
-			////			{
-			////				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
-			////				mailbox_write_data(face_pos);
-			////				face_pos_last = face_pos;
-			////			}
-			////			for (int i = 0; i < face_count; i++)
-			////			{
-			////				FaceRect *face_get = &faces_result[i];
-			////
-			////				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-			////				{
-			////					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-			////				}
-			////				face_pos = (face_get->y1 + face_get->y2) / 2;
-			////				if (abs(face_pos - face_pos_last) >= 16)
-			////				{
-			////					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
-			////					mailbox_write_data(face_pos);
-			////					face_pos_last = face_pos;
-			////				}
-			//////				clamp_face_rect(face_get);
-			////
-			//////				face_get->x1 *= 2;
-			//////				face_get->y1 *= 2;
-			//////				face_get->x2 *= 2;
-			//////				face_get->y2 *= 2;
-			//////				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-			//////				if (face_get->x1 < face_get->x2)
-			//////				{
-			//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-			//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-			//////				}
-			//////				else
-			//////				{
-			//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-			//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-			//////				}
-			//////				for (int p = 0; p < 5; p++)
-			//////				{
-			//////					int x = (int)face_get->lm[2 * p];
-			//////					int y = (int)face_get->lm[2 * p + 1];
-			//////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-			//////					{
-			////////						rt_kprintf("restore_pixel %d, %d\n", x, y);
-			//////						restore_pixel(&x, &y);
-			//////					}
-			//////
-			//////					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
-			//////					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
-			//////				}
-			////			}
-			////			if (rframe0_ready)
-			////			{
-			////				REG32(DSP_MM_BASE + 0x50) = 1;
-			////			}
-			//
-						REG32(DSP_MM_BASE + 0x38) = 1;
-					}
-
-			REG32(DSP_MM_BASE + 0x3C) = 1;
-		}
+        times_cycles++;
     }
     return 0;
 }
