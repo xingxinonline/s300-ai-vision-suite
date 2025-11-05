@@ -306,8 +306,8 @@ int main(void)
 					debug_test_dsp_mm();
     				REG32(DSP_MM_BASE + 0x70) = 1;
 					REG32(DSP_MM_BASE + 0x1E0) = 1;
-					face_pos_last = face_pos = 80;
-					mailbox_write_data(face_pos);
+//					face_pos_last = face_pos = 80;
+//					mailbox_write_data(face_pos);
 
     			}
     		}
@@ -317,99 +317,99 @@ int main(void)
 //    		}
     	}
     	times_cycles++;
-    	if (wframe0_flag)
-		{
-			/* code */
-			rt_kprintf("wframe0 read start\n");
-			wframe0_flag = 0;
-			int face_count = 0;
-			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-			{
-				rotate_ccw90(wframe0_buffer, bgr565_buffer1);
-				face_count = face_detect(bgr565_buffer1);
-			}
-			else
-			{
-				face_count = face_detect(wframe0_buffer);
-			}
-
-//			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
-//			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+//    	if (wframe0_flag)
+//		{
+//			/* code */
+//			rt_kprintf("wframe0 read start\n");
+//			wframe0_flag = 0;
+//			int face_count = 0;
+//			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 //			{
-//				/* code */
-//				alpha0_buffer_addr[i] = 0x00;
+//				rotate_ccw90(wframe0_buffer, bgr565_buffer1);
+//				face_count = face_detect(bgr565_buffer1);
 //			}
-			face_pos = 80;
-			if (face_count)
-			{
-				FaceRect *face_get = &faces_result[0];
-
-				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-				{
-					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
-					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-				}
-				face_pos = (face_get->y1 + face_get->y2) / 2;
-			}
-			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
-			{
-				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
-				mailbox_write_data(face_pos);
-				face_pos_last = face_pos;
-			}
-//			for (int i = 0; i < face_count; i++)
+//			else
 //			{
-//				FaceRect *face_get = &faces_result[i];
+//				face_count = face_detect(wframe0_buffer);
+//			}
 //
+////			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
+////			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+////			{
+////				/* code */
+////				alpha0_buffer_addr[i] = 0x00;
+////			}
+//			face_pos = 80;
+//			FaceRect *face_get = &faces_result[0];
+//			if (face_count)
+//			{
 //				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 //				{
 //					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 //				}
-//				face_pos = (face_get->y1 + face_get->y2) / 2;
-//				if (abs(face_pos - face_pos_last) >= 16)
-//				{
-//					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
-//					mailbox_write_data(face_pos);
-//					face_pos_last = face_pos;
-//				}
-////				clamp_face_rect(face_get);
-//
-////				face_get->x1 *= 2;
-////				face_get->y1 *= 2;
-////				face_get->x2 *= 2;
-////				face_get->y2 *= 2;
-////				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-////				if (face_get->x1 < face_get->x2)
-////				{
-////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-////				}
-////				else
-////				{
-////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
-////				}
-////				for (int p = 0; p < 5; p++)
-////				{
-////					int x = (int)face_get->lm[2 * p];
-////					int y = (int)face_get->lm[2 * p + 1];
-////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
-////					{
-//////						rt_kprintf("restore_pixel %d, %d\n", x, y);
-////						restore_pixel(&x, &y);
-////					}
+////				face_pos = (face_get->y1 + face_get->y2) / 2;
+//			}
+//			mailbox_write_data((uint32_t)face_get);
+////			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
+////			{
+////				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
+////				mailbox_write_data(face_pos);
+////				face_pos_last = face_pos;
+////			}
+////			for (int i = 0; i < face_count; i++)
+////			{
+////				FaceRect *face_get = &faces_result[i];
 ////
-////					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
-////					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
+////				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+////				{
+////					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
 ////				}
-//			}
-//			if (rframe0_ready)
-//			{
-//				REG32(DSP_MM_BASE + 0x50) = 1;
-//			}
-
-			REG32(DSP_MM_BASE + 0x38) = 1;
-		}
+////				face_pos = (face_get->y1 + face_get->y2) / 2;
+////				if (abs(face_pos - face_pos_last) >= 16)
+////				{
+////					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
+////					mailbox_write_data(face_pos);
+////					face_pos_last = face_pos;
+////				}
+//////				clamp_face_rect(face_get);
+////
+//////				face_get->x1 *= 2;
+//////				face_get->y1 *= 2;
+//////				face_get->x2 *= 2;
+//////				face_get->y2 *= 2;
+//////				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//////				if (face_get->x1 < face_get->x2)
+//////				{
+//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+//////				}
+//////				else
+//////				{
+//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+//////				}
+//////				for (int p = 0; p < 5; p++)
+//////				{
+//////					int x = (int)face_get->lm[2 * p];
+//////					int y = (int)face_get->lm[2 * p + 1];
+//////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+//////					{
+////////						rt_kprintf("restore_pixel %d, %d\n", x, y);
+//////						restore_pixel(&x, &y);
+//////					}
+//////
+//////					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
+//////					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
+//////				}
+////			}
+////			if (rframe0_ready)
+////			{
+////				REG32(DSP_MM_BASE + 0x50) = 1;
+////			}
+//
+//			REG32(DSP_MM_BASE + 0x38) = 1;
+//		}
 		if (wframe1_flag)
 		{
 			rt_kprintf("wframe1 read start\n");
@@ -433,23 +433,23 @@ int main(void)
 //				alpha1_buffer_addr[i] = 0x00;
 //			}
 			face_pos = 80;
+			FaceRect *face_get = &faces_result[0];
 			if (face_count)
 			{
-				FaceRect *face_get = &faces_result[0];
-
 				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
 				{
 					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
 					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
 				}
 				face_pos = (face_get->y1 + face_get->y2) / 2;
+				mailbox_write_data((uint32_t)face_get);
 			}
-			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
-			{
-				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
-				mailbox_write_data(face_pos);
-				face_pos_last = face_pos;
-			}
+//			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
+//			{
+//				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
+//				mailbox_write_data(face_pos);
+//				face_pos_last = face_pos;
+//			}
 //			for (int i = 0; i < face_count; i++)
 //			{
 //				FaceRect *face_get = &faces_result[i];
@@ -500,6 +500,99 @@ int main(void)
 //			{
 //				REG32(DSP_MM_BASE + 0x54) = 1;
 //			}
+			if (wframe0_flag)
+					{
+						/* code */
+						rt_kprintf("wframe0 read start\n");
+						wframe0_flag = 0;
+			//			int face_count = 0;
+			//			if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+			//			{
+			//				rotate_ccw90(wframe0_buffer, bgr565_buffer1);
+			//				face_count = face_detect(bgr565_buffer1);
+			//			}
+			//			else
+			//			{
+			//				face_count = face_detect(wframe0_buffer);
+			//			}
+			//
+			////			uint64_t *alpha0_buffer_addr = (uint64_t *)alpha0_buffer;
+			////			for (size_t i = 0; i < (DISP_IMAGE_WIDTH * DISP_IMAGE_HEIGHT / 8); i++)
+			////			{
+			////				/* code */
+			////				alpha0_buffer_addr[i] = 0x00;
+			////			}
+			//			face_pos = 80;
+			//			FaceRect *face_get = &faces_result[0];
+			//			if (face_count)
+			//			{
+			//				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+			//				{
+			//					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+			//					rt_kprintf("restore_coordinates %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+			//				}
+			////				face_pos = (face_get->y1 + face_get->y2) / 2;
+			//			}
+			//			mailbox_write_data((uint32_t)face_get);
+			////			if ((abs(face_pos - face_pos_last) >= 16) || ((face_pos == 80) && (face_pos_last != 80)))
+			////			{
+			////				rt_kprintf("pos = %d, pos_last = %d\n", face_pos, face_pos_last);
+			////				mailbox_write_data(face_pos);
+			////				face_pos_last = face_pos;
+			////			}
+			////			for (int i = 0; i < face_count; i++)
+			////			{
+			////				FaceRect *face_get = &faces_result[i];
+			////
+			////				if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+			////				{
+			////					restore_coordinates(&face_get->x1, &face_get->y1, &face_get->x2, &face_get->y2);
+			////				}
+			////				face_pos = (face_get->y1 + face_get->y2) / 2;
+			////				if (abs(face_pos - face_pos_last) >= 16)
+			////				{
+			////					rt_kprintf("x1 = %d, y1 = %d, x2 = %d, y2 = %d, pos = %d, pos_last = %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2, face_pos, face_pos_last);
+			////					mailbox_write_data(face_pos);
+			////					face_pos_last = face_pos;
+			////				}
+			//////				clamp_face_rect(face_get);
+			////
+			//////				face_get->x1 *= 2;
+			//////				face_get->y1 *= 2;
+			//////				face_get->x2 *= 2;
+			//////				face_get->y2 *= 2;
+			//////				rt_kprintf("wframe0 draw_green_box %d, %d, %d, %d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+			//////				if (face_get->x1 < face_get->x2)
+			//////				{
+			//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+			//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+			//////				}
+			//////				else
+			//////				{
+			//////					draw_green_box(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+			//////					draw_alpha_box(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, face_get->x2, face_get->y2, face_get->x1, face_get->y1);
+			//////				}
+			//////				for (int p = 0; p < 5; p++)
+			//////				{
+			//////					int x = (int)face_get->lm[2 * p];
+			//////					int y = (int)face_get->lm[2 * p + 1];
+			//////					if (SNAP_IMAGE_WIDTH < SNAP_IMAGE_HEIGHT)
+			//////					{
+			////////						rt_kprintf("restore_pixel %d, %d\n", x, y);
+			//////						restore_pixel(&x, &y);
+			//////					}
+			//////
+			//////					draw_green_3x3(rframe0_buffer, SNAP_IMAGE_WIDTH, SNAP_IMAGE_HEIGHT, x, y);
+			//////					draw_alpha_3x3(alpha0_buffer, DISP_IMAGE_WIDTH, DISP_IMAGE_HEIGHT, x, y);
+			//////				}
+			////			}
+			////			if (rframe0_ready)
+			////			{
+			////				REG32(DSP_MM_BASE + 0x50) = 1;
+			////			}
+			//
+						REG32(DSP_MM_BASE + 0x38) = 1;
+					}
 
 			REG32(DSP_MM_BASE + 0x3C) = 1;
 		}
