@@ -21,6 +21,28 @@
 
 #include "custom_printf.h"
 
+// 统一的DSP调试输出：使用串口直接输出，避免rt_kprintf占用资源
+#ifndef DSP_LOG
+#define DSP_LOG(fmt, ...) do { \
+        char _dsp_log_buf[192]; \
+        int _len = snprintf(_dsp_log_buf, sizeof(_dsp_log_buf), fmt, ##__VA_ARGS__); \
+        if (_len < 0) { \
+            /* snprintf 出错，仍尝试输出固定标记 */ \
+            rt_hw_console_output("[DSP_LOG snprintf error]\n"); \
+        } else { \
+            /* 若内容被截断，添加省略标记 */ \
+            if (_len >= (int)sizeof(_dsp_log_buf)) { \
+                _dsp_log_buf[sizeof(_dsp_log_buf)-5] = '.'; \
+                _dsp_log_buf[sizeof(_dsp_log_buf)-4] = '.'; \
+                _dsp_log_buf[sizeof(_dsp_log_buf)-3] = '.'; \
+                _dsp_log_buf[sizeof(_dsp_log_buf)-2] = '\n'; \
+                _dsp_log_buf[sizeof(_dsp_log_buf)-1] = '\0'; \
+            } \
+            rt_hw_console_output(_dsp_log_buf); \
+        } \
+    } while(0)
+#endif
+
 uint16_t display_width;
 uint16_t display_height;
 uint16_t snapshot_width;
@@ -471,19 +493,24 @@ static void restore_faces_with_transform(FaceRect* faces, int count, const Trans
 // ==================== 业务流程拆分：模块化辅助函数 ====================
 
 // 根据mailbox握手初始化地址、缓冲指针与分辨率
+/* CM4<->DSP 握手协议：
+ * CM4 发送 TOKEN_BOOT_REQ 提示 DSP 启动初始化；DSP 完成后回写 TOKEN_DSP_READY。
+ */
+#define TOKEN_BOOT_REQ   0x5A5A5A5AU
+#define TOKEN_DSP_READY  0xA5A5A5A5U
 static void mailbox_setup_if_needed(PipelineContext* ctx) {
     if (mailbox_is_empty() == false) {
         uint32_t recv_data = mailbox_read_data();
-        rt_kprintf("mailbox_recv = 0x%x\n", recv_data);
-        if (recv_data == 0x5A5A5A5A) {
+//        DSP_LOG("mailbox_recv = 0x%x\n", recv_data);
+        if (recv_data == TOKEN_BOOT_REQ) {
             wframe0_addr = REG32(DSP_MM_BASE + 0x30);
             wframe1_addr = REG32(DSP_MM_BASE + 0x34);
             rframe0_addr = REG32(DSP_MM_BASE + 0x40);
             rframe1_addr = REG32(DSP_MM_BASE + 0x44);
             alpha0_addr  = REG32(DSP_MM_BASE + 0x48);
             alpha1_addr  = REG32(DSP_MM_BASE + 0x4C);
-            rt_kprintf("wframe0_addr = 0x%p, rframe0_addr = 0x%p, alpha0_addr = 0x%p\n", wframe0_addr, rframe0_addr, alpha0_addr);
-            rt_kprintf("wframe1_addr = 0x%p, rframe1_addr = 0x%p, alpha1_addr = 0x%p\n", wframe1_addr, rframe1_addr, alpha1_addr);
+//            DSP_LOG("wframe0_addr = 0x%p, rframe0_addr = 0x%p, alpha0_addr = 0x%p\n", (void*)wframe0_addr, (void*)rframe0_addr, (void*)alpha0_addr);
+//            DSP_LOG("wframe1_addr = 0x%p, rframe1_addr = 0x%p, alpha1_addr = 0x%p\n", (void*)wframe1_addr, (void*)rframe1_addr, (void*)alpha1_addr);
 
             // 写全局地址与本地上下文
             wframe0_buffer = (uint16_t *)wframe0_addr;
@@ -510,8 +537,8 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
             ctx->snapshot_width  = snapshot_width;
             ctx->snapshot_height = snapshot_height;
 
-            rt_kprintf("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n",
-                       display_width, display_height, snapshot_width, snapshot_height);
+//            DSP_LOG("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n",
+//                       display_width, display_height, snapshot_width, snapshot_height);
 
             // 清屏为白色，避免残影
             size_t pix_count = (size_t)ctx->snapshot_width * (size_t)ctx->snapshot_height;
@@ -519,11 +546,16 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
                 ctx->wframe0_buffer[i] = 0xFFFF;
                 ctx->wframe1_buffer[i] = 0xFFFF;
             }
-            rt_kprintf("init mm memory\n");
+//            DSP_LOG("init mm memory\n");
 
+//            DSP_LOG("dsp_mm self-test start (boot handshake)\n");
             debug_test_dsp_mm();
-            REG32(DSP_MM_BASE + 0x70) = 1;
-            REG32(DSP_MM_BASE + 0x1E0) = 1;
+//            DSP_LOG("dsp_mm self-test finished, sending TOKEN_DSP_READY=0x%08X to CM4\n", TOKEN_DSP_READY);
+
+           REG32(DSP_MM_BASE + 0x70) = 1; // 由CM4接收READY后执行
+           REG32(DSP_MM_BASE + 0x1E0) = 1; // 由CM4接收READY后执行
+//            DSP_LOG("TOKEN_DSP_READY sent. times_count=%lu cycles=%lu (boot phase)\n", (unsigned long)times_count, (unsigned long)times_cycles);
+            // mailbox_write_data(TOKEN_DSP_READY); /* 改为通知CM4使能MM */
         }
     }
 }
@@ -531,7 +563,7 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
 // 处理一帧：前处理->推理->坐标还原->通知
 static void process_wframe1_if_flagged(PipelineContext* ctx) {
     if (wframe1_flag) {
-        rt_kprintf("wframe1 read start\n");
+        // DSP_LOG("wframe1 read start\n");
         wframe1_flag = 0;
 
         // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
@@ -547,13 +579,13 @@ static void process_wframe1_if_flagged(PipelineContext* ctx) {
             // 使用通用逆变换还原所有检测框到原图坐标
             restore_faces_with_transform(faces_result, face_count, &tfm);
             FaceRect *face_get = &faces_result[0];
-            rt_kprintf("restored face[0]: %d,%d,%d,%d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
+            DSP_LOG("restored face[0]: %d,%d,%d,%d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
             mailbox_write_data((uint32_t)face_get);
         }
 
         // 可选：处理wframe0标志
         if (wframe0_flag) {
-            rt_kprintf("wframe0 read start\n");
+            // DSP_LOG("wframe0 read start\n");
             wframe0_flag = 0;
             REG32(DSP_MM_BASE + 0x38) = 1;
         }
@@ -572,15 +604,17 @@ int main(void)
     dd = _in(_cpm, 0x924);
     REG32(0x44040000) = dd;
 
-    rt_kprintf("Hello, world!\n");
-    rt_kprintf("Integer: %d\n", 123);
-    rt_kprintf("Hex: %x\n", 0xABCD);
-    rt_kprintf("Float: %s\n", float_to_string_simple(3.012345));
-    rt_kprintf("Float: %s\n", float_to_string_simple(0.123456));
-    rt_kprintf("String: %s\n", "Embedded");
+//    DSP_LOG("[S300 DSP][DisplayDemo] Booting..!\n");
+//    DSP_LOG("This program was compiled on %s at %s\n", __DATE__, __TIME__);
 
-    rt_kprintf("This program was compiled on %s at %s\n", __DATE__, __TIME__);
+    // rt_kprintf("Hello, world!\n");
+    // rt_kprintf("Integer: %d\n", 123);
+    // rt_kprintf("Hex: %x\n", 0xABCD);
+    // rt_kprintf("Float: %s\n", float_to_string_simple(3.012345));
+    // rt_kprintf("Float: %s\n", float_to_string_simple(0.123456));
+    // rt_kprintf("String: %s\n", "Embedded");
 
+   
     // 运行期上下文
     PipelineContext ctx = {0};
 
@@ -590,7 +624,7 @@ int main(void)
         if (times_cycles % 10000000 == 0) {
             times_count++;
             times_cycles = 0;
-            rt_kprintf("times_count = %ld\n", times_count);
+//            DSP_LOG("times_count = %ld\n", times_count);
             mailbox_setup_if_needed(&ctx);
         }
 
