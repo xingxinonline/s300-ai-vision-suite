@@ -613,9 +613,13 @@ int main(void)
     // rt_kprintf("Float: %s\n", float_to_string_simple(3.012345));
     // rt_kprintf("Float: %s\n", float_to_string_simple(0.123456));
     // rt_kprintf("String: %s\n", "Embedded");
-    extern int face_recognition();
-    face_recognition();
-    while (1);
+    
+    // Notify M4 that DSP is ready
+    dsp_mailbox_send_evt(EVT_READY, 0, 0, 0);
+
+    while (1) {
+        dsp_mailbox_process_command();
+    }
    
 //     // 运行期上下文
 //     PipelineContext ctx = {0};
