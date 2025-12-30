@@ -9,42 +9,14 @@
 
 #include "custom_printf.h"
 
-// ==================== 输出方式选择 ====================
-// 设置 DSP_LOG_USE_RT_HW_CONSOLE 为 1 使用 rt_hw_console_output
-// 设置 DSP_LOG_USE_RT_HW_CONSOLE 为 0 使用 printf (默认)
-#define DSP_LOG_USE_RT_HW_CONSOLE 1
+// 打印开关，1开启，0关闭
+#define ENABLE_TENSOR_PRINT 0
 
 // 自动字符串化参数名的宏
+#if ENABLE_TENSOR_PRINT
 #define print_uint8tensor(tensor) print_uint8tensor_impl(#tensor, (tensor))
-
-// 统一的DSP调试输出：根据配置选择输出方式
-#ifndef DSP_LOG
-#define DSP_LOG(fmt, ...) do { \
-        char _dsp_log_buf[192]; \
-        int _len = snprintf(_dsp_log_buf, sizeof(_dsp_log_buf), fmt, ##__VA_ARGS__); \
-        if (_len < 0) { \
-            /* snprintf 出错，仍尝试输出固定标记 */ \
-            if (DSP_LOG_USE_RT_HW_CONSOLE) { \
-                rt_hw_console_output("[DSP_LOG snprintf error]\n"); \
-            } else { \
-                printf("[DSP_LOG snprintf error]\n"); \
-            } \
-        } else { \
-            /* 若内容被截断，添加省略标记 */ \
-            if (_len >= (int)sizeof(_dsp_log_buf)) { \
-                _dsp_log_buf[sizeof(_dsp_log_buf)-5] = '.'; \
-                _dsp_log_buf[sizeof(_dsp_log_buf)-4] = '.'; \
-                _dsp_log_buf[sizeof(_dsp_log_buf)-3] = '.'; \
-                _dsp_log_buf[sizeof(_dsp_log_buf)-2] = '\n'; \
-                _dsp_log_buf[sizeof(_dsp_log_buf)-1] = '\0'; \
-            } \
-            if (DSP_LOG_USE_RT_HW_CONSOLE) { \
-                rt_hw_console_output(_dsp_log_buf); \
-            } else { \
-                printf(_dsp_log_buf); \
-            } \
-        } \
-    } while(0)
+#else
+#define print_uint8tensor(tensor) ((void)0)
 #endif
 
 int buffer_conv_1024[1024];
@@ -98,36 +70,60 @@ void print_uint8tensor_impl(const char *name, struct Uint8Tensor *input)
     if (input->type == 1) {
         // int8_t type
         int8_t *data = (int8_t *)input->data_location;
+        char line_buf[128];
+        int pos = 0;
+        line_buf[0] = '\0';
+
         for (int i = 0; i < print_elements; i++) {
-            DSP_LOG("%d", data[i]);
+            if (pos > 100) {
+                DSP_LOG("%s\n", line_buf);
+                pos = 0;
+                line_buf[0] = '\0';
+            }
+
+            pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, "%d", data[i]);
+
             if ((i + 1) % input->channel == 0) {
-                DSP_LOG("\n");
+                DSP_LOG("%s\n", line_buf);
+                pos = 0;
+                line_buf[0] = '\0';
             } else if ((i + 1) % 16 == 0) {
-                DSP_LOG(" | ");
+                pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, " | ");
             } else {
-                DSP_LOG(" ");
+                pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, " ");
             }
         }
-        // 添加结尾换行，以防限制切在中间
-        if (print_elements % input->channel != 0) {
-            DSP_LOG("\n");
+        if (pos > 0) {
+            DSP_LOG("%s\n", line_buf);
         }
     } else {
         // uint8_t type
         uint8_t *data = input->data_location;
+        char line_buf[128];
+        int pos = 0;
+        line_buf[0] = '\0';
+
         for (int i = 0; i < print_elements; i++) {
-            DSP_LOG("%3u", data[i]);
+            if (pos > 100) {
+                DSP_LOG("%s\n", line_buf);
+                pos = 0;
+                line_buf[0] = '\0';
+            }
+
+            pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, "%3u", data[i]);
+
             if ((i + 1) % input->channel == 0) {
-                DSP_LOG("\n");
+                DSP_LOG("%s\n", line_buf);
+                pos = 0;
+                line_buf[0] = '\0';
             } else if ((i + 1) % 16 == 0) {
-                DSP_LOG(" | ");
+                pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, " | ");
             } else {
-                DSP_LOG(" ");
+                pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, " ");
             }
         }
-        // 添加结尾换行，以防限制切在中间
-        if (print_elements % input->channel != 0) {
-            DSP_LOG("\n");
+        if (pos > 0) {
+            DSP_LOG("%s\n", line_buf);
         }
     }
     DSP_LOG("========================================\n\n");
@@ -1099,7 +1095,20 @@ void conv_fr(struct Uint8Tensor *input, struct Uint8Tensor *output, struct Struc
 
 
 
-int fr_run(float* result, uint8_t *rgb_data){
+// Simple square root approximation (Newton's method)
+static float dsp_sqrtf(float number) {
+    if (number <= 0.0f) return 0.0f;
+    float x = number;
+    float y = 1.0f;
+    float e = 0.00001f; // Precision
+    while (x - y > e) {
+        x = (x + y) / 2.0f;
+        y = number / x;
+    }
+    return x;
+}
+
+int fr_run(int8_t* result, uint8_t *rgb_data){
 	struct Structure structure_conv1 = {24, 3, 3, 1, 1, 2, 2, 1, 0, 0, 0, 0, 1, 0, 1};
 	struct Structure structure_conv2 = {24, 3, 3, 1, 1, 2, 2, 1, 1, 0, 0, 0, 1, 0, 0};
 	struct Structure structure_conv3 = {24, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0};
@@ -1483,22 +1492,40 @@ int fr_run(float* result, uint8_t *rgb_data){
     int inputlength = blob1.channel*blob1.height*blob1.width;
     blob1.data_location= (uint8_t*)rgb_data;
     
-    DSP_LOG("Before rgb_data change (first 128 bytes):\n");
-    for (int i = 0; i < 128 && i < inputlength; i++) {
-        DSP_LOG("%02X ", rgb_data[i]);
-        if ((i + 1) % 16 == 0) DSP_LOG("\n");
-    }
-    DSP_LOG("\n");
+    // DSP_LOG("Before rgb_data change (first 128 bytes):\n");
+    // {
+    //     char line_buf[128];
+    //     int pos = 0;
+    //     line_buf[0] = '\0';
+    //     for (int i = 0; i < 128 && i < inputlength; i++) {
+    //         pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, "%02X ", rgb_data[i]);
+    //         if ((i + 1) % 16 == 0) {
+    //             DSP_LOG("%s\n", line_buf);
+    //             pos = 0;
+    //             line_buf[0] = '\0';
+    //         }
+    //     }
+    //     if (pos > 0) DSP_LOG("%s\n", line_buf);
+    // }
 
     for(int i=0;i<inputlength;i++)
         blob1.data_location[i] = rgb_data[i]-127;
 
-    DSP_LOG("After rgb_data change (first 128 bytes):\n");
-    for (int i = 0; i < 128 && i < inputlength; i++) {
-        DSP_LOG("%02X ", blob1.data_location[i]);
-        if ((i + 1) % 16 == 0) DSP_LOG("\n");
-    }
-    DSP_LOG("\n");
+    // DSP_LOG("After rgb_data change (first 128 bytes):\n");
+    // {
+    //     char line_buf[128];
+    //     int pos = 0;
+    //     line_buf[0] = '\0';
+    //     for (int i = 0; i < 128 && i < inputlength; i++) {
+    //         pos += snprintf(line_buf + pos, sizeof(line_buf) - pos, "%02X ", blob1.data_location[i]);
+    //         if ((i + 1) % 16 == 0) {
+    //             DSP_LOG("%s\n", line_buf);
+    //             pos = 0;
+    //             line_buf[0] = '\0';
+    //         }
+    //     }
+    //     if (pos > 0) DSP_LOG("%s\n", line_buf);
+    // }
 
     print_uint8tensor(&blob1);
 	build_output(&conv_blob1, 1);
@@ -2146,7 +2173,7 @@ int fr_run(float* result, uint8_t *rgb_data){
 
 	release_input(&conv_blob72);
 
-	build_output(&conv_blob73, 1)
+	build_output(&conv_blob73, 1);
 
 	conv_fr(&prelu_blob37, &conv_blob73, &structure_conv73, &weight_conv73);
 
@@ -2183,14 +2210,38 @@ int fr_run(float* result, uint8_t *rgb_data){
 	release_input(&conv1d_blob1);
 	print_uint8tensor(&conv_bn_blob1);
 		
+    // Calculate L2 Norm and Normalize
+    float sum_sq = 0.0f;
+    float temp_float[128];
+    float scale = 0.010845917096839575f;
 
+    // 1. Dequantize to float and calculate sum of squares
+	for(int i=0;i<128;i++){
+       temp_float[i] = (float)scale * (int8_t)conv_bn_blob1.data_location[i];
+       sum_sq += temp_float[i] * temp_float[i];
+    }
 
-//	for(int i=0;i<128;i++){
-//        result[i] = (float)0.010845917096839575*(int8_t)conv_bn_blob1.data_location[i];
-//        DSP_LOG("%d,",conv_bn_blob1.data_location[i]);
-//    }
-//
-//    DSP_LOG("\n");
+    // 2. Calculate Norm
+    float norm = dsp_sqrtf(sum_sq);
+    float inv_norm = (norm > 1e-6f) ? (1.0f / norm) : 0.0f;
+
+    // 3. Normalize, Quantize and output
+    for(int i=0;i<128;i++){
+        float normalized_val = temp_float[i] * inv_norm;
+        // Scale by 127 to maximize int8 range
+        float quantized_val = normalized_val * 127.0f;
+        
+        // Clamp and cast
+        if (quantized_val >= 127.0f) quantized_val = 127.0f;
+        if (quantized_val <= -128.0f) quantized_val = -128.0f;
+        
+        // Rounding
+        result[i] = (int8_t)(quantized_val > 0 ? quantized_val + 0.5f : quantized_val - 0.5f);
+    }
+
+    DSP_LOG("Normalized result (first 10): %d %d %d %d %d %d %d %d %d %d\n", 
+        result[0], result[1], result[2], result[3], result[4], 
+        result[5], result[6], result[7], result[8], result[9]);
 		
 
 	release_input(&conv_bn_blob1);
@@ -2201,14 +2252,14 @@ int fr_run(float* result, uint8_t *rgb_data){
 
 int face_recognition(){
 
-    float result_vev[128] = {0};
+    int8_t result_vev[128] = {0};
 
     DSP_LOG("run into running processer\r\n");
 
     fr_run(result_vev , input_image);
     DSP_LOG("run out running processer\r\n");
 
-    DSP_LOG("%f\n",result_vev[111]);
+    DSP_LOG("%d\n",result_vev[111]);
     
 
 }
