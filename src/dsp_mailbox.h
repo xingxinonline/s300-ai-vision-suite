@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "reg.h"
+#include "dsp_protocol.h"
 
 // Base address of the Mailbox peripheral (example base address, replace as needed)
 #define MAILBOX_BASE_ADDR   DSP_MAILBOX_BASE
@@ -69,5 +70,9 @@ void mailbox_enable_interrupt(uint32_t interrupt_flags);
 void mailbox_disable_interrupt(uint32_t interrupt_flags);
 void mailbox_clear_interrupt(uint32_t interrupt_flags);
 bool mailbox_is_empty(void) ;
+
+// Protocol functions
+void dsp_mailbox_send_evt(uint32_t evt_id, uint32_t arg0, uint32_t arg1, uint32_t arg2);
+void dsp_mailbox_process_command(void);
 
 #endif // __DSP_MAILBOX_H__
