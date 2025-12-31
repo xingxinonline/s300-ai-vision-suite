@@ -208,12 +208,13 @@ void build_output(struct Uint8Tensor *output, unsigned char type){
 //	static int i = 0;
     total_memory += (output->channel)*(output->width)*(output->height);
     output->data_location = (uint8_t *)malloc(sizeof(uint8_t)*(output->channel)*(output->width)*(output->height));
-//    DSP_LOG("build_output %d\n", i++);
+//    DSP_LOG("total_memory %d, alloc size %d\n", total_memory, (output->channel)*(output->width)*(output->height));
 }
 
 void release_input(struct Uint8Tensor *input){
     total_memory -= (input->channel)*(input->width)*(input->height);
     free(input->data_location);
+//    DSP_LOG("total_memory %d, free size %d\n", total_memory, (input->channel)*(input->width)*(input->height));
     return;
 }
 
@@ -472,7 +473,7 @@ void conv_fr1x1xn_psram(struct Uint8Tensor *input, struct Uint8Tensor *output, s
     for(int i=0;i<output->height;i++){
         for(int j=0;j<output->width;j++){
             memcpy(tmp_kernel, input->data_location+i*(step3) + j * input->channel, input->channel);
-
+            DSP_LOG("tmp_psram_addr cpy start\n");
             for(int k=0;k<output->channel;k++){
                 channel_sum = 0;
                 weight_index = k*input->channel;
@@ -487,7 +488,7 @@ void conv_fr1x1xn_psram(struct Uint8Tensor *input, struct Uint8Tensor *output, s
                     channel_sum += (int8_t)tmp_kernel[f] * (int8_t)temp_buf[f];
                 position_result[k] = channel_sum;
             }
-
+            DSP_LOG("tmp_psram_addr cpy finish\n");
 
             
             for(int s=0;s<output->channel;s++){
@@ -1530,13 +1531,21 @@ int fr_run(int8_t* result, uint8_t *rgb_data){
     print_uint8tensor(&blob1);
 	build_output(&conv_blob1, 1);
 	//conv_rgb_dsp(&blob1, &conv_blob1, &structure_conv1, &weight_conv1);
+    // uint32_t start_cycles = get_cycles_start();
 	conv_fr_rgb(&blob1, &conv_blob1, &structure_conv1, &weight_conv1);
+    // uint32_t end_cycles = get_cycles_end();
+
+    // DSP_LOG("conv_fr_rgb cycles: %u\n", end_cycles - start_cycles);
 	print_uint8tensor(&conv_blob1);
 
 	//release_input(&blob1);
 
 	build_output(&prelu_blob1, 1);
+    // start_cycles = get_cycles_start();
 	lookup(&conv_blob1, &prelu_blob1, &params_prelu1);
+    // end_cycles = get_cycles_end();
+
+    // DSP_LOG("lookup cycles: %u\n", end_cycles - start_cycles);
 	release_input(&conv_blob1);
     print_uint8tensor(&prelu_blob1);
 
@@ -2196,12 +2205,15 @@ int fr_run(int8_t* result, uint8_t *rgb_data){
 
 	build_output(&conv1d_blob1, 1);
 
-
+//    uint32_t start_cycles = get_cycles_start();
 	// conv_fr1x1xn(&prelu_blob39, &conv1d_blob1, &structure_conv1d1, &weight_conv1d1);
 	conv_fr1x1xn_psram(&prelu_blob39, &conv1d_blob1, &structure_conv1d1, &weight_conv1d1);
+//    uint32_t end_cycles = get_cycles_end();
+
+//    DSP_LOG("Conv1x1xN cycles: %u\n", end_cycles - start_cycles);
 
 	print_uint8tensor(&conv1d_blob1);
-	release_input(&conv1d_blob1);
+	release_input(&prelu_blob39);
 
 	build_output(&conv_bn_blob1, 1);
 
