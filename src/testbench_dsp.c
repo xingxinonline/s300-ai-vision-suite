@@ -531,7 +531,7 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
 // 处理一帧：前处理->推理->坐标还原->通知
 static void process_wframe1_if_flagged(PipelineContext* ctx) {
     if (wframe1_flag) {
-        rt_kprintf("wframe1 read start\n");
+        // rt_kprintf("wframe1 read start\n");
         wframe1_flag = 0;
 
         // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
@@ -553,7 +553,7 @@ static void process_wframe1_if_flagged(PipelineContext* ctx) {
 
         // 可选：处理wframe0标志
         if (wframe0_flag) {
-            rt_kprintf("wframe0 read start\n");
+            // rt_kprintf("wframe0 read start\n");
             wframe0_flag = 0;
             REG32(DSP_MM_BASE + 0x38) = 1;
         }
