@@ -242,17 +242,20 @@ void conv_fr_split(struct Uint8Tensor *input, struct Uint8Tensor *output, struct
 
     for(int i=0;i<input_h;i++){
         for(int j=0;j<input_w;j++){
-            memcpy(temp_memory_in, input->data_location + i*input_w*input_c + j*input_c, input_c);
+            // memcpy(temp_memory_in, input->data_location + i*input_w*input_c + j*input_c, input_c);
+            uint8_t *input_ptr = input->data_location + i*input_w*input_c + j*input_c;
+            uint8_t *output_ptr = output->data_location + i*input_w*output_c + j*output_c;
+
             for(int k=0;k<output_c;k++){
-                int result = ((temp_memory_in[index_out_from_in[k]]*127 + (1<<(shift-1))) >> shift);
+                int result = (( (int8_t)input_ptr[index_out_from_in[k]] * 127 + (1<<(shift-1))) >> shift);
                 if(result > max){
                     result = max;
                 }else if(result < min){
                     result = min;
                 }
-                temp_memory_out[k] = (int8_t)result;
+                output_ptr[k] = (int8_t)result;
             }
-            memcpy(output->data_location + i*input_w*output_c + j*output_c,temp_memory_out,output_c);
+            // memcpy(output->data_location + i*input_w*output_c + j*output_c,temp_memory_out,output_c);
         }
     }
 
@@ -316,7 +319,7 @@ void conv1x1xn_dsp(struct Uint8Tensor *input, struct Uint8Tensor *output, struct
 		uint2xN_t shift_vec_lo = *(uint2xN_t*)temp_shift_lo;
 		uint2xN_t shift_vec_hi = *(uint2xN_t*)temp_shift_hi;
 
-		unsigned char tmp_kernel[1024] = {0};
+		// unsigned char tmp_kernel[1024] = {0};
 		int tmp_input1 = 0;
 		int tmp_input2 = 0;
 		int tmp_input3 = 0;
@@ -328,7 +331,8 @@ void conv1x1xn_dsp(struct Uint8Tensor *input, struct Uint8Tensor *output, struct
 
 		for(int i=0;i<output->height;i++){
 			for(int j=0;j<output->width;j++){
-				memcpy(tmp_kernel, input->data_location+count0,  i_c);
+				// memcpy(tmp_kernel, input->data_location+count0,  i_c);
+				uint8_t *input_ptr = input->data_location + count0;
 				count0 += i_c;
 
 				int4xN_t temp_result1 = {0};
@@ -339,10 +343,14 @@ void conv1x1xn_dsp(struct Uint8Tensor *input, struct Uint8Tensor *output, struct
 
 				for(int ii=0; ii<i_c; ii += 16){
 
-					memcpy(&tmp_input1, tmp_kernel + ii, 4);
-					memcpy(&tmp_input2, tmp_kernel + ii + 4, 4);
-					memcpy(&tmp_input3, tmp_kernel + ii + 8, 4);
-					memcpy(&tmp_input4, tmp_kernel + ii + 12, 4);
+					// memcpy(&tmp_input1, tmp_kernel + ii, 4);
+					// memcpy(&tmp_input2, tmp_kernel + ii + 4, 4);
+					// memcpy(&tmp_input3, tmp_kernel + ii + 8, 4);
+					// memcpy(&tmp_input4, tmp_kernel + ii + 12, 4);
+					tmp_input1 = *(int *)(input_ptr + ii);
+					tmp_input2 = *(int *)(input_ptr + ii + 4);
+					tmp_input3 = *(int *)(input_ptr + ii + 8);
+					tmp_input4 = *(int *)(input_ptr + ii + 12);
 
 					temp_result1 = _vmac5((weight_out[ii + 0]),(weight_out[ii + 1]),(weight_out[ii + 2]),(weight_out[ii + 3]), tmp_input1,temp_result1);
 					temp_result2 = _vmac5((weight_out[ii + 4]),(weight_out[ii + 5]),(weight_out[ii + 6]),(weight_out[ii + 7]), tmp_input2,temp_result2);
@@ -395,7 +403,7 @@ void conv_fr1x1xn(struct Uint8Tensor *input, struct Uint8Tensor *output, struct 
     
 	
     memset(buffer_conv_1024,0,1024*4);
-    uint8_t tmp_kernel[1024] = {0};
+    // uint8_t tmp_kernel[1024] = {0};
 
     int *position_result = buffer_conv_1024;
     int step3 = input->width*input->channel;
@@ -404,36 +412,54 @@ void conv_fr1x1xn(struct Uint8Tensor *input, struct Uint8Tensor *output, struct 
 
     for(int i=0;i<output->height;i++){
         for(int j=0;j<output->width;j++){
-            memcpy(tmp_kernel, input->data_location+i*(step3) + j * input->channel, input->channel);
-
-            for(int k=0;k<output->channel;k++){
-                channel_sum = 0;
-                weight_index = k*input->channel;
-                for(int f=0;f<input->channel;f++)
-                    channel_sum += (int8_t)tmp_kernel[f] * (int8_t)weight->weight[weight_index+f];
-                position_result[k] = channel_sum;
-            }
-
-
-            
-            for(int s=0;s<output->channel;s++){
-                position_result[s] += bias_local[s];
-                int shift = (conv_params->offset_per_channel)?weight->offset_per_channel[s]:conv_params->offset;
-                position_result[s] = ((position_result[s] + (1<<(shift-1))) >> shift);
-            }
-
-            int max=127,min=-128;
+            // memcpy(tmp_kernel, input->data_location+i*(step3) + j * input->channel, input->channel);
+            uint8_t *input_ptr = input->data_location+i*(step3) + j * input->channel;
             int position000 = i*(output->width*output->channel) + j*(output->channel);
 
-            for(int s=0;s<output->channel;s++){
-                int kk = position000 + s;
-                if(position_result[s] > max){
-                    output->data_location[kk] = max;
-                }else if(position_result[s] < min){
-                    output->data_location[kk] = min;
-                }else{
-                    output->data_location[kk] = position_result[s];
+            int k = 0;
+            // 4路循环展开
+            for(; k <= output->channel - 4; k+=4) {
+                int sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
+                int w_idx0 = k * input->channel;
+                int w_idx1 = (k+1) * input->channel;
+                int w_idx2 = (k+2) * input->channel;
+                int w_idx3 = (k+3) * input->channel;
+                
+                for(int f=0; f<input->channel; f++) {
+                    int8_t val = (int8_t)input_ptr[f];
+                    sum0 += val * (int8_t)weight->weight[w_idx0 + f];
+                    sum1 += val * (int8_t)weight->weight[w_idx1 + f];
+                    sum2 += val * (int8_t)weight->weight[w_idx2 + f];
+                    sum3 += val * (int8_t)weight->weight[w_idx3 + f];
                 }
+                
+                // 后处理
+                int sums[4] = {sum0, sum1, sum2, sum3};
+                for(int sub=0; sub<4; sub++) {
+                    int current_k = k + sub;
+                    int val = sums[sub] + bias_local[current_k];
+                    int shift = (conv_params->offset_per_channel)?weight->offset_per_channel[current_k]:conv_params->offset;
+                    val = ((val + (1<<(shift-1))) >> shift);
+                    if(val > 127) val = 127;
+                    else if(val < -128) val = -128;
+                    output->data_location[position000 + current_k] = val;
+                }
+            }
+            
+            // 处理剩余通道
+            for(; k < output->channel; k++) {
+                int sum = 0;
+                int w_idx = k * input->channel;
+                for(int f=0; f<input->channel; f++) {
+                    sum += (int8_t)input_ptr[f] * (int8_t)weight->weight[w_idx + f];
+                }
+                // 后处理
+                int val = sum + bias_local[k];
+                int shift = (conv_params->offset_per_channel)?weight->offset_per_channel[k]:conv_params->offset;
+                val = ((val + (1<<(shift-1))) >> shift);
+                if(val > 127) val = 127;
+                else if(val < -128) val = -128;
+                output->data_location[position000 + k] = val;
             }
         }
     }
@@ -473,7 +499,7 @@ void conv_fr1x1xn_psram(struct Uint8Tensor *input, struct Uint8Tensor *output, s
     for(int i=0;i<output->height;i++){
         for(int j=0;j<output->width;j++){
             memcpy(tmp_kernel, input->data_location+i*(step3) + j * input->channel, input->channel);
-            DSP_LOG("tmp_psram_addr cpy start\n");
+//            DSP_LOG("tmp_psram_addr cpy start\n");
             for(int k=0;k<output->channel;k++){
                 channel_sum = 0;
                 weight_index = k*input->channel;
@@ -488,7 +514,7 @@ void conv_fr1x1xn_psram(struct Uint8Tensor *input, struct Uint8Tensor *output, s
                     channel_sum += (int8_t)tmp_kernel[f] * (int8_t)temp_buf[f];
                 position_result[k] = channel_sum;
             }
-            DSP_LOG("tmp_psram_addr cpy finish\n");
+//            DSP_LOG("tmp_psram_addr cpy finish\n");
 
             
             for(int s=0;s<output->channel;s++){
@@ -524,7 +550,7 @@ void conv_fr1x1xn_psram(struct Uint8Tensor *input, struct Uint8Tensor *output, s
 }
 
 
-
+/* 
 void conv_fr_rgb(struct Uint8Tensor *input, struct Uint8Tensor *output, struct Structure *conv_params, struct ConvParameter *weight){
 
 //	static int i = 0;
@@ -539,12 +565,12 @@ void conv_fr_rgb(struct Uint8Tensor *input, struct Uint8Tensor *output, struct S
 
 //    DSP_LOG("conv_fr_rgb %d \n", i++);
 
-    memset(buffer_conv_u8,0,sizeof(buffer_conv_u8));
-    memset(buffer_conv_1024,0,1024*4);
+    // memset(buffer_conv_u8,0,sizeof(buffer_conv_u8));
+    // memset(buffer_conv_1024,0,1024*4);
 
 //    DSP_LOG("conv_fr_rgb %d \n", i++);
 
-    uint8_t *tmp_kernel = buffer_conv_u8;
+    // uint8_t *tmp_kernel = buffer_conv_u8;
 
     int *position_result = buffer_conv_1024;
 
@@ -552,10 +578,10 @@ void conv_fr_rgb(struct Uint8Tensor *input, struct Uint8Tensor *output, struct S
     int step2 = kernel_w*input->channel;
     int step3 = input->width*input->channel;
 
-    int16_t weight_local[step1*output->channel];
-    for(int i=0;i<step1*output->channel;i++){
-        weight_local[i] = weight->weight[i];
-    }
+    // int16_t weight_local[step1*output->channel];
+    // for(int i=0;i<step1*output->channel;i++){
+    //     weight_local[i] = weight->weight[i];
+    // }
 
 //    DSP_LOG("conv_fr_rgb %d \n", i++);
 
@@ -575,43 +601,88 @@ void conv_fr_rgb(struct Uint8Tensor *input, struct Uint8Tensor *output, struct S
 
     for(int i=0;i<output->height;i++){
         for(int j=0;j<output->width;j++){   
-            memset(tmp_kernel, 0, 27);
-            for(int s=0;s<3;s++){
-                for(int t=0;t<3;t++){
-//                	DSP_LOG("conv_fr_rgb i=%d j=%d s=%d t=%d \n", i, j, s, t);
-                    position_h = i * conv_params->stride_h + s - conv_params->pad_h;
-                    position_w = j * conv_params->stride_w + t - conv_params->pad_w;
-                    
-                    if(position_h < 0 || position_w < 0 || position_h >= input->height || position_w >= input->width){
-                        continue;
-                    }
-                    else{
-                        int data_index = position_h*(step3) + position_w * input->channel;
-//                        DSP_LOG("tmp_kernel addr %p\n", tmp_kernel);
-                        memcpy(tmp_kernel + s*9 + t*3,input->data_location+data_index,3);
-                    }
+            
+            int position000 = i*(output->width*output->channel) + j*(output->channel);
+            int oc = 0;
 
+            // 4路循环展开，利用寄存器并行计算
+            for (; oc <= output->channel - 4; oc += 4) {
+                int sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
+                
+                for(int s=0;s<3;s++){
+                    int position_h = i * conv_params->stride_h + s - conv_params->pad_h;
+                    if (position_h < 0 || position_h >= input->height) continue;
+                    
+                    for(int t=0;t<3;t++){
+                        int position_w = j * conv_params->stride_w + t - conv_params->pad_w;
+                        if (position_w < 0 || position_w >= input->width) continue;
+
+                        int data_index = position_h*(step3) + position_w * input->channel;
+                        uint8_t *pixel_ptr = input->data_location + data_index;
+                        
+                        int8_t p0 = (int8_t)pixel_ptr[0];
+                        int8_t p1 = (int8_t)pixel_ptr[1];
+                        int8_t p2 = (int8_t)pixel_ptr[2];
+                        
+                        int kernel_idx_base = s*9 + t*3;
+                        
+                        // Channel 0
+                        int w_idx0 = oc * 27 + kernel_idx_base;
+                        sum0 += p0 * (int8_t)weight->weight[w_idx0] + p1 * (int8_t)weight->weight[w_idx0+1] + p2 * (int8_t)weight->weight[w_idx0+2];
+                        
+                        // Channel 1
+                        int w_idx1 = (oc+1) * 27 + kernel_idx_base;
+                        sum1 += p0 * (int8_t)weight->weight[w_idx1] + p1 * (int8_t)weight->weight[w_idx1+1] + p2 * (int8_t)weight->weight[w_idx1+2];
+
+                        // Channel 2
+                        int w_idx2 = (oc+2) * 27 + kernel_idx_base;
+                        sum2 += p0 * (int8_t)weight->weight[w_idx2] + p1 * (int8_t)weight->weight[w_idx2+1] + p2 * (int8_t)weight->weight[w_idx2+2];
+
+                        // Channel 3
+                        int w_idx3 = (oc+3) * 27 + kernel_idx_base;
+                        sum3 += p0 * (int8_t)weight->weight[w_idx3] + p1 * (int8_t)weight->weight[w_idx3+1] + p2 * (int8_t)weight->weight[w_idx3+2];
+                    }
+                }
+                
+                // 合并后处理
+                int res[4] = {sum0, sum1, sum2, sum3};
+                for (int k=0; k<4; k++) {
+                    int current_oc = oc + k;
+                    int val = res[k] + bias_local[current_oc];
+                    int shift = weight->offset_per_channel[current_oc];
+                    val = ((val + (1<<(shift-1))) >> shift);
+                    val = (val > -128) ? val : -128;
+                    output->data_location[position000 + current_oc] = (val < 127) ? val : 127;
                 }
             }
 
-            
-            for(int s=0;s<output->channel;s++){
-                int temp = 0;
-                int ssss = 27*s;
-                for(int t=0;t<step1;t++){
-                    temp += (int8_t)(tmp_kernel[t]) * (int8_t)weight->weight[ssss+t];
-                }
-                position_result[s] = temp;
-            } 
-            
-            int position000 = i*(output->width*output->channel) + j*(output->channel);
+            // 处理剩余通道
+            for (; oc < output->channel; oc++) {
+                int sum = 0;
+                for(int s=0;s<3;s++){
+                    int position_h = i * conv_params->stride_h + s - conv_params->pad_h;
+                    if (position_h < 0 || position_h >= input->height) continue;
+                    
+                    for(int t=0;t<3;t++){
+                        int position_w = j * conv_params->stride_w + t - conv_params->pad_w;
+                        if (position_w < 0 || position_w >= input->width) continue;
 
-            for(int s=0;s<output->channel;s++){
-                position_result[s] = position_result[s] + bias_local[s];
-                int shift = weight->offset_per_channel[s];
-                position_result[s] = ((position_result[s] + (1<<(shift-1))) >> shift);
-                position_result[s] = (position_result[s]>-128)?position_result[s]:-128;
-                output->data_location[position000 + s] = (position_result[s]<127)?position_result[s]:127;
+                        int data_index = position_h*(step3) + position_w * input->channel;
+                        uint8_t *pixel_ptr = input->data_location + data_index;
+                        int8_t p0 = (int8_t)pixel_ptr[0];
+                        int8_t p1 = (int8_t)pixel_ptr[1];
+                        int8_t p2 = (int8_t)pixel_ptr[2];
+                        
+                        int kernel_idx_base = s*9 + t*3;
+                        int w_idx = oc * 27 + kernel_idx_base;
+                        sum += p0 * (int8_t)weight->weight[w_idx] + p1 * (int8_t)weight->weight[w_idx+1] + p2 * (int8_t)weight->weight[w_idx+2];
+                    }
+                }
+                int val = sum + bias_local[oc];
+                int shift = weight->offset_per_channel[oc];
+                val = ((val + (1<<(shift-1))) >> shift);
+                val = (val > -128) ? val : -128;
+                output->data_location[position000 + oc] = (val < 127) ? val : 127;
             }
         }
     }
@@ -619,8 +690,136 @@ void conv_fr_rgb(struct Uint8Tensor *input, struct Uint8Tensor *output, struct S
 //    DSP_LOG("rgb_conv, %f M MACs, time cost is %f M cycles\n", 1.0*(9*input->channel*output->channel*output->width*output->height)/1000000, 1.0*(start_time - end_time)/1000000);
 }
 
+ */
+
+void conv_fr_rgb(struct Uint8Tensor *input, struct Uint8Tensor *output, struct Structure *conv_params, struct ConvParameter *weight){
+
+    uint32_t start_time = TIMER0_START();
+	int o_c = output->channel;
+
+	assert(output->channel == 24);
+    short temp_weight[32] = {0};
+    short4xN_t weight_vec[56];
+
+    for (int j=0;j<27;j++){//27
+        for(int i=0;i<24;i++){//24
+            temp_weight[i] = weight->weight[i*27+j];
+        }
+        weight_vec[j] = *(short4xN_t*)(temp_weight);
+		weight_vec[27+j] = *(short4xN_t*)(temp_weight+16);
+    }
+
+	int bias_offset = conv_params->bias_offset;
+    int bias_offset_per_channel_flag = conv_params->bias_offset_per_channel;
+    int bias_local[24] = {0};
+	for(int s=0;s<output->channel;s++){
+		if(bias_offset_per_channel_flag){
+			bias_local[s] = (weight->bias[s] << weight->bias_offset_per_channel[s]) + (1<<(weight->offset_per_channel[s]-1));
+		}
+		else{
+			bias_local[s] = (weight->bias[s] << bias_offset)+ (1<<(weight->offset_per_channel[s]-1));
+		}
+	}
+
+	int4xN_t bias_vec0 = *(int4xN_t*)bias_local;
+	int4xN_t bias_vec1 = *(int4xN_t*)(bias_local+16);
+
+	unsigned int temp_shift_lo[8] ={0};
+	unsigned int temp_shift_hi[8] ={0};
+	for(int i=0;i<8;i++){
+		temp_shift_lo[i] = (unsigned int)weight->offset_per_channel[i];
+	}
+	for(int i=8;i<16;i++){
+		temp_shift_hi[i-8] = (unsigned int)weight->offset_per_channel[i];
+	}
+    uint2xN_t shift_vec_lo0 = *(uint2xN_t*)temp_shift_lo;
+    uint2xN_t shift_vec_hi0 = *(uint2xN_t*)temp_shift_hi;
+
+	for(int i=16;i<24;i++){
+		temp_shift_lo[i-16] = (unsigned int)weight->offset_per_channel[i];
+	}
+    uint2xN_t shift_vec_lo1 = *(uint2xN_t*)temp_shift_lo;
+
+	char tmp_kernel[28] = {0};
+	int input_step0 = input->width*input->channel;
 
 
+
+	for(int i=0;i<output->height;i++){
+        for(int j=0;j<output->width;j++){
+			memset(tmp_kernel, 0, 28);
+			memset(tmp_kernel, 0, 28);
+            if(i == 0 && j == 0){
+                for(int s=1;s<3;s++){
+                    for(int t=1;t<3;t++){
+                        int position_h = s - conv_params->pad_h;
+                        int position_w = t - conv_params->pad_w;
+                        int data_index = position_h*(input_step0) + position_w * input->channel;
+                        memcpy(tmp_kernel + s*9 + t*3,input->data_location+data_index,3);
+                    }
+                }
+            }else if(i == 0 && j != 0){
+                int position_h1 = 1 - conv_params->pad_h;
+                int position_h2 = 2 - conv_params->pad_h;
+                int position_w = j * conv_params->stride_w - conv_params->pad_w;
+                int data_index1 = position_h1*(input_step0) + position_w * input->channel;
+                int data_index2 = position_h2*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 9,input->data_location+data_index1,9);
+                memcpy(tmp_kernel + 18,input->data_location+data_index2,9);
+            }else if(i != 0 && j == 0){
+                int position_h1 = i * conv_params->stride_h + 0 - conv_params->pad_h;
+                int position_h2 = i * conv_params->stride_h + 1 - conv_params->pad_h;
+                int position_h3 = i * conv_params->stride_h + 2 - conv_params->pad_h;
+                int position_w = 1 - conv_params->pad_w;
+
+                int data_index = position_h1*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 3,input->data_location+data_index,6);
+                data_index = position_h2*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 12,input->data_location+data_index,6);
+                data_index = position_h3*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 21,input->data_location+data_index,6);
+
+            }else{
+                int position_h1 = i * conv_params->stride_h + 0 - conv_params->pad_h;
+                int position_h2 = i * conv_params->stride_h + 1 - conv_params->pad_h;
+                int position_h3 = i * conv_params->stride_h + 2 - conv_params->pad_h;
+                int position_w = j * conv_params->stride_w + 0 - conv_params->pad_w;
+                int data_index = position_h1*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 0,input->data_location+data_index,9);
+                data_index = position_h2*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 9,input->data_location+data_index,9);
+                data_index = position_h3*(input_step0) + position_w * input->channel;
+                memcpy(tmp_kernel + 18,input->data_location+data_index,9);
+            }
+
+			int4xN_t temp_result0 = bias_vec0;
+			int4xN_t temp_result1 = bias_vec1;
+			for(int k=0;k<27;k++){
+				temp_result0 = _vmac(weight_vec[k],tmp_kernel[k],temp_result0);
+				temp_result1 = _vmac(weight_vec[27+k],tmp_kernel[k],temp_result1);
+
+			}
+
+
+			int2xN_t vec_lo = _vunpack_lo(temp_result0);
+			int2xN_t vec_hi = _vunpack_hi(temp_result0);
+			int4xN_t temp_result5 = _vpack(_vshiftr(vec_lo,shift_vec_lo0),_vshiftr(vec_hi,shift_vec_hi0));
+			short4xN_t temp0 = _vcasts4n(_sat,temp_result5);
+			char4xN_t temp1 = _vcastc4n(_sat, temp0);
+			int position000 = i*(output->width*output->channel) + j*(output->channel);
+            memcpy(output->data_location+position000,&temp1,16);
+
+			vec_lo = _vunpack_lo(temp_result1);
+			temp_result5 = _vpack(_vshiftr(vec_lo,shift_vec_lo1),_vshiftr(vec_hi,shift_vec_hi0));
+			temp0 = _vcasts4n(_sat,temp_result5);
+			temp1 = _vcastc4n(_sat, temp0);
+            memcpy(output->data_location+position000+16,&temp1,8);
+
+		}
+    }
+	uint32_t end_time = TIMER0_END();
+    // printf("rgb_conv, %f M MACs, time cost is %f M cycles\n", 1.0*(9*input->channel*output->channel*output->width*output->height)/1000000, 1.0*(start_time - end_time)/1000000);
+}
 
 void conv_rgb_dsp(struct Uint8Tensor *input, struct Uint8Tensor *output, struct Structure *conv_params, struct ConvParameter *weight){
 
@@ -1531,11 +1730,11 @@ int fr_run(int8_t* result, uint8_t *rgb_data){
     print_uint8tensor(&blob1);
 	build_output(&conv_blob1, 1);
 	//conv_rgb_dsp(&blob1, &conv_blob1, &structure_conv1, &weight_conv1);
-    // uint32_t start_cycles = get_cycles_start();
+//    uint32_t start_cycles = get_cycles_start();
 	conv_fr_rgb(&blob1, &conv_blob1, &structure_conv1, &weight_conv1);
-    // uint32_t end_cycles = get_cycles_end();
-
-    // DSP_LOG("conv_fr_rgb cycles: %u\n", end_cycles - start_cycles);
+//    uint32_t end_cycles = get_cycles_end();
+//
+//    DSP_LOG("conv_fr_rgb cycles: %u\n", (end_cycles - start_cycles) * 16);
 	print_uint8tensor(&conv_blob1);
 
 	//release_input(&blob1);
