@@ -173,10 +173,10 @@ void dsp_mailbox_process_command(void) {
             // Run Face Recognition
             // fr_run writes to g_feature_vector (which are already normalized and quantized int8)
              DSP_LOG("CMD_EXTRACT_FEATURE fr_run start\n");
-            // uint32_t start_cycles = get_cycles_start();
-            fr_run(g_feature_vector, (uint8_t*)image_addr); 
-            // uint32_t end_cycles = get_cycles_end();
-            // DSP_LOG("Face Recognition cycles: %u\n", end_cycles - start_cycles);
+            //   uint32_t start_cycles = get_cycles_start();
+             fr_run(g_feature_vector, (uint8_t*)image_addr);
+            //   uint32_t end_cycles = get_cycles_end();
+            //   DSP_LOG("Face Recognition cycles: %u\n", (end_cycles - start_cycles) * 16);
              DSP_LOG("CMD_EXTRACT_FEATURE fr_run finish\n");
 
             dsp_mailbox_send_evt(EVT_FEATURE_READY, (uint32_t)g_feature_vector, 0, 0);
