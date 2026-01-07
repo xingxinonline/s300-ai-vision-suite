@@ -353,6 +353,13 @@ static void binning_downscale_bgr565_roi(const uint16_t *src, int srcStride,
 // 统一前处理：任意 >=160x120(横) 或 >=120x160(竖) 的RGB565输入 -> 160x120 RGB888 输出
 static void preprocess_to_160x120_rgb(const uint16_t* src, int srcW, int srcH, uint8_t* outRgb888, Transform* tfm)
 {
+//    rt_kprintf("Raw BGR565 Image (%dx%d):\n", srcW, srcH);
+//    for (int i = 0; i < srcW * srcH; i++) {
+//        rt_kprintf("%04x ", src[i]);
+//        if ((i + 1) % 16 == 0) rt_kprintf("\n");
+//    }
+//    rt_kprintf("\n");
+
     int portrait = (srcW < srcH);
     tfm->srcW = srcW; tfm->srcH = srcH;
     tfm->preW = portrait ? 120 : 160;
@@ -384,14 +391,31 @@ static void preprocess_to_160x120_rgb(const uint16_t* src, int srcW, int srcH, u
         scaled565 = bgr565_buffer1;
     }
 
+    const uint16_t* src565For888 = NULL;
     // 竖屏需要再旋转；横屏则直接转换
     if (portrait) {
         // 现在 scaled565 始终在 bgr565_buffer1，旋转输出到 wframe1 或反之均可
         rotate_ccw90_generic(scaled565, 120, 160, wframe1_buffer);
-        convert_565_to_888_160x120((const uint16_t*)wframe1_buffer, outRgb888);
+        src565For888 = (const uint16_t*)wframe1_buffer;
     } else {
-        convert_565_to_888_160x120((const uint16_t*)scaled565, outRgb888);
+        src565For888 = (const uint16_t*)scaled565;
     }
+
+//    rt_kprintf("RGB565 Image (160x120):\n");
+//    for (int i = 0; i < 160 * 120; i++) {
+//        rt_kprintf("%04x ", src565For888[i]);
+//        if ((i + 1) % 16 == 0) rt_kprintf("\n");
+//    }
+//    rt_kprintf("\n");
+
+    convert_565_to_888_160x120(src565For888, outRgb888);
+
+//    rt_kprintf("RGB888 Image (160x120):\n");
+//    for (int i = 0; i < 160 * 120 * 3; i++) {
+//        rt_kprintf("%02x ", outRgb888[i]);
+//        if ((i + 1) % 32 == 0) rt_kprintf("\n");
+//    }
+//    rt_kprintf("\n");
 }
 
 // ============ 通用坐标逆变换：从CNN(160x120)坐标还原到原图(srcW x srcH) ============
@@ -531,7 +555,7 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
 // 处理一帧：前处理->推理->坐标还原->通知
 static void process_wframe1_if_flagged(PipelineContext* ctx) {
     if (wframe1_flag) {
-        // rt_kprintf("wframe1 read start\n");
+//         rt_kprintf("wframe1 read start\n");
         wframe1_flag = 0;
 
         // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
@@ -553,7 +577,7 @@ static void process_wframe1_if_flagged(PipelineContext* ctx) {
 
         // 可选：处理wframe0标志
         if (wframe0_flag) {
-            // rt_kprintf("wframe0 read start\n");
+//             rt_kprintf("wframe0 read start\n");
             wframe0_flag = 0;
             REG32(DSP_MM_BASE + 0x38) = 1;
         }
@@ -590,7 +614,7 @@ int main(void)
         if (times_cycles % 10000000 == 0) {
             times_count++;
             times_cycles = 0;
-            rt_kprintf("times_count = %ld\n", times_count);
+//            rt_kprintf("times_count = %ld\n", times_count);
             mailbox_setup_if_needed(&ctx);
         }
 
