@@ -40,7 +40,7 @@ def package_binaries(tag):
     if not os.path.exists(RELEASE_DIR):
         os.makedirs(RELEASE_DIR)
 
-    zip_filename = f"dsp_firmware_{tag}.zip"
+    zip_filename = f"ai_firmware_{tag}.zip"
     zip_path = os.path.join(RELEASE_DIR, zip_filename)
 
     print(f"正在打包固件版本: {tag} ...")
