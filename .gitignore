@@ -6,3 +6,4 @@
 /.settings/
 
 release_pkgs/
+output/deploy_all.py
