@@ -1,5 +1,9 @@
 # Build artifacts
-/Debug/
+/Debug/*
+!/Debug/testbench_dsp.ld
 
 # IDE settings
 /.settings/
+
+release_pkgs/
+output/deploy_all.py
