@@ -11,16 +11,16 @@ __internal_code_size  = DEFINED(__internal_code_size ) ? __internal_code_size  :
 __internal_data_start = DEFINED(__internal_data_start) ? __internal_data_start : 0x00000000;
 __internal_data_size  = DEFINED(__internal_data_size ) ? __internal_data_size  : 256k;
 __sram0_start      	  = DEFINED(__sram0_start        ) ? __sram0_start         : 0x44000000;
-__sram0_size          = DEFINED(__sram0_size         ) ? __sram0_size          : 0x40000;
-__sram1_start      	  = DEFINED(__sram1_start        ) ? __sram1_start         : 0x44040000;
+__sram0_size          = DEFINED(__sram0_size         ) ? __sram0_size          : 0x80000;
+__sram1_start      	  = DEFINED(__sram1_start        ) ? __sram1_start         : 0x44080000;
 __sram1_size          = DEFINED(__sram1_size         ) ? __sram1_size          : 0x40000;
 __psram_start      	  = DEFINED(__psram_start        ) ? __psram_start         : 0x80000000;
 __psram_size          = DEFINED(__psram_size         ) ? __psram_size          : 0x800000;
 __rom_start           = DEFINED(__rom_start          ) ? __rom_start           : 0xC0000000;
 __rom_size            = DEFINED(__rom_size           ) ? __rom_size            : 1024M;
 
-__malloc_size         = DEFINED(__malloc_size        ) ? __malloc_size         : 16;
-__stack_size          = DEFINED(__stack_size         ) ? __stack_size          : 8k;
+__malloc_size         = DEFINED(__malloc_size        ) ? __malloc_size         : 4k;
+__stack_size          = DEFINED(__stack_size         ) ? __stack_size          : 4k;
 __arg_sect_size       = DEFINED(__arg_sect_size      ) ? __arg_sect_size       : 512;
 
 MEMORY {
