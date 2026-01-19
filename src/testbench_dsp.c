@@ -282,9 +282,9 @@ static void convert_565_to_888_160x120(const uint16_t* src160x120, uint8_t* dst8
             uint8_t r,g,b;
             unpack_rgb565(src160x120[y*160 + x], &r, &g, &b);
             int o = (y*160 + x)*3;
-            dst888[o+0] = r;
+            dst888[o+0] = b;
             dst888[o+1] = g;
-            dst888[o+2] = b;
+            dst888[o+2] = r;
         }
     }
 }
@@ -350,7 +350,7 @@ static void binning_downscale_bgr565_roi(const uint16_t *src, int srcStride,
     }
 }
 
-// 统一前处理：任意 >=160x120(横) 或 >=120x160(竖) 的RGB565输入 -> 160x120 RGB888 输出
+// 统一前处理：任意 >=160x120(横) 或 >=120x160(竖) 的RGB565输入 -> 160x120 BGR888 输出
 static void preprocess_to_160x120_rgb(const uint16_t* src, int srcW, int srcH, uint8_t* outRgb888, Transform* tfm)
 {
 //    rt_kprintf("Raw BGR565 Image (%dx%d):\n", srcW, srcH);
