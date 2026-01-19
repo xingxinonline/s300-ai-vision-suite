@@ -17,4 +17,9 @@
 #define CEVACSL_XM6_VERSION_PATCH    0
 #endif //VECC_XM6
 
+// APP Version for Gesture Detection
+#define APP_VERSION_MAJOR    1
+#define APP_VERSION_MINOR    1
+#define APP_VERSION_PATCH    0
+
 #endif //__CEVACSL_VERSION_H__
