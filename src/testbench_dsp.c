@@ -276,15 +276,15 @@ static inline void unpack_rgb565(uint16_t p, uint8_t* r, uint8_t* g, uint8_t* b)
     *b = (blue << 3) | (blue >> 2);
 }
 
-static void convert_565_to_888_160x120(const uint16_t* src160x120, uint8_t* dst888 /*bgr320_buffer1*/) {
+static void convert_565_to_bgr888_160x120(const uint16_t* src160x120, uint8_t* dst888 /*bgr320_buffer1*/) {
     for (int y = 0; y < 120; ++y) {
         for (int x = 0; x < 160; ++x) {
             uint8_t r,g,b;
             unpack_rgb565(src160x120[y*160 + x], &r, &g, &b);
             int o = (y*160 + x)*3;
-            dst888[o+0] = r;
+            dst888[o+0] = b;
             dst888[o+1] = g;
-            dst888[o+2] = b;
+            dst888[o+2] = r;
         }
     }
 }
@@ -351,7 +351,7 @@ static void binning_downscale_bgr565_roi(const uint16_t *src, int srcStride,
 }
 
 // 统一前处理：任意 >=160x120(横) 或 >=120x160(竖) 的RGB565输入 -> 160x120 RGB888 输出
-static void preprocess_to_160x120_rgb(const uint16_t* src, int srcW, int srcH, uint8_t* outRgb888, Transform* tfm)
+static void preprocess_to_160x120_bgr(const uint16_t* src, int srcW, int srcH, uint8_t* outRgb888, Transform* tfm)
 {
 //    rt_kprintf("Raw BGR565 Image (%dx%d):\n", srcW, srcH);
 //    for (int i = 0; i < srcW * srcH; i++) {
@@ -408,7 +408,7 @@ static void preprocess_to_160x120_rgb(const uint16_t* src, int srcW, int srcH, u
 //    }
 //    rt_kprintf("\n");
 
-    convert_565_to_888_160x120(src565For888, outRgb888);
+    convert_565_to_bgr888_160x120(src565For888, outRgb888);
 
 //    rt_kprintf("RGB888 Image (160x120):\n");
 //    for (int i = 0; i < 160 * 120 * 3; i++) {
@@ -560,7 +560,7 @@ static void process_wframe1_if_flagged(PipelineContext* ctx) {
 
         // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
         Transform tfm;
-        preprocess_to_160x120_rgb(ctx->wframe1_buffer,
+        preprocess_to_160x120_bgr(ctx->wframe1_buffer,
                                   ctx->snapshot_width,
                                   ctx->snapshot_height,
                                   bgr320_buffer1,
