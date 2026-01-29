@@ -20,7 +20,7 @@ __rom_start           = DEFINED(__rom_start          ) ? __rom_start           :
 __rom_size            = DEFINED(__rom_size           ) ? __rom_size            : 1024M;
 
 __malloc_size         = DEFINED(__malloc_size        ) ? __malloc_size         : 4k;
-__stack_size          = DEFINED(__stack_size         ) ? __stack_size          : 4k;
+__stack_size          = DEFINED(__stack_size         ) ? __stack_size          : 16k;
 __arg_sect_size       = DEFINED(__arg_sect_size      ) ? __arg_sect_size       : 512;
 
 MEMORY {

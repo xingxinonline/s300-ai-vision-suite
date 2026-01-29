@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "reg.h"
+#include "detection_protocol.h"
 
 // Base address of the Mailbox peripheral (example base address, replace as needed)
 #define MAILBOX_BASE_ADDR   DSP_MAILBOX_BASE
@@ -68,6 +69,42 @@ void mailbox_clear_send_fifo(void);
 void mailbox_enable_interrupt(uint32_t interrupt_flags);
 void mailbox_disable_interrupt(uint32_t interrupt_flags);
 void mailbox_clear_interrupt(uint32_t interrupt_flags);
-bool mailbox_is_empty(void) ;
+bool mailbox_is_empty(void);
+
+/*============================================================================
+ * 多目标检测消息发送接口
+ *============================================================================*/
+
+/**
+ * @brief 发送多目标检测结果消息
+ *
+ * Payload 发送 DSP 本地地址（即相对于 PTCM 起始的偏移），
+ * M4 收到后需要加上 DSP_PTCM_M4_BASE_OFFSET (0x44800000) 才能访问。
+ *
+ * @param result 检测结果结构体指针（DSP本地地址）
+ * @return 发送的消息值
+ */
+static inline uint32_t mailbox_send_multi_detection(const DetectionResult_t *result) {
+    // Payload = DSP 本地地址（M4 收到后自己加 0x44800000 偏移）
+    uint32_t dsp_local_addr = (uint32_t)(uintptr_t)result;
+    uint32_t msg;
+
+    if (result->count > 0) {
+        // 发送 DSP 本地地址作为 payload
+        msg = MAILBOX_MSG_TYPE_MULTI | (dsp_local_addr & MAILBOX_MSG_PAYLOAD_MASK);
+    } else {
+        msg = MAILBOX_MSG_TYPE_NO_DETECT;
+    }
+
+    mailbox_write_data(msg);
+    return msg;
+}
+
+/**
+ * @brief 发送无检测结果消息
+ */
+static inline void mailbox_send_no_detection(void) {
+    mailbox_write_data(MAILBOX_MSG_TYPE_NO_DETECT);
+}
 
 #endif // __DSP_MAILBOX_H__
