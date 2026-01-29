@@ -109,5 +109,12 @@ void cropAndConvertImage(const uint16_t *srcImage, uint8_t *dstImage, int srcWid
 // 新增：当预处理已在接收图像阶段完成时，直接用160x120x3(RGB888)做推理
 int face_detect_rgb(const uint8_t *rgb_image_160x120);
 
+// 细化计时统计（供外部读取）
+extern volatile uint32_t g_perf_preprocess_ms; // 前处理耗时 (BGR565→RGB888)
+extern volatile uint32_t g_perf_infer_ms;      // 推理耗时 (48层CNN)
+extern volatile uint32_t g_perf_softmax_ms;    // softmax耗时  
+extern volatile uint32_t g_perf_decode_ms;     // priorbox解码耗时
+extern volatile uint32_t g_perf_nms_ms;        // NMS耗时 (含IOU计算)
+
 #endif
 

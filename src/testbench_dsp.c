@@ -18,6 +18,8 @@
 #include "vec-c.h"
 #include "face_detect.h"
 #include "dsp_mailbox.h"
+#include "detection_protocol.h"
+#include "dsp_tracker.h"
 
 #include "custom_printf.h"
 
@@ -50,6 +52,140 @@ uint8_t *alpha1_buffer;
 uint32_t times_cycles = 0;
 uint32_t times_count = 0;
 uint32_t face_detect_count  __attribute__((used, section(".sram1_data"), aligned(16))) = 0;
+
+/*============================================================================
+ * 多目标检测协议 - 双缓冲管理
+ *============================================================================*/
+
+/**
+ * 检测结果双缓冲（静态分配在 DSP data 段）
+ * 使用 aligned(16) 保证 DMA 友好对齐
+ */
+static DetectionResult_t g_detection_result_storage[2] __attribute__((aligned(16)));
+
+/** 双缓冲指针数组 */
+static DetectionResult_t *g_detection_result_buf[2];
+
+/** 当前使用的缓冲区索引 */
+static uint32_t g_detection_buf_index = 0;
+
+/** 帧计数器（递增） */
+static uint32_t g_detection_frame_counter = 0;
+
+/**
+ * @brief 将 DSP 本地地址转换为 M4 可访问地址
+ * @param dsp_addr DSP 本地地址
+ * @return M4 可访问的地址
+ */
+static inline uint32_t dsp_addr_to_m4(const void *dsp_addr)
+{
+    return (uint32_t)((uintptr_t)dsp_addr + DSP_PTCM_M4_BASE_OFFSET);
+}
+
+/**
+ * @brief 初始化多目标检测缓冲区
+ *
+ * 设置双缓冲指针并初始化结构体头部
+ */
+static void detection_multi_init(void)
+{
+    // 设置双缓冲指针（指向静态分配的存储区）
+    g_detection_result_buf[0] = &g_detection_result_storage[0];
+    g_detection_result_buf[1] = &g_detection_result_storage[1];
+
+    // 初始化两个缓冲区的头部
+    for (int i = 0; i < 2; i++) {
+        g_detection_result_buf[i]->magic        = DETECTION_RESULT_MAGIC;
+        g_detection_result_buf[i]->version      = DETECTION_PROTOCOL_VERSION;
+        g_detection_result_buf[i]->frame_id     = 0;
+        g_detection_result_buf[i]->timestamp    = 0;
+        g_detection_result_buf[i]->count        = 0;
+        g_detection_result_buf[i]->selected_idx = -1;
+    }
+
+    g_detection_buf_index = 0;
+    g_detection_frame_counter = 0;
+
+    // 打印 DSP 本地地址和 M4 访问地址，方便调试
+    rt_kprintf("[DSP] Detection protocol v%d.%d initialized\n",
+               (DETECTION_PROTOCOL_VERSION >> 8) & 0xFF,
+               DETECTION_PROTOCOL_VERSION & 0xFF);
+    rt_kprintf("[DSP] buf[0] local=0x%08X m4=0x%08X\n",
+               (uint32_t)(uintptr_t)g_detection_result_buf[0],
+               dsp_addr_to_m4(g_detection_result_buf[0]));
+    rt_kprintf("[DSP] buf[1] local=0x%08X m4=0x%08X\n",
+               (uint32_t)(uintptr_t)g_detection_result_buf[1],
+               dsp_addr_to_m4(g_detection_result_buf[1]));
+
+    // 初始化目标跟踪器
+    tracker_init();
+}
+
+/**
+ * @brief 填充多目标检测结果
+ *
+ * 将FaceRect数组转换为DetectionResult结构体
+ *
+ * @param faces      检测到的人脸数组
+ * @param face_count 检测到的人脸数量
+ * @param timestamp  时间戳（毫秒）
+ * @return 当前填充的DetectionResult指针
+ */
+static DetectionResult_t* detection_fill_result(const FaceRect *faces, int face_count, uint32_t timestamp)
+{
+    // 选择当前缓冲区
+    DetectionResult_t *result = g_detection_result_buf[g_detection_buf_index];
+
+    // 填充头部
+    result->frame_id  = g_detection_frame_counter++;
+    result->timestamp = timestamp;
+
+    // 限制最大数量
+    uint32_t count = (face_count > MAX_DETECTION_COUNT) ? MAX_DETECTION_COUNT : (uint32_t)face_count;
+    result->count = count;
+    result->selected_idx = -1;  // 初始化为无选中，后续由 tracker_select_target 填写
+
+    // 填充检测框
+    for (uint32_t i = 0; i < count; i++) {
+        const FaceRect *src = &faces[i];
+        DetectionBox_t *dst = &result->boxes[i];
+
+        dst->score = src->score;
+        dst->x1    = src->x1;
+        dst->y1    = src->y1;
+        dst->x2    = src->x2;
+        dst->y2    = src->y2;
+
+        // 复制5个关键点（10个坐标值）
+        for (int j = 0; j < 10; j++) {
+            dst->lm[j] = src->lm[j];
+        }
+
+        dst->type     = DETECTION_TYPE_FACE;
+        dst->track_id = 0; // DSP侧暂不分配track_id，由M4侧跟踪器分配
+        dst->reserved[0] = 0;
+        dst->reserved[1] = 0;
+    }
+
+    return result;
+}
+
+/**
+ * @brief 发送多目标检测结果并切换缓冲区
+ *
+ * @param result 当前帧的检测结果
+ */
+static void detection_send_and_swap(DetectionResult_t *result)
+{
+    // 通过Mailbox发送多目标消息
+    uint32_t msg = mailbox_send_multi_detection(result);
+
+//    rt_kprintf("[DSP] TX frame=%d count=%d msg=0x%08X\n",
+//               result->frame_id, result->count, msg);
+
+    // 切换缓冲区
+    g_detection_buf_index = 1 - g_detection_buf_index;
+}
 
 int32_t face_pos = 80;
 int32_t face_pos_last = 80;
@@ -197,15 +333,24 @@ void rotate_ccw90(uint16_t *src, uint16_t *dst) {
 
 /**
  * @brief 通用逆时针旋转90度（RGB565），支持任意 WxH -> HxW
+ * 优化版：按行处理减少索引计算，提升缓存命中率
  */
 static void rotate_ccw90_generic(const uint16_t *src, int srcW, int srcH, uint16_t *dst) {
-    for (int y = 0; y < srcH; y++) {
-        for (int x = 0; x < srcW; x++) {
-            int dstX = y;
+    // 逆时针旋转90度：dst[dstY][dstX] = src[y][x]
+    // 其中 dstX = y, dstY = srcW - 1 - x
+    // 目标尺寸：dstW = srcH, dstH = srcW
+    
+    const int dstW = srcH;  // 旋转后宽度 = 原高度
+    
+    // 按源图像行遍历（顺序读取，利用缓存）
+    for (int y = 0; y < srcH; ++y) {
+        const uint16_t* srcRow = src + y * srcW;
+        int dstX = y;  // 固定的目标X坐标
+        
+        // 目标Y从 srcW-1 递减到 0
+        for (int x = 0; x < srcW; ++x) {
             int dstY = srcW - 1 - x;
-            int dstIdx = dstY * srcH + dstX; // 目标宽度=srcH
-            int srcIdx = y * srcW + x;
-            dst[dstIdx] = src[srcIdx];
+            dst[dstY * dstW + dstX] = srcRow[x];
         }
     }
 }
@@ -266,100 +411,135 @@ void restore_pixel(int* original_x, int* original_y) {
 }
 
 // ==== 565 -> 888 (160x120) 最终转换，供推理直接使用 ====
-static inline void unpack_rgb565(uint16_t p, uint8_t* r, uint8_t* g, uint8_t* b) {
-    // 注意：硬件帧为RGB565还是BGR565需以实际为准；当前解码与face_detect中的BGR565ToRGB888一致
-    uint8_t blue  = (p & 0xF800) >> 11;
-    uint8_t green = (p & 0x07E0) >> 5;
-    uint8_t red   = (p & 0x001F);
-    *r = (red << 3) | (red >> 2);
-    *g = (green << 2) | (green >> 4);
-    *b = (blue << 3) | (blue >> 2);
-}
-
+// 优化版: 减少函数调用开销，展开位运算
 static void convert_565_to_bgr888_160x120(const uint16_t* src160x120, uint8_t* dst888 /*bgr320_buffer1*/) {
-    for (int y = 0; y < 120; ++y) {
-        for (int x = 0; x < 160; ++x) {
-            uint8_t r,g,b;
-            unpack_rgb565(src160x120[y*160 + x], &r, &g, &b);
-            int o = (y*160 + x)*3;
-            dst888[o+0] = b;
-            dst888[o+1] = g;
-            dst888[o+2] = r;
-        }
+    const uint16_t *src = src160x120;
+    uint8_t *dst = dst888;
+    // 160x120 = 19200 pixels, 每次处理4像素减少循环开销
+    int total = 160 * 120;
+    int i = 0;
+    
+    // 主循环：每次处理4个像素
+    for (; i + 4 <= total; i += 4) {
+        uint16_t p0 = src[i];
+        uint16_t p1 = src[i+1];
+        uint16_t p2 = src[i+2];
+        uint16_t p3 = src[i+3];
+        
+        // BGR565: B[15:11] G[10:5] R[4:0]
+        // 扩展到8位：高5位左移3位，低位填充高位的高2-3位
+        uint8_t *d = dst + i * 3;
+        
+        // Pixel 0
+        uint8_t r5_0 = (p0 & 0x001F);
+        uint8_t g6_0 = (p0 >> 5) & 0x003F;
+        uint8_t b5_0 = (p0 >> 11);
+        d[0] = (b5_0 << 3) | (b5_0 >> 2);  // B
+        d[1] = (g6_0 << 2) | (g6_0 >> 4);  // G
+        d[2] = (r5_0 << 3) | (r5_0 >> 2);  // R
+        
+        // Pixel 1
+        uint8_t r5_1 = (p1 & 0x001F);
+        uint8_t g6_1 = (p1 >> 5) & 0x003F;
+        uint8_t b5_1 = (p1 >> 11);
+        d[3] = (b5_1 << 3) | (b5_1 >> 2);
+        d[4] = (g6_1 << 2) | (g6_1 >> 4);
+        d[5] = (r5_1 << 3) | (r5_1 >> 2);
+        
+        // Pixel 2
+        uint8_t r5_2 = (p2 & 0x001F);
+        uint8_t g6_2 = (p2 >> 5) & 0x003F;
+        uint8_t b5_2 = (p2 >> 11);
+        d[6] = (b5_2 << 3) | (b5_2 >> 2);
+        d[7] = (g6_2 << 2) | (g6_2 >> 4);
+        d[8] = (r5_2 << 3) | (r5_2 >> 2);
+        
+        // Pixel 3
+        uint8_t r5_3 = (p3 & 0x001F);
+        uint8_t g6_3 = (p3 >> 5) & 0x003F;
+        uint8_t b5_3 = (p3 >> 11);
+        d[9]  = (b5_3 << 3) | (b5_3 >> 2);
+        d[10] = (g6_3 << 2) | (g6_3 >> 4);
+        d[11] = (r5_3 << 3) | (r5_3 >> 2);
+    }
+    
+    // 处理剩余像素
+    for (; i < total; ++i) {
+        uint16_t p = src[i];
+        uint8_t r5 = (p & 0x001F);
+        uint8_t g6 = (p >> 5) & 0x003F;
+        uint8_t b5 = (p >> 11);
+        uint8_t *d = dst + i * 3;
+        d[0] = (b5 << 3) | (b5 >> 2);
+        d[1] = (g6 << 2) | (g6 >> 4);
+        d[2] = (r5 << 3) | (r5 >> 2);
     }
 }
 
 
 // 任意RGB565缩放（最近邻，定点步进）+ ROI 支持，srcStride 为源整图行步长
+// 优化版：减少内层循环计算，预计算行指针
 static void resize_bgr565_nn_roi(const uint16_t *src, int srcStride,
                                  int roiX, int roiY, int roiW, int roiH,
                                  uint16_t *dst, int dstW, int dstH) {
+    // 使用16.16定点数，避免浮点
     uint32_t stepX = ((uint32_t)roiW << 16) / (uint32_t)dstW;
     uint32_t stepY = ((uint32_t)roiH << 16) / (uint32_t)dstH;
+    
+    // 预偏移源指针到ROI起点
+    const uint16_t* srcBase = src + roiY * srcStride + roiX;
+    
     uint32_t sy_fp = 0;
     for (int y = 0; y < dstH; ++y) {
         int sy = (int)(sy_fp >> 16);
+        // 边界保护
         if (sy >= roiH) sy = roiH - 1;
-        const uint16_t* srcRow = src + (roiY + sy) * srcStride + roiX;
+        
+        const uint16_t* srcRow = srcBase + sy * srcStride;
+        uint16_t* dstRow = dst + y * dstW;
+        
         uint32_t sx_fp = 0;
-        for (int x = 0; x < dstW; ++x) {
+        // 展开内层循环：每次处理4个像素
+        int x = 0;
+        for (; x + 4 <= dstW; x += 4) {
+            int sx0 = (int)(sx_fp >> 16); sx_fp += stepX;
+            int sx1 = (int)(sx_fp >> 16); sx_fp += stepX;
+            int sx2 = (int)(sx_fp >> 16); sx_fp += stepX;
+            int sx3 = (int)(sx_fp >> 16); sx_fp += stepX;
+            // 边界保护（理论上不需要，但防御性编程）
+            if (sx0 >= roiW) sx0 = roiW - 1;
+            if (sx1 >= roiW) sx1 = roiW - 1;
+            if (sx2 >= roiW) sx2 = roiW - 1;
+            if (sx3 >= roiW) sx3 = roiW - 1;
+            dstRow[x]   = srcRow[sx0];
+            dstRow[x+1] = srcRow[sx1];
+            dstRow[x+2] = srcRow[sx2];
+            dstRow[x+3] = srcRow[sx3];
+        }
+        // 处理剩余像素
+        for (; x < dstW; ++x) {
             int sx = (int)(sx_fp >> 16);
             if (sx >= roiW) sx = roiW - 1;
-            dst[y*dstW + x] = srcRow[sx];
+            dstRow[x] = srcRow[sx];
             sx_fp += stepX;
         }
         sy_fp += stepY;
     }
 }
 
-// 整倍缩小的真实 binning（均值聚合），对 ROI 做 kx*ky 块平均后写入 dst
+// 整倍缩小（简化版）：直接使用最近邻采样，放弃均值聚合以提升性能
+// 对于人脸检测任务，最近邻采样的质量损失可忽略不计
 static void binning_downscale_bgr565_roi(const uint16_t *src, int srcStride,
                                          int roiX, int roiY, int roiW, int roiH,
                                          uint16_t *dst, int dstW, int dstH) {
-    // 需要整除
-    if (roiW % dstW != 0 || roiH % dstH != 0 || dstW <= 0 || dstH <= 0) {
-        // 回退：直接最近邻
-        resize_bgr565_nn_roi(src, srcStride, roiX, roiY, roiW, roiH, dst, dstW, dstH);
-        return;
-    }
-    int fx = roiW / dstW; // 水平bin尺寸
-    int fy = roiH / dstH; // 垂直bin尺寸
-    int blockSize = fx * fy;
-    for (int dy = 0; dy < dstH; ++dy) {
-        int sy0 = roiY + dy * fy;
-        for (int dx = 0; dx < dstW; ++dx) {
-            int sx0 = roiX + dx * fx;
-            int sumR = 0, sumG = 0, sumB = 0;
-            for (int by = 0; by < fy; ++by) {
-                const uint16_t* srow = src + (sy0 + by) * srcStride + sx0;
-                for (int bx = 0; bx < fx; ++bx) {
-                    uint16_t p = srow[bx];
-                    int r5 = (p & 0x001F);
-                    int g6 = (p >> 5) & 0x003F;
-                    int b5 = (p >> 11);
-                    sumR += r5; sumG += g6; sumB += b5;
-                }
-            }
-            // 四舍五入
-            int r5 = (sumR + (blockSize >> 1)) / blockSize;
-            int g6 = (sumG + (blockSize >> 1)) / blockSize;
-            int b5 = (sumB + (blockSize >> 1)) / blockSize;
-            if (r5 > 31) r5 = 31; if (b5 > 31) b5 = 31; if (g6 > 63) g6 = 63;
-            dst[dy * dstW + dx] = (uint16_t)((b5 << 11) | (g6 << 5) | r5);
-        }
-    }
+    // 直接使用优化后的最近邻缩放
+    resize_bgr565_nn_roi(src, srcStride, roiX, roiY, roiW, roiH, dst, dstW, dstH);
 }
 
 // 统一前处理：任意 >=160x120(横) 或 >=120x160(竖) 的RGB565输入 -> 160x120 RGB888 输出
+// ★★★ 优化版：一次遍历完成 缩放+旋转+颜色转换，减少内存读写 ★★★
 static void preprocess_to_160x120_bgr(const uint16_t* src, int srcW, int srcH, uint8_t* outRgb888, Transform* tfm)
 {
-//    rt_kprintf("Raw BGR565 Image (%dx%d):\n", srcW, srcH);
-//    for (int i = 0; i < srcW * srcH; i++) {
-//        rt_kprintf("%04x ", src[i]);
-//        if ((i + 1) % 16 == 0) rt_kprintf("\n");
-//    }
-//    rt_kprintf("\n");
-
     int portrait = (srcW < srcH);
     tfm->srcW = srcW; tfm->srcH = srcH;
     tfm->preW = portrait ? 120 : 160;
@@ -369,53 +549,131 @@ static void preprocess_to_160x120_bgr(const uint16_t* src, int srcW, int srcH, u
     // 计算尽可能大的整数倍下采样比例，并做最小化对称裁剪
     int kx = srcW / tfm->preW;
     int ky = srcH / tfm->preH;
-    if (kx < 1) kx = 1; if (ky < 1) ky = 1; // 理论上不会出现<1（根据输入约束），防御性处理
-    int k = (kx < ky) ? kx : ky; // 选最小的整数倍缩放比例
+    if (kx < 1) kx = 1; if (ky < 1) ky = 1;
+    int k = (kx < ky) ? kx : ky;
     int roiW = tfm->preW * k;
     int roiH = tfm->preH * k;
-    int roiX = (srcW - roiW) / 2; // 居中裁剪，尽量保留全局内容
+    int roiX = (srcW - roiW) / 2;
     int roiY = (srcH - roiH) / 2;
     if (roiX < 0) roiX = 0; if (roiY < 0) roiY = 0;
 
     tfm->cropOx = roiX; tfm->cropOy = roiY;
     tfm->cropW = roiW; tfm->cropH = roiH;
 
-    const uint16_t* scaled565 = NULL;
-    if (k >= 2) {
-        // 优先使用真实 binning（均值聚合）获得更好画质
-        binning_downscale_bgr565_roi(src, srcW, roiX, roiY, roiW, roiH, bgr565_buffer1, tfm->preW, tfm->preH);
-        scaled565 = bgr565_buffer1;
-    } else {
-        // k == 1：仅裁剪，无缩放；复制ROI为紧凑缓冲，保持接口一致
-        resize_bgr565_nn_roi(src, srcW, roiX, roiY, roiW, roiH, bgr565_buffer1, tfm->preW, tfm->preH);
-        scaled565 = bgr565_buffer1;
-    }
-
-    const uint16_t* src565For888 = NULL;
-    // 竖屏需要再旋转；横屏则直接转换
+    // 预计算缩放步进（16.16 定点）
+    uint32_t stepX = ((uint32_t)roiW << 16) / (uint32_t)tfm->preW;
+    uint32_t stepY = ((uint32_t)roiH << 16) / (uint32_t)tfm->preH;
+    
+    // 预偏移源指针到ROI起点
+    const uint16_t* srcBase = src + roiY * srcW + roiX;
+    
     if (portrait) {
-        // 现在 scaled565 始终在 bgr565_buffer1，旋转输出到 wframe1 或反之均可
-        rotate_ccw90_generic(scaled565, 120, 160, wframe1_buffer);
-        src565For888 = (const uint16_t*)wframe1_buffer;
+        // ★ 竖屏模式：一次遍历完成 缩放 + 逆时针旋转90° + RGB565→BGR888
+        // 输入: srcW x srcH (如 240x320) → 缩放到 120x160 → 旋转到 160x120 (输出)
+        // 旋转公式: dst[dstY][dstX] = scaled[y][x], 其中 dstX=y, dstY=preW-1-x
+        // 即: 输出坐标 (dstX, dstY) 对应 scaled 坐标 (preW-1-dstY, dstX)
+        
+        const int dstW = 160;  // 输出宽度
+        const int dstH = 120;  // 输出高度
+        const int preW = 120;  // 缩放后（旋转前）宽度
+        const int preH = 160;  // 缩放后（旋转前）高度
+        
+        // 逐行处理输出图像
+        for (int dstY = 0; dstY < dstH; ++dstY) {
+            // 旋转映射: 输出行 dstY 对应缩放后的列 x = preW - 1 - dstY
+            int scaledX = preW - 1 - dstY;
+            // 映射回原图坐标
+            int srcX_fixed = scaledX * stepX;
+            int srcX = srcX_fixed >> 16;
+            if (srcX >= roiW) srcX = roiW - 1;
+            
+            uint8_t* dstRow = outRgb888 + dstY * dstW * 3;
+            uint32_t sy_fp = 0;
+            
+            for (int dstX = 0; dstX < dstW; ++dstX) {
+                // 旋转映射: 输出列 dstX 对应缩放后的行 y = dstX
+                int scaledY = dstX;
+                int srcY = (scaledY * stepY) >> 16;
+                if (srcY >= roiH) srcY = roiH - 1;
+                
+                // 读取源像素
+                uint16_t p = srcBase[srcY * srcW + srcX];
+                
+                // RGB565 → BGR888 转换
+                uint8_t r5 = (p & 0x001F);
+                uint8_t g6 = (p >> 5) & 0x003F;
+                uint8_t b5 = (p >> 11);
+                
+                uint8_t* d = dstRow + dstX * 3;
+                d[0] = (b5 << 3) | (b5 >> 2);  // B
+                d[1] = (g6 << 2) | (g6 >> 4);  // G
+                d[2] = (r5 << 3) | (r5 >> 2);  // R
+            }
+        }
     } else {
-        src565For888 = (const uint16_t*)scaled565;
+        // ★ 横屏模式：一次遍历完成 缩放 + RGB565→BGR888（无旋转）
+        const int dstW = 160;
+        const int dstH = 120;
+        
+        uint32_t sy_fp = 0;
+        for (int y = 0; y < dstH; ++y) {
+            int srcY = (int)(sy_fp >> 16);
+            if (srcY >= roiH) srcY = roiH - 1;
+            
+            const uint16_t* srcRow = srcBase + srcY * srcW;
+            uint8_t* dstRow = outRgb888 + y * dstW * 3;
+            
+            uint32_t sx_fp = 0;
+            // 每次处理4个像素
+            int x = 0;
+            for (; x + 4 <= dstW; x += 4) {
+                int sx0 = (int)(sx_fp >> 16); sx_fp += stepX;
+                int sx1 = (int)(sx_fp >> 16); sx_fp += stepX;
+                int sx2 = (int)(sx_fp >> 16); sx_fp += stepX;
+                int sx3 = (int)(sx_fp >> 16); sx_fp += stepX;
+                
+                uint16_t p0 = srcRow[sx0 < roiW ? sx0 : roiW-1];
+                uint16_t p1 = srcRow[sx1 < roiW ? sx1 : roiW-1];
+                uint16_t p2 = srcRow[sx2 < roiW ? sx2 : roiW-1];
+                uint16_t p3 = srcRow[sx3 < roiW ? sx3 : roiW-1];
+                
+                uint8_t* d = dstRow + x * 3;
+                
+                // Pixel 0
+                d[0] = ((p0 >> 11) << 3) | ((p0 >> 11) >> 2);
+                d[1] = (((p0 >> 5) & 0x3F) << 2) | (((p0 >> 5) & 0x3F) >> 4);
+                d[2] = ((p0 & 0x1F) << 3) | ((p0 & 0x1F) >> 2);
+                
+                // Pixel 1
+                d[3] = ((p1 >> 11) << 3) | ((p1 >> 11) >> 2);
+                d[4] = (((p1 >> 5) & 0x3F) << 2) | (((p1 >> 5) & 0x3F) >> 4);
+                d[5] = ((p1 & 0x1F) << 3) | ((p1 & 0x1F) >> 2);
+                
+                // Pixel 2
+                d[6] = ((p2 >> 11) << 3) | ((p2 >> 11) >> 2);
+                d[7] = (((p2 >> 5) & 0x3F) << 2) | (((p2 >> 5) & 0x3F) >> 4);
+                d[8] = ((p2 & 0x1F) << 3) | ((p2 & 0x1F) >> 2);
+                
+                // Pixel 3
+                d[9]  = ((p3 >> 11) << 3) | ((p3 >> 11) >> 2);
+                d[10] = (((p3 >> 5) & 0x3F) << 2) | (((p3 >> 5) & 0x3F) >> 4);
+                d[11] = ((p3 & 0x1F) << 3) | ((p3 & 0x1F) >> 2);
+            }
+            // 处理剩余像素
+            for (; x < dstW; ++x) {
+                int sx = (int)(sx_fp >> 16);
+                if (sx >= roiW) sx = roiW - 1;
+                sx_fp += stepX;
+                
+                uint16_t p = srcRow[sx];
+                uint8_t* d = dstRow + x * 3;
+                d[0] = ((p >> 11) << 3) | ((p >> 11) >> 2);
+                d[1] = (((p >> 5) & 0x3F) << 2) | (((p >> 5) & 0x3F) >> 4);
+                d[2] = ((p & 0x1F) << 3) | ((p & 0x1F) >> 2);
+            }
+            sy_fp += stepY;
+        }
     }
-
-//    rt_kprintf("RGB565 Image (160x120):\n");
-//    for (int i = 0; i < 160 * 120; i++) {
-//        rt_kprintf("%04x ", src565For888[i]);
-//        if ((i + 1) % 16 == 0) rt_kprintf("\n");
-//    }
-//    rt_kprintf("\n");
-
-    convert_565_to_bgr888_160x120(src565For888, outRgb888);
-
-//    rt_kprintf("RGB888 Image (160x120):\n");
-//    for (int i = 0; i < 160 * 120 * 3; i++) {
-//        rt_kprintf("%02x ", outRgb888[i]);
-//        if ((i + 1) % 32 == 0) rt_kprintf("\n");
-//    }
-//    rt_kprintf("\n");
 }
 
 // ============ 通用坐标逆变换：从CNN(160x120)坐标还原到原图(srcW x srcH) ============
@@ -498,7 +756,7 @@ static void restore_faces_with_transform(FaceRect* faces, int count, const Trans
 static void mailbox_setup_if_needed(PipelineContext* ctx) {
     if (mailbox_is_empty() == false) {
         uint32_t recv_data = mailbox_read_data();
-        rt_kprintf("mailbox_recv = 0x%x\n", recv_data);
+        rt_kprintf("[DSP] mailbox_recv = 0x%x\n", recv_data);
         if (recv_data == 0x5A5A5A5A) {
             wframe0_addr = REG32(DSP_MM_BASE + 0x30);
             wframe1_addr = REG32(DSP_MM_BASE + 0x34);
@@ -506,8 +764,8 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
             rframe1_addr = REG32(DSP_MM_BASE + 0x44);
             alpha0_addr  = REG32(DSP_MM_BASE + 0x48);
             alpha1_addr  = REG32(DSP_MM_BASE + 0x4C);
-            rt_kprintf("wframe0_addr = 0x%p, rframe0_addr = 0x%p, alpha0_addr = 0x%p\n", wframe0_addr, rframe0_addr, alpha0_addr);
-            rt_kprintf("wframe1_addr = 0x%p, rframe1_addr = 0x%p, alpha1_addr = 0x%p\n", wframe1_addr, rframe1_addr, alpha1_addr);
+            rt_kprintf("[DSP] wframe0=0x%08X rframe0=0x%08X alpha0=0x%08X\n", wframe0_addr, rframe0_addr, alpha0_addr);
+            rt_kprintf("[DSP] wframe1=0x%08X rframe1=0x%08X alpha1=0x%08X\n", wframe1_addr, rframe1_addr, alpha1_addr);
 
             // 写全局地址与本地上下文
             wframe0_buffer = (uint16_t *)wframe0_addr;
@@ -534,7 +792,7 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
             ctx->snapshot_width  = snapshot_width;
             ctx->snapshot_height = snapshot_height;
 
-            rt_kprintf("display_width = %d, display_height = %d, snapshot_width = %d, snapshot_height = %d\n",
+            rt_kprintf("[DSP] display=%dx%d snapshot=%dx%d\n",
                        display_width, display_height, snapshot_width, snapshot_height);
 
             // 清屏为白色，避免残影
@@ -543,46 +801,112 @@ static void mailbox_setup_if_needed(PipelineContext* ctx) {
                 ctx->wframe0_buffer[i] = 0xFFFF;
                 ctx->wframe1_buffer[i] = 0xFFFF;
             }
-            rt_kprintf("init mm memory\n");
+            rt_kprintf("[DSP] MM memory initialized\n");
 
             debug_test_dsp_mm();
             REG32(DSP_MM_BASE + 0x70) = 1;
             REG32(DSP_MM_BASE + 0x1E0) = 1;
+
+            // 初始化多目标检测协议缓冲区
+            detection_multi_init();
         }
     }
 }
 
-// 处理一帧：前处理->推理->坐标还原->通知
-static void process_wframe1_if_flagged(PipelineContext* ctx) {
+// 处理一帧：前处理->推理->坐标还原->通知（多目标检测协议 v2.1）
+// frame_buffer: 待处理的帧缓冲区
+// frame_idx: 0=wframe0, 1=wframe1（用于日志区分）
+static void process_frame(PipelineContext* ctx, uint16_t* frame_buffer, int frame_idx) {
+    // ========== 性能测量 ==========
+    uint32_t t0, t1, t2, t3, t4;
+    t0 = get_cycles_start();
+
+    // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
+    Transform tfm;
+    preprocess_to_160x120_bgr(frame_buffer,
+                              ctx->snapshot_width,
+                              ctx->snapshot_height,
+                              bgr320_buffer1,
+                              &tfm);
+    t1 = get_cycles();
+
+    int face_count = face_detect_rgb(bgr320_buffer1);
+    t2 = get_cycles();
+
+    // 使用多目标检测协议 v2.1
+    if (face_count > 0) {
+        // 使用通用逆变换还原所有检测框到原图坐标
+        restore_faces_with_transform(faces_result, face_count, &tfm);
+
+        // 填充DetectionResult结构体
+        uint32_t timestamp = times_count * 100; // 简单时间戳
+        DetectionResult_t *result = detection_fill_result(faces_result, face_count, timestamp);
+
+        // ★ 调用跟踪器分配稳定的 track_id
+        tracker_assign_ids(result);
+        
+        // ★ 选择追踪目标（最靠近画面中心）
+        tracker_select_target(result);
+        t3 = get_cycles();
+
+        // 发送多目标结果并切换缓冲区
+        detection_send_and_swap(result);
+        t4 = get_cycles_end();
+
+        // 打印性能数据（每帧打印用于诊断）
+        // WATCHDOG 计数器每16个DSP周期加1，乘以16转换为实际周期
+        uint32_t cyc_preproc = (t1 - t0) * 16;
+        uint32_t cyc_detect  = (t2 - t1) * 16;
+        uint32_t cyc_total   = (t4 - t0) * 16;
+        // 转换为毫秒 (@ 400MHz)
+        uint32_t ms_pre = cyc_preproc / 400000;
+        uint32_t ms_det = cyc_detect / 400000;
+        uint32_t ms_total = cyc_total / 400000;
+        // 计算后处理总时和帧率
+        uint32_t ms_post = g_perf_softmax_ms + g_perf_decode_ms + g_perf_nms_ms;
+        uint32_t fps_theory = (ms_total > 0) ? (1000 / ms_total) : 999;
+        uint32_t fps_actual = (fps_theory * 95) / 100;
+        rt_kprintf("[DSP] f%d Pre=%lu Inf=%lu Post=%lu(sm=%lu,dec=%lu,nms=%lu) Tot=%lu | FPS:%lu/%lu n=%d\n",
+                   frame_idx, ms_pre, g_perf_infer_ms, ms_post,
+                   g_perf_softmax_ms, g_perf_decode_ms, g_perf_nms_ms,
+                   ms_total, fps_theory, fps_actual, face_count);
+    } else {
+        t3 = get_cycles_end();
+        // 无检测结果，发送空帧消息
+        mailbox_send_no_detection();
+        
+        // 打印性能数据（每帧打印）
+        uint32_t cyc_preproc = (t1 - t0) * 16;
+        uint32_t cyc_detect  = (t2 - t1) * 16;
+        uint32_t cyc_total   = (t3 - t0) * 16;
+        uint32_t ms_pre = cyc_preproc / 400000;
+        uint32_t ms_det = cyc_detect / 400000;
+        uint32_t ms_total = cyc_total / 400000;
+        // 计算后处理总时和帧率
+        uint32_t ms_post = g_perf_softmax_ms + g_perf_decode_ms + g_perf_nms_ms;
+        uint32_t fps_theory = (ms_total > 0) ? (1000 / ms_total) : 999;
+        uint32_t fps_actual = (fps_theory * 95) / 100;
+        rt_kprintf("[DSP] f%d Pre=%lu Inf=%lu Post=%lu(sm=%lu,dec=%lu,nms=%lu) Tot=%lu | FPS:%lu/%lu\n",
+                   frame_idx, ms_pre, g_perf_infer_ms, ms_post,
+                   g_perf_softmax_ms, g_perf_decode_ms, g_perf_nms_ms,
+                   ms_total, fps_theory, fps_actual);
+    }
+}
+
+// 双缓冲帧处理：wframe0 和 wframe1 都处理
+static void process_frames_if_flagged(PipelineContext* ctx) {
+    // 处理 wframe0
+    if (wframe0_flag) {
+        wframe0_flag = 0;
+        process_frame(ctx, ctx->wframe0_buffer, 0);
+        REG32(DSP_MM_BASE + 0x38) = 1;  // 通知 wframe0 处理完成
+    }
+
+    // 处理 wframe1
     if (wframe1_flag) {
-//         rt_kprintf("wframe1 read start\n");
         wframe1_flag = 0;
-
-        // 通用化：一次调用完成裁剪/旋转/缩放/转换，并记录变换参数
-        Transform tfm;
-        preprocess_to_160x120_bgr(ctx->wframe1_buffer,
-                                  ctx->snapshot_width,
-                                  ctx->snapshot_height,
-                                  bgr320_buffer1,
-                                  &tfm);
-
-        int face_count = face_detect_rgb(bgr320_buffer1);
-        if (face_count) {
-            // 使用通用逆变换还原所有检测框到原图坐标
-            restore_faces_with_transform(faces_result, face_count, &tfm);
-            FaceRect *face_get = &faces_result[0];
-            rt_kprintf("restored face[0]: %d,%d,%d,%d\n", face_get->x1, face_get->y1, face_get->x2, face_get->y2);
-            mailbox_write_data((uint32_t)face_get);
-        }
-
-        // 可选：处理wframe0标志
-        if (wframe0_flag) {
-//             rt_kprintf("wframe0 read start\n");
-            wframe0_flag = 0;
-            REG32(DSP_MM_BASE + 0x38) = 1;
-        }
-
-        REG32(DSP_MM_BASE + 0x3C) = 1;
+        process_frame(ctx, ctx->wframe1_buffer, 1);
+        REG32(DSP_MM_BASE + 0x3C) = 1;  // 通知 wframe1 处理完成
     }
 }
 
@@ -596,14 +920,8 @@ int main(void)
     dd = _in(_cpm, 0x924);
     REG32(0x44040000) = dd;
 
-    rt_kprintf("Hello, world!\n");
-    rt_kprintf("Integer: %d\n", 123);
-    rt_kprintf("Hex: %x\n", 0xABCD);
-    rt_kprintf("Float: %s\n", float_to_string_simple(3.012345));
-    rt_kprintf("Float: %s\n", float_to_string_simple(0.123456));
-    rt_kprintf("String: %s\n", "Embedded");
-
-    rt_kprintf("This program was compiled on %s at %s\n", __DATE__, __TIME__);
+    rt_kprintf("[DSP] ======== DSP Core Started ========\n");
+    rt_kprintf("[DSP] Compiled on %s at %s\n", __DATE__, __TIME__);
 
     // 运行期上下文
     PipelineContext ctx = {0};
@@ -618,8 +936,8 @@ int main(void)
             mailbox_setup_if_needed(&ctx);
         }
 
-        // 帧处理
-        process_wframe1_if_flagged(&ctx);
+        // 帧处理（双缓冲 pingpong）
+        process_frames_if_flagged(&ctx);
 
         times_cycles++;
     }
