@@ -60,6 +60,8 @@ enum MAILBOX_REG_OFFSETS {
 
 // Function Prototypes
 void mailbox_write_data(uint32_t data);
+bool mailbox_write_data_nb(uint32_t data);  // Non-blocking version
+uint32_t mailbox_get_drop_count(void);      // Get dropped message count
 uint32_t mailbox_read_data(void);
 uint32_t mailbox_read(void);
 uint32_t mailbox_get_status(void);
@@ -70,6 +72,7 @@ void mailbox_enable_interrupt(uint32_t interrupt_flags);
 void mailbox_disable_interrupt(uint32_t interrupt_flags);
 void mailbox_clear_interrupt(uint32_t interrupt_flags);
 bool mailbox_is_empty(void);
+bool mailbox_is_full(void);
 
 /*============================================================================
  * 多目标检测消息发送接口
@@ -82,7 +85,7 @@ bool mailbox_is_empty(void);
  * M4 收到后需要加上 DSP_PTCM_M4_BASE_OFFSET (0x44800000) 才能访问。
  *
  * @param result 检测结果结构体指针（DSP本地地址）
- * @return 发送的消息值
+ * @return 发送的消息值（0 表示发送失败/被丢弃）
  */
 static inline uint32_t mailbox_send_multi_detection(const DetectionResult_t *result) {
     // Payload = DSP 本地地址（M4 收到后自己加 0x44800000 偏移）
@@ -96,15 +99,19 @@ static inline uint32_t mailbox_send_multi_detection(const DetectionResult_t *res
         msg = MAILBOX_MSG_TYPE_NO_DETECT;
     }
 
-    mailbox_write_data(msg);
+    // 使用非阻塞发送，避免 M4 处理慢导致 DSP 阻塞
+    if (!mailbox_write_data_nb(msg)) {
+        return 0;  // 发送失败，FIFO 满
+    }
     return msg;
 }
 
 /**
- * @brief 发送无检测结果消息
+ * @brief 发送无检测结果消息（非阻塞）
+ * @return true 发送成功，false 发送失败（FIFO满）
  */
-static inline void mailbox_send_no_detection(void) {
-    mailbox_write_data(MAILBOX_MSG_TYPE_NO_DETECT);
+static inline bool mailbox_send_no_detection(void) {
+    return mailbox_write_data_nb(MAILBOX_MSG_TYPE_NO_DETECT);
 }
 
 #endif // __DSP_MAILBOX_H__

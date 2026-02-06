@@ -3,10 +3,10 @@
  * @brief DSP与M4之间的多目标检测协议定义
  *
  * 本文件定义了DSP侧检测算法与M4侧face_tracker模块的通信协议。
- * 协议版本 v2.1 支持多目标检测，DSP 负责选择目标。
+ * 协议版本 v2.2 增加卡尔曼滤波速度输出 (vx, vy, speed, kf_confidence)。
  *
- * @version 2.1
- * @date 2026-01-29
+ * @version 2.2
+ * @date 2026-01-30
  */
 
 #ifndef __DETECTION_PROTOCOL_H__
@@ -28,8 +28,8 @@ extern "C" {
 /** 检测结果魔数（用于数据校验）"DETF" */
 #define DETECTION_RESULT_MAGIC      0x44455446u
 
-/** 协议版本号 (v2.1 = 0x0201) */
-#define DETECTION_PROTOCOL_VERSION  0x0201u
+/** 协议版本号 (v2.2 = 0x0202) */
+#define DETECTION_PROTOCOL_VERSION  0x0202u
 
 /**
  * @brief DSP内存地址映射说明
@@ -78,14 +78,25 @@ typedef struct __attribute__((packed)) {
     float    lm[10];          /**< 5个关键点坐标 (x0,y0,x1,y1,...,x4,y4) */
     uint8_t  type;            /**< 检测类型 (DetectionType_e) */
     uint8_t  track_id;        /**< 跟踪ID（由跟踪器分配） */
-    uint8_t  reserved[2];     /**< 保留字段 */
-} DetectionBox_t;             /* 64 bytes total */
+    int8_t   vx;              /**< X方向速度 (像素/帧, 卡尔曼滤波输出) */
+    int8_t   vy;              /**< Y方向速度 (像素/帧, 卡尔曼滤波输出) */
+    uint8_t  speed;           /**< 速度大小 (0-255, 用于箭头大小) */
+    uint8_t  kf_confidence;   /**< 卡尔曼滤波置信度 (0-100) */
+    uint8_t  edge_flags;      /**< 边缘位置标记: bit0=左, bit1=右, bit2=上, bit3=下 */
+    uint8_t  reserved;        /**< 保留字段 */
+} DetectionBox_t;             /* 68 bytes total */
+
+/** 边缘标记位定义 */
+#define EDGE_FLAG_LEFT      (1 << 0)  /**< 目标靠近左边缘 */
+#define EDGE_FLAG_RIGHT     (1 << 1)  /**< 目标靠近右边缘 */
+#define EDGE_FLAG_TOP       (1 << 2)  /**< 目标靠近上边缘 */
+#define EDGE_FLAG_BOTTOM    (1 << 3)  /**< 目标靠近下边缘 */
 
 /**
  * @brief 检测结果结构体
  *
  * 包含一帧图像的所有检测结果。
- * 结构体大小为 664 字节（24 字节头 + 10 * 64 字节检测框）。
+ * 结构体大小为 704 字节（24 字节头 + 10 * 68 字节检测框）。
  */
 typedef struct __attribute__((packed)) {
     uint32_t       magic;        /**< 魔数 = DETECTION_RESULT_MAGIC */
@@ -163,8 +174,8 @@ typedef struct __attribute__((packed)) {
 #endif
 
 /* 结构体大小验证（仅在编译时检查） */
-COMPILE_TIME_ASSERT(sizeof(DetectionBox_t) == 64, DetectionBox_size_mismatch);
-COMPILE_TIME_ASSERT(sizeof(DetectionResult_t) == 664, DetectionResult_size_mismatch);
+COMPILE_TIME_ASSERT(sizeof(DetectionBox_t) == 68, DetectionBox_size_mismatch);
+COMPILE_TIME_ASSERT(sizeof(DetectionResult_t) == 704, DetectionResult_size_mismatch);
 
 #ifdef __cplusplus
 }

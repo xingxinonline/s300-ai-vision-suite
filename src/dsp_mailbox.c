@@ -1,5 +1,8 @@
 #include "dsp_mailbox.h"
 
+// 丢帧统计
+static uint32_t g_mailbox_drop_count = 0;
+
 // Function to write data to the mailbox
 void mailbox_write_data(uint32_t data) {
     // Wait until there is space in the FIFO
@@ -7,6 +10,22 @@ void mailbox_write_data(uint32_t data) {
         // Busy wait
     }
     WRDATA_REG = data;
+}
+
+// Function to write data to the mailbox (non-blocking)
+// Returns: true if sent successfully, false if FIFO full (dropped)
+bool mailbox_write_data_nb(uint32_t data) {
+    if (STATUS_REG & STATUS_FULL_FLAG) {
+        g_mailbox_drop_count++;
+        return false;  // FIFO full, drop this message
+    }
+    WRDATA_REG = data;
+    return true;
+}
+
+// Get mailbox drop count
+uint32_t mailbox_get_drop_count(void) {
+    return g_mailbox_drop_count;
 }
 
 // Function to read data from the mailbox
