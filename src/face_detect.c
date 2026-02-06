@@ -252,33 +252,26 @@ void my_softmax(struct FloatTensor *result)
 {
     float a1 = 0;
     float a2 = 0;
-    int count = result->height * result->width * result->channel / 17;
-    float *data = result->data_location;
-    
-    for (int i = 0; i < count; i++)
+    float temp1 = 0;
+    float temp2 = 0;
+    for (int i = 0; i < result->height * result->width * result->channel / 17; i++)
     {
-        a1 = data[i * 17 + 14];
-        a2 = data[i * 17 + 15];
-        // 使用 max-trick 提高数值稳定性，同时减少一次 expf 调用
-        float max_val = (a1 > a2) ? a1 : a2;
-        float diff1 = a1 - max_val;  // diff1 <= 0
-        float diff2 = a2 - max_val;  // diff2 <= 0
-        float temp1 = my_expf(diff1);
-        float temp2 = my_expf(diff2);
-        float sum_inv = 1.0f / (temp1 + temp2);
-        data[i * 17 + 14] = temp1 * sum_inv;
-        data[i * 17 + 15] = temp2 * sum_inv;
-//        if (i < 32)
-//        {
-//          char buffer[6][32];
-//          float_to_string(a1, buffer[0], 32, 6);
-//          float_to_string(a2, buffer[1], 32, 6);
-//          float_to_string(temp1, buffer[2], 32, 6);
-//          float_to_string(temp2, buffer[3], 32, 6);
-//          float_to_string(result->data_location[i * 17 + 14], buffer[4], 32, 6);
-//          float_to_string(result->data_location[i * 17 + 15], buffer[5], 32, 6);
-//          rt_kprintf("i = %d a1:%s a2:%s temp1:%s temp2:%s  result->data_location[14]: %s  result->data_location[15]: %s \n", i, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
-//        }
+        a1 = result->data_location[i * 17 + 14];
+        a2 = result->data_location[i * 17 + 15];
+
+        if(a1 > a2){
+            a2 = a2 - a1;
+            a1 = 0;
+        }
+        else{
+            a1 = a1 - a2;
+            a2 = 0;
+        }
+        temp1 = my_expf(a1);
+        temp2 = my_expf(a2);
+        result->data_location[i * 17 + 14] = temp1 / (temp1 + temp2);
+        result->data_location[i * 17 + 15] = temp2 / (temp1 + temp2);
+
     }
 }
 
@@ -314,25 +307,75 @@ float overlap(FaceRect  *face1, FaceRect  *face2)
 }
 
 
-int nms(FaceRect* faces, FaceRect* faces_result, int face_count, float threshold) {
-    if (face_count <= 0) return 0;
+static int select_top_k(const FaceRect* faces,
+                        int face_count,
+                        int* top_idx,
+                        int k)
+{
+    int top_count = 0;
 
-    int suppressed[face_count];
     for (int i = 0; i < face_count; i++) {
+        float score = faces[i].score;
+
+        int insert_pos = top_count;
+
+        // 找插入位置
+        for (int j = 0; j < top_count; j++) {
+            if (score > faces[top_idx[j]].score) {
+                insert_pos = j;
+                break;
+            }
+        }
+
+        if (insert_pos < k) {
+            // 向后移动
+            int end = (top_count < k) ? top_count : (k - 1);
+            for (int j = end; j > insert_pos; j--) {
+                top_idx[j] = top_idx[j - 1];
+            }
+
+            top_idx[insert_pos] = i;
+
+            if (top_count < k)
+                top_count++;
+        }
+    }
+
+    return top_count;
+}
+
+
+int nms(const FaceRect* faces,
+        FaceRect* faces_result,
+        int face_count,
+        float threshold)
+{
+    if (face_count <= 0)
+        return 0;
+
+    int top_idx[10];
+    int top_count = select_top_k(faces, face_count, top_idx, 10);
+
+    int suppressed[10];
+    for (int i = 0; i < top_count; i++) {
         suppressed[i] = 0;
     }
 
     int result_count = 0;
-    for (int i = 0; i < face_count; i++) {
-        if (suppressed[i] > 0) continue;
 
-        faces_result[result_count++] = faces[i];
+    // NMS on Top-K
+    for (int i = 0; i < top_count; i++) {
+        if (suppressed[i])
+            continue;
 
-        for (int j = i + 1; j < face_count; j++) {
-            if (suppressed[j] > 0) continue;
+        faces_result[result_count++] = faces[top_idx[i]];
 
-            //printf("%d, %d, %f\n",i,j,overlap(&faces[i], &faces[j]));
-            if (overlap(&faces[i], &faces[j]) > threshold) {
+        for (int j = i + 1; j < top_count; j++) {
+            if (suppressed[j])
+                continue;
+
+            if (overlap(&faces[top_idx[i]],
+                        &faces[top_idx[j]]) > threshold) {
                 suppressed[j] = 1;
             }
         }
@@ -384,7 +427,7 @@ int objectdetect_cnn(const unsigned char *rgb_image_data, int width, int height,
     result[1].data_location = buffer5 + 15 * 20 * 51;
     result[2].data_location = buffer5 + 15 * 20 * 51 + 7 * 10 * 34;
     result[3].data_location = buffer5 + 15 * 20 * 51 + 7 * 10 * 34 + 3 * 5 * 34;
-    float confidence = 0.5;
+    float confidence = 0.5;  /* 50% 置信度阈值，过滤低质量检测 */
     
     // ========== 细化计时 ==========
     uint32_t t_start = get_cycles();
@@ -461,7 +504,7 @@ int objectdetect_cnn(const unsigned char *rgb_image_data, int width, int height,
 //          rt_kprintf("result[%d].data_location[%d] = %s,%s,%s,%s\n",j, i, buffer[0],buffer[1],buffer[2],buffer[3]);
             if (face_count < 100)
             {
-                faces[face_count].score = 100 * result[j].data_location[i * 17 + 15];
+                faces[face_count].score = result[j].data_location[i * 17 + 15];  /* 0.0~1.0 */
 //                rt_kprintf("faces[%d].score = %s\n", face_count, float_to_string_simple(faces[face_count].score));
                 faces[face_count].x1 = (int)result[j].data_location[i * 17 + 0];
                 faces[face_count].y1 = (int)result[j].data_location[i * 17 + 1];

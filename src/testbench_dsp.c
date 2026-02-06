@@ -1,4 +1,4 @@
-
+﻿
 /******************************************************************************\
  * Name        : testbench_dsp.c
  * Author      : Your name
@@ -19,7 +19,7 @@
 #include "face_detect.h"
 #include "dsp_mailbox.h"
 #include "detection_protocol.h"
-#include "dsp_tracker.h"
+#include "dsp_tracker_v2.h"  /* 简化版 tracker */
 
 #include "custom_printf.h"
 
@@ -121,10 +121,78 @@ static void detection_multi_init(void)
     tracker_init();
 }
 
+/*============================================================================
+ * 边界框过滤 - DSP 端过滤，确保与 M4 一致
+ *============================================================================*/
+
+/** 最小边界框尺寸（像素），过滤噪声检测 */
+#define DSP_MIN_BOX_SIZE         16
+
+/** 最小置信度阈值（score范围0.0-1.0，0.70表示70%置信度）
+ *  提高阈值以减少小目标误检测 */
+#define DSP_MIN_SCORE_THRESHOLD  0.80f
+
+/** 最小面积百分比阈值（相对于 COORD_SPACE 面积）
+ *  box < 5% 通常是误检测（背景噪声），应过滤 */
+#define DSP_MIN_BOX_AREA_PCT     1
+
+/** 坐标空间尺寸（与 M4 端 FACE_COORD_SPACE 一致） */
+#define DSP_COORD_SPACE_W        160
+#define DSP_COORD_SPACE_H        128
+
 /**
- * @brief 填充多目标检测结果
+ * @brief 校验边界框是否有效
  *
- * 将FaceRect数组转换为DetectionResult结构体
+ * 与 M4 端 validate_box() 保持一致的过滤规则
+ * 注意：score 范围是 0.0-1.0（与 face_detect.c 中 FaceRect.score 一致）
+ *
+ * @param x1, y1, x2, y2 边界框坐标
+ * @param score 置信度 (0.0-1.0)
+ * @return 1 有效，0 无效（应丢弃）
+ */
+static int is_box_valid(int32_t x1, int32_t y1, int32_t x2, int32_t y2, float score)
+{
+    /* 1. 置信度检查（主要过滤手段，score范围0.0-1.0） */
+    if (score < DSP_MIN_SCORE_THRESHOLD) {
+        return 0;
+    }
+
+    /* 2. 坐标顺序校正（确保 x1 < x2, y1 < y2）*/
+    if (x2 < x1) { int32_t t = x1; x1 = x2; x2 = t; }
+    if (y2 < y1) { int32_t t = y1; y1 = y2; y2 = t; }
+
+    /* 3. 坐标范围检查（允许贴边，不做边缘裁剪） */
+    if (x1 < 0 || y1 < 0) {
+        return 0;
+    }
+    if (x2 > DSP_COORD_SPACE_W || y2 > DSP_COORD_SPACE_H) {
+        return 0;
+    }
+
+    /* 4. 最小尺寸检查 */
+    int32_t width  = x2 - x1;
+    int32_t height = y2 - y1;
+    if (width <= DSP_MIN_BOX_SIZE || height <= DSP_MIN_BOX_SIZE) {
+        return 0;
+    }
+
+    /* 5. 最小面积百分比检查（过滤太小的误检测）
+     *    日志显示 box=3%-4% 的目标多为误检测 */
+    int32_t box_area = width * height;
+    int32_t img_area = DSP_COORD_SPACE_W * DSP_COORD_SPACE_H;
+    int32_t area_pct = (box_area * 100) / img_area;
+    if (area_pct < DSP_MIN_BOX_AREA_PCT) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief 填充多目标检测结果（带过滤）
+ *
+ * 将FaceRect数组过滤后转换为DetectionResult结构体
+ * 只保留有效的边界框，确保 M4 端不需要再次过滤
  *
  * @param faces      检测到的人脸数组
  * @param face_count 检测到的人脸数量
@@ -139,16 +207,40 @@ static DetectionResult_t* detection_fill_result(const FaceRect *faces, int face_
     // 填充头部
     result->frame_id  = g_detection_frame_counter++;
     result->timestamp = timestamp;
-
-    // 限制最大数量
-    uint32_t count = (face_count > MAX_DETECTION_COUNT) ? MAX_DETECTION_COUNT : (uint32_t)face_count;
-    result->count = count;
     result->selected_idx = -1;  // 初始化为无选中，后续由 tracker_select_target 填写
 
-    // 填充检测框
-    for (uint32_t i = 0; i < count; i++) {
+    // 限制输入数量
+    int raw_count = (face_count > MAX_DETECTION_COUNT) ? MAX_DETECTION_COUNT : face_count;
+
+    // 调试：打印所有原始检测框的置信度
+    if (raw_count > 0) {
+        rt_kprintf("[DSP:RAW] frame=%lu cnt=%d scores:", 
+                   (unsigned long)g_detection_frame_counter, raw_count);
+        for (int i = 0; i < raw_count; i++) {
+            // score 范围是 0.0-1.0，转换为百分比整数打印
+            int score_pct = (int)(faces[i].score * 100);
+            rt_kprintf(" %d%%", score_pct);
+        }
+        rt_kprintf("\n");
+    }
+
+    // 过滤并填充有效检测框
+    uint32_t valid_count = 0;
+    for (int i = 0; i < raw_count; i++) {
         const FaceRect *src = &faces[i];
-        DetectionBox_t *dst = &result->boxes[i];
+
+        // 边界框验证
+        if (!is_box_valid(src->x1, src->y1, src->x2, src->y2, src->score)) {
+            // 打印被过滤的框信息
+            int score_pct = (int)(src->score * 100);
+            rt_kprintf("[DSP:REJECT] idx=%d score=%d%% box=(%ld,%ld)-(%ld,%ld)\n",
+                       i, score_pct,
+                       (long)src->x1, (long)src->y1, (long)src->x2, (long)src->y2);
+            continue;
+        }
+
+        // 复制有效框
+        DetectionBox_t *dst = &result->boxes[valid_count];
 
         dst->score = src->score;
         dst->x1    = src->x1;
@@ -156,15 +248,28 @@ static DetectionResult_t* detection_fill_result(const FaceRect *faces, int face_
         dst->x2    = src->x2;
         dst->y2    = src->y2;
 
+        // 确保坐标顺序正确
+        if (dst->x2 < dst->x1) { int32_t t = dst->x1; dst->x1 = dst->x2; dst->x2 = t; }
+        if (dst->y2 < dst->y1) { int32_t t = dst->y1; dst->y1 = dst->y2; dst->y2 = t; }
+
         // 复制5个关键点（10个坐标值）
         for (int j = 0; j < 10; j++) {
             dst->lm[j] = src->lm[j];
         }
 
-        dst->type     = DETECTION_TYPE_FACE;
-        dst->track_id = 0; // DSP侧暂不分配track_id，由M4侧跟踪器分配
-        dst->reserved[0] = 0;
-        dst->reserved[1] = 0;
+        dst->type       = DETECTION_TYPE_FACE;
+        dst->track_id   = 0; // DSP侧暂不分配track_id，由 tracker 分配
+        dst->edge_flags = 0; // 由 tracker_process() 设置
+        dst->reserved   = 0;
+
+        valid_count++;
+    }
+
+    result->count = valid_count;
+
+    // 调试输出：如果有框被过滤
+    if (raw_count > 0 && (int)valid_count != raw_count) {
+        rt_kprintf("[DSP:FILTER] raw=%d valid=%lu\n", raw_count, (unsigned long)valid_count);
     }
 
     return result;
@@ -842,11 +947,8 @@ static void process_frame(PipelineContext* ctx, uint16_t* frame_buffer, int fram
         uint32_t timestamp = times_count * 100; // 简单时间戳
         DetectionResult_t *result = detection_fill_result(faces_result, face_count, timestamp);
 
-        // ★ 调用跟踪器分配稳定的 track_id
-        tracker_assign_ids(result);
-        
-        // ★ 选择追踪目标（最靠近画面中心）
-        tracker_select_target(result);
+        // ★ 调用 tracker v2: ID关联 + 速度估计 (DSP不选目标)
+        tracker_process(result);
         t3 = get_cycles();
 
         // 发送多目标结果并切换缓冲区
@@ -866,10 +968,10 @@ static void process_frame(PipelineContext* ctx, uint16_t* frame_buffer, int fram
         uint32_t ms_post = g_perf_softmax_ms + g_perf_decode_ms + g_perf_nms_ms;
         uint32_t fps_theory = (ms_total > 0) ? (1000 / ms_total) : 999;
         uint32_t fps_actual = (fps_theory * 95) / 100;
-        rt_kprintf("[DSP] f%d Pre=%lu Inf=%lu Post=%lu(sm=%lu,dec=%lu,nms=%lu) Tot=%lu | FPS:%lu/%lu n=%d\n",
-                   frame_idx, ms_pre, g_perf_infer_ms, ms_post,
-                   g_perf_softmax_ms, g_perf_decode_ms, g_perf_nms_ms,
-                   ms_total, fps_theory, fps_actual, face_count);
+//        rt_kprintf("[DSP] f%d Pre=%lu Inf=%lu Post=%lu(sm=%lu,dec=%lu,nms=%lu) Tot=%lu | FPS:%lu/%lu n=%d\n",
+//                   frame_idx, ms_pre, g_perf_infer_ms, ms_post,
+//                   g_perf_softmax_ms, g_perf_decode_ms, g_perf_nms_ms,
+//                   ms_total, fps_theory, fps_actual, face_count);
     } else {
         t3 = get_cycles_end();
         // 无检测结果，发送空帧消息
@@ -886,18 +988,21 @@ static void process_frame(PipelineContext* ctx, uint16_t* frame_buffer, int fram
         uint32_t ms_post = g_perf_softmax_ms + g_perf_decode_ms + g_perf_nms_ms;
         uint32_t fps_theory = (ms_total > 0) ? (1000 / ms_total) : 999;
         uint32_t fps_actual = (fps_theory * 95) / 100;
-        rt_kprintf("[DSP] f%d Pre=%lu Inf=%lu Post=%lu(sm=%lu,dec=%lu,nms=%lu) Tot=%lu | FPS:%lu/%lu\n",
-                   frame_idx, ms_pre, g_perf_infer_ms, ms_post,
-                   g_perf_softmax_ms, g_perf_decode_ms, g_perf_nms_ms,
-                   ms_total, fps_theory, fps_actual);
+//        rt_kprintf("[DSP] f%d Pre=%lu Inf=%lu Post=%lu(sm=%lu,dec=%lu,nms=%lu) Tot=%lu | FPS:%lu/%lu\n",
+//                   frame_idx, ms_pre, g_perf_infer_ms, ms_post,
+//                   g_perf_softmax_ms, g_perf_decode_ms, g_perf_nms_ms,
+//                   ms_total, fps_theory, fps_actual);
     }
 }
 
 // 双缓冲帧处理：wframe0 和 wframe1 都处理
+static uint32_t g_dsp_frame_id = 0;  // DSP 帧计数器
+
 static void process_frames_if_flagged(PipelineContext* ctx) {
     // 处理 wframe0
     if (wframe0_flag) {
         wframe0_flag = 0;
+        g_dsp_frame_id++;
         process_frame(ctx, ctx->wframe0_buffer, 0);
         REG32(DSP_MM_BASE + 0x38) = 1;  // 通知 wframe0 处理完成
     }
@@ -905,6 +1010,7 @@ static void process_frames_if_flagged(PipelineContext* ctx) {
     // 处理 wframe1
     if (wframe1_flag) {
         wframe1_flag = 0;
+        g_dsp_frame_id++;
         process_frame(ctx, ctx->wframe1_buffer, 1);
         REG32(DSP_MM_BASE + 0x3C) = 1;  // 通知 wframe1 处理完成
     }
@@ -943,3 +1049,5 @@ int main(void)
     }
     return 0;
 }
+
+
