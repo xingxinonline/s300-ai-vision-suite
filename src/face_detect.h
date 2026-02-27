@@ -15,6 +15,7 @@ typedef struct FaceRect_
     int x2;
     int y2;
     float lm[10];
+    int class_id;
 } FaceRect;
 
 
