@@ -46,7 +46,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_csl/lib/libcsl.a}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dsp_lib/lib/ceva_dsp_lib.a}&quot;"/>
 								</option>
-								<option id="elf.linker.build_options.lnkfile.1527138247" name="Linker memory mapping script:" superClass="elf.linker.build_options.lnkfile" useByScannerDiscovery="false" value="D:\Toolbox\workspace_dsp_next_fd_app\testbench_dsp\Debug\testbench_dsp.ld" valueType="string"/>
+								<option id="elf.linker.build_options.lnkfile.1527138247" name="Linker memory mapping script:" superClass="elf.linker.build_options.lnkfile" useByScannerDiscovery="false" value="F:\Toolbox\workspace_dsp_control_detect\testbench_dsp\Debug\testbench_dsp.ld" valueType="string"/>
 								<option id="elf.linker.build_options.relax.485214526" name="Target specific global optimizations" superClass="elf.linker.build_options.relax" useByScannerDiscovery="false" value="elf.linker.build_options.relax.--relax" valueType="enumerated"/>
 								<option id="elf.linker.build_options.gc.2093793119" name="Remove unused sections" superClass="elf.linker.build_options.gc" useByScannerDiscovery="false" value="elf.linker.build_options.gc.remove" valueType="enumerated"/>
 								<option id="elf.linker.build_options.-Map.695932565" name="Create map file" superClass="elf.linker.build_options.-Map" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -54,14 +54,6 @@
 							<tool id="com.ceva.toolchain.elf.libmanager.1378902638" name="CEVA Archiver" superClass="com.ceva.toolchain.elf.libmanager"/>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="com.ceva.toolchain.elf.exe.configuration.debug.1145216361.1978078083" name="testbench_dsp.map" rcbsApplicability="disable" resourcePath="Debug/testbench_dsp.map" toolsToInvoke="">
-						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.2098674681" name="Resource Custom Build Step">
-							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.2122015279" name="Resource Custom Build Step Input Type">
-								<additionalInput kind="additionalinputdependency" paths=""/>
-							</inputType>
-							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.164899995" name="Resource Custom Build Step Output Type"/>
-						</tool>
-					</fileInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
