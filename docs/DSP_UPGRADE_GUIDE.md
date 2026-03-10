@@ -1,10 +1,11 @@
-# DSP 侧多目标检测协议升级指南
+# DSP 侧检测协议升级指南
 
 ## 概述
 
-本文档描述如何将 DSP 侧的检测算法从单目标模式升级到多目标模式，以配合 M4 侧的 `face_tracker` 模块。
+本文档描述如何将 DSP 侧输出升级为统一的检测结果协议，并与 M4 显示链路对齐。
+当前仓库的现行实现是“纯检测 + 兼容字段保留”，不再要求 DSP 侧承担目标关联或速度估计。
 
-> **详细设计文档**: 请参阅 [DSP_Multi_Target_Tracking_Design.md](docs/DSP_Multi_Target_Tracking_Design.md)，包含完整的架构设计、跟踪算法和实现示例。
+> 历史上的扩展设计文档仅作归档参考，不再作为当前 face demo 的实现要求。
 
 ## 协议版本
 
@@ -12,6 +13,7 @@
 | ---- | ---------- | ------------- |
 | v1.0 | 单目标检测 | 旧版本        |
 | v2.0 | 多目标检测 | 向后兼容 v1.0 |
+| v2.2 | 纯检测输出 | 兼容旧结构体  |
 
 ## 数据结构定义
 
@@ -34,7 +36,7 @@ typedef struct __attribute__((packed)) {
     int32_t  x2, y2;          // 右下角
     float    lm[10];          // 5个关键点
     uint8_t  type;            // 检测类型
-    uint8_t  track_id;        // ★ 跟踪ID (重要! 见跟踪算法章节)
+    uint8_t  track_id;        // 兼容保留字段，当前固定填 0
     uint8_t  reserved[2];     // 保留
 } DetectionBox_t;             // 64 bytes
 
@@ -49,23 +51,21 @@ typedef struct __attribute__((packed)) {
 } DetectionResult_t;          // 664 bytes
 ```
 
-## ★ 跟踪算法要求
+## 兼容字段要求
 
-### 为什么需要 track_id？
+### 为什么仍然保留这些字段？
 
-M4 侧需要"锁定"选中的目标。即使画面中有多个目标移动，**绿框应该跟随同一个目标**，而不是跳到另一个目标上。
+M4 侧已有结构体和解析代码已经包含 `track_id`、`selected_idx` 等字段。为了减少联调面，DSP 侧继续保留这些字段，但当前统一填固定值。
 
 ### DSP 侧的职责
 
-DSP 需要实现**目标跟踪**，为每个目标分配**稳定的 `track_id`**：
+当前 face demo 中，DSP 的职责仅包括：
 
-- 同一目标在连续帧中保持相同的 `track_id`
-- 新目标分配新的 `track_id`
-- 消失的目标不再使用其 `track_id`
+- 生成人脸检测框和关键点
+- 在发送前过滤低质量框，保证 `count` 与 `boxes[0..count-1]` 一致
+- 将兼容字段填为固定值：`track_id=0`、`vx=0`、`vy=0`、`speed=0`、`kf_confidence=0`、`selected_idx=-1`
 
-### 推荐算法：IoU 匹配
-
-详见 [DSP_Multi_Target_Tracking_Design.md](docs/DSP_Multi_Target_Tracking_Design.md) 第 3 节。
+如果未来重新引入目标关联，应新开版本说明，不要直接复用当前 face demo 的行为描述。
 
 ## 共享内存布局
 
@@ -167,7 +167,7 @@ void detection_process_frame(const ImageFrame_t *frame)
         }
         
         box->type = DETECTION_TYPE_FACE;
-        box->track_id = det->track_id;  // 如果有跟踪器
+        box->track_id = 0;  // 兼容保留字段
         
         count++;
     }
@@ -254,15 +254,15 @@ M4 侧代码已经支持：
 | 文件                       | 说明                        |
 | -------------------------- | --------------------------- |
 | `Inc/detection_protocol.h` | 共享协议定义（M4/DSP 共用） |
-| `Src/face_tracker.c`       | M4 侧多目标处理实现         |
-| `Inc/face_tracker.h`       | M4 侧接口定义               |
+| `Src/...`                  | M4 侧检测结果消费与显示逻辑 |
+| `Inc/...`                  | M4 侧协议与接口定义         |
 
 ## 测试步骤
 
 1. 确保 DSP 侧包含 `detection_protocol.h`
 2. DSP 按上述示例填充 `DetectionResult_t`
 3. DSP 通过 Mailbox 发送 `MAILBOX_MSG_TYPE_MULTI | offset`
-4. M4 侧运行 `face_tracker_poll()`
+4. M4 侧运行检测结果轮询与显示逻辑
 5. 观察屏幕上是否正确显示多个边界框
 
 ---

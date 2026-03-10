@@ -272,7 +272,7 @@ __stack_size = DEFINED(__stack_size) ? __stack_size : 16k;  // 原 4k
 
 优化后人脸检测功能正常：
 - 检测框正确显示
-- 跟踪 ID 正常分配
+- 兼容字段保持固定值
 - 无误检/漏检
 
 ---

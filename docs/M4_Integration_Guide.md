@@ -1,6 +1,7 @@
-# M4 集成指南 - DSP 跟踪结果处理
+# M4 集成指南 - DSP 检测结果处理
 
-本文档描述 M4 MCU 如何处理 DSP 发送的跟踪结果，包括基于速度的箭头渲染以实现视觉反馈。
+本文档描述 M4 MCU 如何处理 DSP 发送的人脸检测结果。
+当前 DSP demo 仅输出检测框与关键点；`track_id`、`vx`、`vy`、`speed`、`kf_confidence`、`selected_idx` 等字段仅为协议兼容保留字段，M4 侧应忽略其业务语义。
 
 ## 1. 通信协议
 
@@ -10,8 +11,8 @@
 ┌─────────┐  检测数据  ┌─────────┐  邮箱通信  ┌─────────┐  显示
 │  摄像头  │ ──────────► │   DSP   │ ─────────► │   M4    │ ────────► LCD
 └─────────┘             └─────────┘            └─────────┘
-                         卡尔曼滤波
-                         + 目标跟踪
+                         人脸检测
+                         + 结果过滤
 ```
 
 ### 1.2 邮箱消息格式
@@ -25,7 +26,7 @@ typedef struct {
     uint32_t frame_id;           // 帧计数器
     uint32_t timestamp;          // DSP 时间戳（毫秒）
     uint32_t count;              // 检测到的目标数量 (0-10)
-    int32_t  selected_idx;       // 主跟踪目标索引 (-1 表示无目标)
+    int32_t  selected_idx;       // 兼容保留字段，当前固定为 -1
     DetectionBox_t boxes[MAX_DETECTIONS];  // 检测框（最多10个）
 } DetectionResult_t;  // 总大小: 704 字节
 ```
@@ -39,49 +40,43 @@ typedef struct __attribute__((packed)) {
     int32_t  x2, y2;             // 右下角坐标
     float    lm[10];             // 5个关键点 (x0,y0,x1,y1,...,x4,y4)
     uint8_t  type;               // 检测类型 (1=人脸, 2=行人, 3=手势)
-    uint8_t  track_id;           // 唯一跟踪ID (1-255, 0=未跟踪)
-    int8_t   vx;                 // X方向速度 (像素/帧, 卡尔曼输出) [新增]
-    int8_t   vy;                 // Y方向速度 (像素/帧, 卡尔曼输出) [新增]
-    uint8_t  speed;              // 速度大小，用于箭头尺寸 [新增]
-    uint8_t  kf_confidence;      // 卡尔曼滤波置信度 (0-100) [新增]
+    uint8_t  track_id;           // 兼容保留字段，当前固定填 0
+    int8_t   vx;                 // 兼容保留字段，当前固定填 0
+    int8_t   vy;                 // 兼容保留字段，当前固定填 0
+    uint8_t  speed;              // 兼容保留字段，当前固定填 0
+    uint8_t  kf_confidence;      // 兼容保留字段，当前固定填 0
     uint8_t  reserved[2];        // 预留字段
 } DetectionBox_t;  // 总大小: 68 字节
 ```
 
-## 2. 速度字段说明
+## 2. 兼容字段说明
 
-从 DSP Tracker v2.2 开始，每个 `DetectionBox_t` 包含卡尔曼滤波后的速度信息：
+当前人脸 demo 中，这些字段只用于保持与既有 CM4 结构体布局兼容：
 
 | 字段            | 类型    | 范围        | 说明                                  |
 | --------------- | ------- | ----------- | ------------------------------------- |
-| `vx`            | int8_t  | -127 ~ +127 | 水平速度（像素/帧），正值表示向右移动 |
-| `vy`            | int8_t  | -127 ~ +127 | 垂直速度（像素/帧），正值表示向下移动 |
-| `speed`         | uint8_t | 0 ~ 255     | 速度大小，用于控制箭头尺寸            |
-| `kf_confidence` | uint8_t | 0 ~ 100     | 卡尔曼滤波置信度（预测时会降低）      |
+| `track_id`      | uint8_t | 固定 0      | 兼容保留字段，当前不分配目标 ID       |
+| `vx`            | int8_t  | 固定 0      | 兼容保留字段，当前不输出速度          |
+| `vy`            | int8_t  | 固定 0      | 兼容保留字段，当前不输出速度          |
+| `speed`         | uint8_t | 固定 0      | 兼容保留字段，当前不输出速度幅值      |
+| `kf_confidence` | uint8_t | 固定 0      | 兼容保留字段，当前不输出滤波置信度    |
+| `selected_idx`  | int32_t | 固定 -1     | 兼容保留字段，当前不指定主目标        |
 
-### 2.1 速度计算公式
+M4 端只需要依赖以下字段：
+- `magic`
+- `version`
+- `frame_id`
+- `timestamp`
+- `count`
+- `boxes[i].score`
+- `boxes[i].x1/y1/x2/y2`
+- `boxes[i].lm[10]`
 
-`speed` 字段计算方式：
+## 3. 历史渲染扩展
 
-$$
-\text{speed} = \min\left(255, \sqrt{v_x^2 + v_y^2} \times 12.75\right)
-$$
+以下箭头渲染内容是旧版扩展设想，当前纯检测 demo 不启用，也不作为联调前置条件。
 
-该公式将 0-20 像素/帧的速度映射到 0-255 的范围。
-
-### 2.2 标志位定义
-
-`flags` 字段用于指示跟踪状态（未来扩展）：
-
-```c
-#define FLAG_TRACKED        0x01  // 目标正在被跟踪
-#define FLAG_SELECTED       0x02  // 这是主目标
-#define FLAG_PREDICTED      0x04  // 位置为卡尔曼预测值（本帧无检测）
-#define FLAG_NEW_TRACK      0x08  // 新获取的跟踪目标
-#define FLAG_LOST           0x10  // 目标正在丢失（超过3帧无检测）
-```
-
-## 3. 箭头渲染算法
+## 4. 箭头渲染算法（历史保留）
 
 ### 3.1 何时绘制箭头
 
@@ -216,9 +211,9 @@ void draw_velocity_arrow(LCD_TypeDef *lcd, const DetectionBox_t *box)
 }
 ```
 
-## 4. 跟踪状态处理
+## 4. 历史扩展示例
 
-### 4.1 正常跟踪流程
+### 4.1 当前推荐处理流程
 
 ```c
 void process_detection_result(const DetectionResult_t *result)
@@ -233,35 +228,20 @@ void process_detection_result(const DetectionResult_t *result)
         log_warning("协议版本不匹配: 0x%04X", result->version);
     }
     
-    // 2. 处理选中目标
-    if (result->selected_idx >= 0 && result->selected_idx < result->count) {
-        const DetectionBox_t *target = &result->boxes[result->selected_idx];
-        
-        // 绘制边界框
-        draw_bounding_box(target, COLOR_GREEN);
-        
-        // 绘制速度箭头
-        draw_velocity_arrow(lcd, target);
-        
-        // 显示跟踪ID
-        display_track_id(target->x1, target->y1 - 20, target->track_id);
-    }
-    
-    // 3. 绘制其他目标（可选）
+    // 2. 当前 demo 不依赖 selected_idx，直接绘制所有有效框
     for (uint32_t i = 0; i < result->count; i++) {
-        if (i != result->selected_idx) {
-            draw_bounding_box(&result->boxes[i], COLOR_GRAY);
-        }
+        draw_bounding_box(&result->boxes[i], COLOR_GREEN);
     }
 }
 ```
 
-### 4.2 目标丢失处理
+### 4.2 历史扩展说明
 
-当 `selected_idx == -1` 时，表示本帧没有检测到目标。M4 应该：
+以下丢失处理、速度箭头和目标 ID 示例来自旧版扩展设想。当前纯检测 demo 中：
 
-1. **短暂丢失**（`kf_confidence > 0`）：显示预测位置，使用虚线边框
-2. **持续丢失**（多帧 `selected_idx == -1`）：清除显示，返回扫描状态
+1. `selected_idx` 固定为 `-1`
+2. `track_id`、`vx`、`vy`、`speed`、`kf_confidence` 固定为 0
+3. M4 端应以 `count` 和 `boxes[0..count-1]` 为唯一有效输入
 
 ```c
 static uint8_t s_lost_count = 0;
@@ -311,31 +291,32 @@ _Static_assert(sizeof(DetectionResult_t) == 704, "DetectionResult_t 大小不匹
 
 ### 6.1 UART 日志格式
 
-DSP 跟踪器日志前缀：
-- `[DSP:TRK]` - 跟踪器状态
-- `[DSP:KF]` - 卡尔曼滤波器状态
+当前 face demo 重点关注以下日志：
+- `[DSP-CTRL]` - 控制面握手、状态迁移、心跳
+- `[DSP:RAW]` - 原始检测分数
+- `[DSP:REJECT]` - 被 DSP 侧过滤的检测框
+- `[DSP:FILTER]` - 原始框数量与有效框数量对比
 
 ### 6.2 常见问题排查
 
 | 问题             | 可能原因                       | 解决方案                         |
 | ---------------- | ------------------------------ | -------------------------------- |
-| 箭头方向错误     | 坐标系不匹配                   | 检查 Y 轴方向定义                |
-| 箭头抖动严重     | 卡尔曼参数不佳                 | 调整 DSP 端 Q/R 参数             |
-| 目标ID频繁变化   | IoU 阈值过高                   | 降低 `TRACKER_IOU_THRESHOLD_PCT` |
-| 丢失后无法恢复   | `TRACKER_MAX_LOST_FRAMES` 过小 | 增加丢失容忍帧数                 |
+| 边框位置错误     | 坐标系不匹配                   | 检查 DSP 与 M4 的坐标空间定义    |
+| 有检测但不显示   | `count` 为 0 或框被本地过滤    | 查看 `[DSP:REJECT]` 与阈值配置   |
+| 握手后无结果     | 未进入 `RUNNING` 状态          | 检查 `[DSP-CTRL]` 状态迁移日志   |
 | 结构体大小不匹配 | 编译器对齐不一致               | 使用 `__attribute__((packed))`   |
 
 ### 6.3 性能指标
 
-- 正常跟踪时延：<5ms（包含卡尔曼滤波）
-- 目标切换时延：1 帧
-- 丢失容忍时间：5 帧（约 250ms @ 20FPS）
+- 检测结果渲染时延应由 LCD 刷新链路主导
+- DSP 侧状态上报周期默认为每 32 帧一次
+- 纯检测链路不再包含目标关联与速度估计开销
 
 ## 7. 版本历史
 
 | 版本 | 日期       | 更改内容                                    |
 | ---- | ---------- | ------------------------------------------- |
-| v2.2 | 2026-01-30 | 新增速度字段 (vx, vy, speed, kf_confidence) |
-| v2.1 | 2026-01-29 | 新增丢失容忍机制，卡尔曼滤波器              |
-| v2.0 | 2026-01-20 | 新增 track_id 跟踪                          |
+| v2.2 | 2026-01-30 | 保留兼容字段布局，当前 demo 仅输出纯检测    |
+| v2.1 | 2026-01-29 | 历史版本曾扩展兼容字段                      |
+| v2.0 | 2026-01-20 | 历史版本曾尝试目标关联                      |
 | v1.0 | 2026-01-01 | 初始版本                                    |

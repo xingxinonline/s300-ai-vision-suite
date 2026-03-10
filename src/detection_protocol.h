@@ -1,9 +1,10 @@
 /**
  * @file detection_protocol.h
- * @brief DSP与M4之间的多目标检测协议定义
+ * @brief DSP与M4之间的检测结果协议定义
  *
- * 本文件定义了DSP侧检测算法与M4侧face_tracker模块的通信协议。
- * 协议版本 v2.2 增加卡尔曼滤波速度输出 (vx, vy, speed, kf_confidence)。
+ * 本文件定义了 DSP 侧人脸检测输出与 M4 侧显示链路之间的数据协议。
+ * 当前 DSP demo 仅输出纯检测结果；为兼容既有 CM4 端结构体布局，
+ * 仍保留 track_id、vx、vy、speed、kf_confidence、selected_idx 等兼容字段。
  *
  * @version 2.2
  * @date 2026-01-30
@@ -77,12 +78,12 @@ typedef struct __attribute__((packed)) {
     int32_t  x2, y2;          /**< 右下角坐标 */
     float    lm[10];          /**< 5个关键点坐标 (x0,y0,x1,y1,...,x4,y4) */
     uint8_t  type;            /**< 检测类型 (DetectionType_e) */
-    uint8_t  track_id;        /**< 跟踪ID（由跟踪器分配） */
-    int8_t   vx;              /**< X方向速度 (像素/帧, 卡尔曼滤波输出) */
-    int8_t   vy;              /**< Y方向速度 (像素/帧, 卡尔曼滤波输出) */
-    uint8_t  speed;           /**< 速度大小 (0-255, 用于箭头大小) */
-    uint8_t  kf_confidence;   /**< 卡尔曼滤波置信度 (0-100) */
-    uint8_t  edge_flags;      /**< 边缘位置标记: bit0=左, bit1=右, bit2=上, bit3=下 */
+    uint8_t  track_id;        /**< 兼容保留字段，当前固定填 0 */
+    int8_t   vx;              /**< 兼容保留字段，当前固定填 0 */
+    int8_t   vy;              /**< 兼容保留字段，当前固定填 0 */
+    uint8_t  speed;           /**< 兼容保留字段，当前固定填 0 */
+    uint8_t  kf_confidence;   /**< 兼容保留字段，当前固定填 0 */
+    uint8_t  edge_flags;      /**< 边缘位置兼容标记，当前固定填 0 */
     uint8_t  reserved;        /**< 保留字段 */
 } DetectionBox_t;             /* 68 bytes total */
 
@@ -104,7 +105,7 @@ typedef struct __attribute__((packed)) {
     uint32_t       frame_id;     /**< 帧序号（递增） */
     uint32_t       timestamp;    /**< 时间戳（毫秒，可选） */
     uint32_t       count;        /**< 目标数量 [0, MAX_DETECTION_COUNT] */
-    int32_t        selected_idx; /**< DSP选中的目标索引 [0,count-1]，-1表示无选中 */
+    int32_t        selected_idx; /**< 兼容保留字段，当前固定填 -1 */
     DetectionBox_t boxes[MAX_DETECTION_COUNT]; /**< 检测框数组 */
 } DetectionResult_t;             /* 664 bytes total */
 
@@ -128,6 +129,9 @@ typedef struct __attribute__((packed)) {
 
 /** 本帧无检测结果 */
 #define MAILBOX_MSG_TYPE_NO_DETECT  0xF0000000u
+
+/** 与状态机 Demo 命名保持兼容 */
+#define MAILBOX_MSG_TYPE_NO_RESULT  MAILBOX_MSG_TYPE_NO_DETECT
 
 /** 消息类型掩码 */
 #define MAILBOX_MSG_TYPE_MASK       0xF0000000u

@@ -4,13 +4,15 @@
 **日期**: 2026-01-30  
 **状态**: ✅ 已实现  
 
+> 说明：本文仍然适用于 DSP/M4 过滤一致性问题，但其中 `selected_idx` 相关分析来自旧版兼容字段场景。当前纯检测 demo 固定发送 `selected_idx = -1`。
+
 ---
 
 ## 1. 问题背景
 
 ### 1.1 现象描述
 
-在单人追踪场景中，当用户静止不动时，出现以下问题：
+在单人检测显示场景中，当用户静止不动时，出现以下问题：
 
 1. **蓝框间歇性出现**：明明只有一个人，却偶尔显示蓝框（非选中目标）
 2. **框闪烁**：检测框在某些帧消失或抖动
@@ -229,32 +231,27 @@ void detection_process_frame(const uint8_t *image)
     static uint32_t frame_counter = 0;
     static uint32_t buf_index = 0;
     
-    if (!g_tracking_enabled) {
+    if (!g_detection_enabled) {
         return;
     }
     
     /* 1. 运行检测模型 */
     uint32_t raw_count = run_detection_model(image, raw_boxes, MAX_DETECTION_COUNT);
     
-    /* 2. 跟踪器分配 track_id */
-    tracker_assign_ids(raw_boxes, raw_count);
-    
-    /* 3. 卡尔曼滤波更新速度 */
-    kalman_update(raw_boxes, raw_count);
-    
-    /* 4. 过滤 + 选择（关键步骤）★ */
+    /* 2. 过滤并填充结果（关键步骤） */
     fill_detection_result_v2(&result, raw_boxes, raw_count);
     
-    /* 5. 填充帧信息 */
+    /* 3. 填充帧信息 */
     result.frame_id = frame_counter++;
     result.timestamp = get_timestamp_ms();
+    result.selected_idx = -1;
     
-    /* 6. 写入共享内存 */
+    /* 4. 写入共享内存 */
     uint32_t offset = (buf_index & 1) ? 0x300 : 0x000;
     memcpy((void*)(DSP_DETECTION_BASE_ADDR + offset), &result, sizeof(result));
     buf_index++;
     
-    /* 7. 通知 M4 */
+    /* 5. 通知 M4 */
     uint32_t msg = MAILBOX_MAKE_MSG(MAILBOX_MSG_TYPE_MULTI, offset);
     send_mailbox_ch0(msg);
 }
@@ -276,25 +273,19 @@ if (valid_count == 0) {
 }
 ```
 
-### 4.2 选中目标被过滤
+### 4.2 兼容字段处理
 
-当之前选中的目标在当前帧被过滤掉时：
+当前纯检测 demo 不再从 DSP 侧维护“选中目标”。建议固定：
 
 ```c
-/* 在 select_tracking_target() 中处理 */
-if (g_selected_track_id != 0) {
-    /* 尝试找到之前选中的目标 */
-    for (uint32_t i = 0; i < count; i++) {
-        if (boxes[i].track_id == g_selected_track_id) {
-            return (int32_t)i;  /* 找到，继续跟踪 */
-        }
-    }
-    /* 未找到（可能被过滤），重新选择 */
-    g_selected_track_id = 0;
+result->selected_idx = -1;
+for (uint32_t i = 0; i < result->count; ++i) {
+    result->boxes[i].track_id = 0;
+    result->boxes[i].vx = 0;
+    result->boxes[i].vy = 0;
+    result->boxes[i].speed = 0;
+    result->boxes[i].kf_confidence = 0;
 }
-
-/* 重新选择最靠近中心的有效目标 */
-return select_nearest_to_center(boxes, count);
 ```
 
 ### 4.3 坐标裁剪 vs 丢弃
@@ -373,8 +364,7 @@ static bool is_box_valid_debug(const DetectionBox_t *box, uint32_t idx)
 ```
 [M4:FRAME] frame=337 count=1        ← DSP 已过滤，只发送 1 个
 [M4:FRAME] valid_count=1            ← M4 无需再过滤
-[M4:SELECT] DSP selected idx=0 track_id=1  ← 索引有效
-[M4:DRAW] count=1 selected_idx=0    ← 绿框正常显示
+[M4:DRAW] count=1                    ← M4 直接绘制 1 个有效框
 ```
 
 ---
@@ -385,18 +375,18 @@ DSP 实现完成后，请确认以下事项：
 
 - [ ] 添加 `is_box_valid()` 函数
 - [ ] 修改结果填充逻辑，只包含有效框
-- [ ] 确保 `selected_idx` 在 `[0, count-1]` 范围内或为 `-1`
+- [ ] 确保 `selected_idx` 固定为 `-1`
 - [ ] 添加过滤调试日志（可选）
 - [ ] 测试边界情况：
   - [ ] 所有框被过滤 → count=0, selected_idx=-1
-  - [ ] 选中目标被过滤 → 重新选择
+    - [ ] 兼容字段始终填固定值
   - [ ] 部分框被过滤 → 索引正确映射
 
 ---
 
 ## 7. 附录：M4 当前的过滤逻辑
 
-以下是 M4 侧 `face_tracker.c` 中的过滤逻辑，DSP 应实现相同或更严格的过滤：
+以下是 M4 侧检测结果消费者中的过滤逻辑，DSP 应实现相同或更严格的过滤：
 
 ```c
 /**
