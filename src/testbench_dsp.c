@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "reg.h"
 #include "kernel.h"
@@ -18,8 +19,8 @@
 #include "vec-c.h"
 #include "face_detect.h"
 #include "dsp_mailbox.h"
+#include "control_proto.h"
 #include "detection_protocol.h"
-#include "dsp_tracker_v2.h"  /* 简化版 tracker */
 
 #include "custom_printf.h"
 
@@ -51,7 +52,26 @@ uint8_t *alpha1_buffer;
 
 uint32_t times_cycles = 0;
 uint32_t times_count = 0;
+static uint32_t g_idle_cycles = 0u;
 uint32_t face_detect_count  __attribute__((used, section(".sram1_data"), aligned(16))) = 0;
+
+#define DSP_FEATURE_LEVEL           1u
+#define DSP_MODEL_ALGO_ID           1u
+
+typedef enum {
+    DSP_CTRL_WAIT_HELLO = 0,
+    DSP_CTRL_READY,
+    DSP_CTRL_RESOURCE_ACCEPTED,
+    DSP_CTRL_CONFIGURED,
+    DSP_CTRL_RUNNING,
+    DSP_CTRL_ERROR,
+} DspControlState;
+
+static DspControlState g_ctrl_state = DSP_CTRL_WAIT_HELLO;
+static uint8_t g_ctrl_session_id = 0u;
+static uint8_t g_heartbeat_seq = 0u;
+static uint8_t g_video_resources_bound = 0u;
+static uint8_t g_startup_log_emitted = 0u;
 
 /*============================================================================
  * 多目标检测协议 - 双缓冲管理
@@ -105,20 +125,6 @@ static void detection_multi_init(void)
 
     g_detection_buf_index = 0;
     g_detection_frame_counter = 0;
-
-    // 打印 DSP 本地地址和 M4 访问地址，方便调试
-    rt_kprintf("[DSP] Detection protocol v%d.%d initialized\n",
-               (DETECTION_PROTOCOL_VERSION >> 8) & 0xFF,
-               DETECTION_PROTOCOL_VERSION & 0xFF);
-    rt_kprintf("[DSP] buf[0] local=0x%08X m4=0x%08X\n",
-               (uint32_t)(uintptr_t)g_detection_result_buf[0],
-               dsp_addr_to_m4(g_detection_result_buf[0]));
-    rt_kprintf("[DSP] buf[1] local=0x%08X m4=0x%08X\n",
-               (uint32_t)(uintptr_t)g_detection_result_buf[1],
-               dsp_addr_to_m4(g_detection_result_buf[1]));
-
-    // 初始化目标跟踪器
-    tracker_init();
 }
 
 /*============================================================================
@@ -207,7 +213,7 @@ static DetectionResult_t* detection_fill_result(const FaceRect *faces, int face_
     // 填充头部
     result->frame_id  = g_detection_frame_counter++;
     result->timestamp = timestamp;
-    result->selected_idx = -1;  // 初始化为无选中，后续由 tracker_select_target 填写
+    result->selected_idx = -1;
 
     // 限制输入数量
     int raw_count = (face_count > MAX_DETECTION_COUNT) ? MAX_DETECTION_COUNT : face_count;
@@ -258,8 +264,12 @@ static DetectionResult_t* detection_fill_result(const FaceRect *faces, int face_
         }
 
         dst->type       = DETECTION_TYPE_FACE;
-        dst->track_id   = 0; // DSP侧暂不分配track_id，由 tracker 分配
-        dst->edge_flags = 0; // 由 tracker_process() 设置
+        dst->track_id   = 0;
+        dst->vx         = 0;
+        dst->vy         = 0;
+        dst->speed      = 0;
+        dst->kf_confidence = 0;
+        dst->edge_flags = 0;
         dst->reserved   = 0;
 
         valid_count++;
@@ -321,6 +331,404 @@ typedef struct {
     int cropW, cropH;   // 裁剪后的区域尺寸（作为缩放输入尺寸）
     int rotated;        // 是否做了 CCW90 旋转（1竖屏，0横屏）
 } Transform;
+
+static const char *dsp_ctrl_state_name(DspControlState state)
+{
+    switch (state) {
+    case DSP_CTRL_WAIT_HELLO:
+        return "WAIT_HELLO";
+    case DSP_CTRL_READY:
+        return "READY";
+    case DSP_CTRL_RESOURCE_ACCEPTED:
+        return "RESOURCE_ACCEPTED";
+    case DSP_CTRL_CONFIGURED:
+        return "CONFIGURED";
+    case DSP_CTRL_RUNNING:
+        return "RUNNING";
+    case DSP_CTRL_ERROR:
+        return "ERROR";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+static void dsp_log_startup_banner(void)
+{
+    rt_kprintf("[DSP] ============================================\n");
+    rt_kprintf("[DSP]   S300 DSP Face Detection Control Demo\n");
+    rt_kprintf("[DSP] ============================================\n");
+    rt_kprintf("[DSP] Control protocol: v%u.%u\n",
+               (unsigned)((CONTROL_PROTOCOL_VERSION >> 8) & 0xFFu),
+               (unsigned)(CONTROL_PROTOCOL_VERSION & 0xFFu));
+    rt_kprintf("[DSP] Detection protocol: v%u.%u\n",
+               (unsigned)((DETECTION_PROTOCOL_VERSION >> 8) & 0xFFu),
+               (unsigned)(DETECTION_PROTOCOL_VERSION & 0xFFu));
+    rt_kprintf("[DSP] Built: %s %s\n", __DATE__, __TIME__);
+}
+
+static void dsp_emit_startup_logs_once(void)
+{
+    if (g_startup_log_emitted != 0u) {
+        return;
+    }
+
+    dsp_log_startup_banner();
+    rt_kprintf("[DSP] buf[0] local=0x%08X m4=0x%08X\n",
+               (uint32_t)(uintptr_t)g_detection_result_buf[0],
+               dsp_addr_to_m4(g_detection_result_buf[0]));
+    rt_kprintf("[DSP] buf[1] local=0x%08X m4=0x%08X\n",
+               (uint32_t)(uintptr_t)g_detection_result_buf[1],
+               dsp_addr_to_m4(g_detection_result_buf[1]));
+    rt_kprintf("[DSP-CTRL] Waiting for CM4 control session\n");
+
+    g_startup_log_emitted = 1u;
+}
+
+static void dsp_set_state(DspControlState next)
+{
+    if (g_ctrl_state != next) {
+        rt_kprintf("[DSP-CTRL] %s -> %s\n",
+                   dsp_ctrl_state_name(g_ctrl_state),
+                   dsp_ctrl_state_name(next));
+        g_ctrl_state = next;
+    }
+}
+
+static ControlRunState_t dsp_get_run_state(void)
+{
+    switch (g_ctrl_state) {
+    case DSP_CTRL_WAIT_HELLO:
+        return CONTROL_RUN_STATE_INIT;
+    case DSP_CTRL_READY:
+    case DSP_CTRL_RESOURCE_ACCEPTED:
+        return CONTROL_RUN_STATE_READY;
+    case DSP_CTRL_CONFIGURED:
+        return CONTROL_RUN_STATE_CONFIGURED;
+    case DSP_CTRL_RUNNING:
+        return CONTROL_RUN_STATE_RUNNING;
+    case DSP_CTRL_ERROR:
+    default:
+        return CONTROL_RUN_STATE_ERROR;
+    }
+}
+
+static void pipeline_context_reset(PipelineContext *ctx)
+{
+    memset(ctx, 0, sizeof(*ctx));
+    wframe0_addr = 0;
+    wframe1_addr = 0;
+    rframe0_addr = 0;
+    rframe1_addr = 0;
+    alpha0_addr = 0;
+    alpha1_addr = 0;
+    wframe0_buffer = 0;
+    wframe1_buffer = 0;
+    rframe0_buffer = 0;
+    rframe1_buffer = 0;
+    alpha0_buffer = 0;
+    alpha1_buffer = 0;
+    display_width = 0;
+    display_height = 0;
+    snapshot_width = 0;
+    snapshot_height = 0;
+    g_video_resources_bound = 0u;
+}
+
+static void dsp_reset_control_session(PipelineContext *ctx, uint8_t session_id)
+{
+    g_ctrl_session_id = session_id;
+    g_heartbeat_seq = 0u;
+    pipeline_context_reset(ctx);
+    detection_multi_init();
+}
+
+static void dsp_mailbox_reset_fifos(void)
+{
+    mailbox_clear_receive_fifo();
+    mailbox_clear_send_fifo();
+}
+
+static void dsp_send_msg(uint32_t msg, const char *label)
+{
+    mailbox_write_data(msg);
+    rt_kprintf("[DSP-CTRL] TX %-18s 0x%08X\n", label, msg);
+}
+
+static void dsp_send_ack(uint8_t kind, uint8_t code)
+{
+    dsp_send_msg(CONTROL_ACK_MAKE(kind, g_ctrl_session_id, code, CONTROL_ACK_OK), "ACK");
+}
+
+static void dsp_send_nack(uint8_t kind, uint8_t code, uint8_t err)
+{
+    dsp_send_msg(CONTROL_NACK_MAKE(kind, g_ctrl_session_id, code, err), "NACK");
+}
+
+static void dsp_send_status(uint8_t brief)
+{
+    dsp_send_msg(CONTROL_STATUS_MAKE(0u, g_ctrl_session_id, dsp_get_run_state(), brief), "STATUS");
+}
+
+static void dsp_send_heartbeat(void)
+{
+    dsp_send_msg(CONTROL_SYS_HEARTBEAT(g_ctrl_session_id, g_heartbeat_seq, dsp_get_run_state()),
+                 "SYS.HEARTBEAT");
+    g_heartbeat_seq++;
+}
+
+static void dsp_send_hello_ack(void)
+{
+    dsp_send_msg(
+        CONTROL_SYS_HELLO_ACK(
+            g_ctrl_session_id,
+            CONTROL_BOOT_REASON_WARM_RESET,
+            DSP_FEATURE_LEVEL,
+            dsp_get_run_state()),
+        "SYS.HELLO_ACK");
+}
+
+static void dsp_send_model_ready(void)
+{
+    dsp_send_msg(
+        CONTROL_SYS_DSP_MODEL_READY(
+            g_ctrl_session_id,
+            DSP_MODEL_ALGO_ID,
+            0u,
+            dsp_get_run_state()),
+        "SYS.DSP_MODEL_READY");
+}
+
+static int pipeline_bind_video_resources(PipelineContext *ctx)
+{
+    wframe0_addr = REG32(DSP_MM_BASE + 0x30);
+    wframe1_addr = REG32(DSP_MM_BASE + 0x34);
+    rframe0_addr = REG32(DSP_MM_BASE + 0x40);
+    rframe1_addr = REG32(DSP_MM_BASE + 0x44);
+    alpha0_addr  = REG32(DSP_MM_BASE + 0x48);
+    alpha1_addr  = REG32(DSP_MM_BASE + 0x4C);
+
+    display_width  = REG32(DSP_MM_BASE + 0x20) & 0x7FF;
+    display_height = (REG32(DSP_MM_BASE + 0x20) & 0x3FF0000) >> 16;
+    snapshot_width  = REG32(DSP_MM_BASE + 0x28) & 0x7FF;
+    snapshot_height = (REG32(DSP_MM_BASE + 0x28) & 0x3FF0000) >> 16;
+
+    if ((wframe0_addr == 0u) || (wframe1_addr == 0u) ||
+        (alpha0_addr == 0u) || (alpha1_addr == 0u) ||
+        (display_width == 0u) || (display_height == 0u) ||
+        (snapshot_width == 0u) || (snapshot_height == 0u)) {
+        return -1;
+    }
+
+    wframe0_buffer = (uint16_t *)wframe0_addr;
+    wframe1_buffer = (uint16_t *)wframe1_addr;
+    rframe0_buffer = (uint16_t *)rframe0_addr;
+    rframe1_buffer = (uint16_t *)rframe1_addr;
+    alpha0_buffer  = (uint8_t *)alpha0_addr;
+    alpha1_buffer  = (uint8_t *)alpha1_addr;
+
+    ctx->wframe0_buffer = wframe0_buffer;
+    ctx->wframe1_buffer = wframe1_buffer;
+    ctx->rframe0_buffer = rframe0_buffer;
+    ctx->rframe1_buffer = rframe1_buffer;
+    ctx->alpha0_buffer  = alpha0_buffer;
+    ctx->alpha1_buffer  = alpha1_buffer;
+    ctx->display_width  = display_width;
+    ctx->display_height = display_height;
+    ctx->snapshot_width  = snapshot_width;
+    ctx->snapshot_height = snapshot_height;
+
+    rt_kprintf("[DSP-CTRL] bind video display=%dx%d snapshot=%dx%d\n",
+               display_width, display_height, snapshot_width, snapshot_height);
+
+    size_t pix_count = (size_t)ctx->snapshot_width * (size_t)ctx->snapshot_height;
+    for (size_t i = 0; i < pix_count; ++i) {
+        ctx->wframe0_buffer[i] = 0xFFFF;
+        ctx->wframe1_buffer[i] = 0xFFFF;
+    }
+
+    debug_test_dsp_mm();
+    REG32(DSP_MM_BASE + 0x70) = 1;
+    REG32(DSP_MM_BASE + 0x1E0) = 1;
+    g_video_resources_bound = 1u;
+    return 0;
+}
+
+static void dsp_handle_hello(PipelineContext *ctx, uint32_t msg)
+{
+    uint16_t arg = CONTROL_GET_ARG(msg);
+
+    rt_kprintf("[DSP-CTRL] RX HELLO session=0x%02X proto=0x%04X\n",
+               CONTROL_GET_SESSION(msg), arg);
+
+    if (arg != CONTROL_PROTOCOL_VERSION) {
+        g_ctrl_session_id = (uint8_t)CONTROL_GET_SESSION(msg);
+        dsp_send_nack(CONTROL_RSP_KIND_SYS,
+                      CONTROL_SYS_SUBTYPE_HELLO,
+                      CONTROL_ERR_PROTOCOL_MISMATCH);
+        dsp_set_state(DSP_CTRL_ERROR);
+        return;
+    }
+
+    dsp_reset_control_session(ctx, (uint8_t)CONTROL_GET_SESSION(msg));
+    dsp_emit_startup_logs_once();
+    dsp_set_state(DSP_CTRL_READY);
+    dsp_send_hello_ack();
+}
+
+static void dsp_handle_sys_message(PipelineContext *ctx, uint32_t msg)
+{
+    uint8_t subtype = (uint8_t)CONTROL_GET_SUBTYPE(msg);
+    uint16_t arg = CONTROL_GET_ARG(msg);
+
+    if (subtype == CONTROL_SYS_SUBTYPE_HELLO) {
+        dsp_handle_hello(ctx, msg);
+        return;
+    }
+
+    if (!control_msg_session_matches(msg, g_ctrl_session_id)) {
+        rt_kprintf("[DSP-CTRL] session mismatch sys=0x%02X current=0x%02X\n",
+                   CONTROL_GET_SESSION(msg), g_ctrl_session_id);
+        dsp_send_nack(CONTROL_RSP_KIND_SYS, subtype, CONTROL_ERR_SESSION_MISMATCH);
+        return;
+    }
+
+    switch (subtype) {
+    case CONTROL_SYS_SUBTYPE_CM4_RESOURCE_READY: {
+        uint8_t input_type = (uint8_t)CONTROL_RESOURCE_READY_GET_INPUT_TYPE(arg);
+        uint8_t flags = (uint8_t)CONTROL_RESOURCE_READY_GET_FLAGS(arg);
+
+        rt_kprintf("[DSP-CTRL] RX CM4_RESOURCE_READY input=%u flags=0x%02X slot=0x%02X\n",
+                   input_type, flags, (unsigned)CONTROL_RESOURCE_READY_GET_CONFIG_SLOT(arg));
+
+        if (input_type != CONTROL_INPUT_VIDEO) {
+            dsp_send_nack(CONTROL_RSP_KIND_SYS, subtype, CONTROL_ERR_INVALID_CONFIG);
+            dsp_set_state(DSP_CTRL_ERROR);
+            return;
+        }
+
+        if ((flags & (CONTROL_RESOURCE_CAMERA_READY |
+                      CONTROL_RESOURCE_MM_READY |
+                      CONTROL_RESOURCE_LCD_READY)) !=
+            (CONTROL_RESOURCE_CAMERA_READY |
+             CONTROL_RESOURCE_MM_READY |
+             CONTROL_RESOURCE_LCD_READY)) {
+            dsp_send_nack(CONTROL_RSP_KIND_SYS, subtype, CONTROL_ERR_RESOURCE_NOT_READY);
+            dsp_set_state(DSP_CTRL_ERROR);
+            return;
+        }
+
+        if (pipeline_bind_video_resources(ctx) != 0) {
+            dsp_send_nack(CONTROL_RSP_KIND_SYS, subtype, CONTROL_ERR_BUFFER_BIND_FAILED);
+            dsp_set_state(DSP_CTRL_ERROR);
+            return;
+        }
+
+        dsp_set_state(DSP_CTRL_RESOURCE_ACCEPTED);
+        dsp_send_model_ready();
+        return;
+    }
+
+    case CONTROL_SYS_SUBTYPE_START_STREAM:
+        if (!g_video_resources_bound) {
+            dsp_send_nack(CONTROL_RSP_KIND_SYS, subtype, CONTROL_ERR_MODEL_NOT_READY);
+            return;
+        }
+        rt_kprintf("[DSP-CTRL] RX START_STREAM id=%u flags=0x%02X\n",
+                   (unsigned)CONTROL_STREAM_GET_ID(arg),
+                   (unsigned)CONTROL_STREAM_GET_FLAGS(arg));
+        dsp_send_ack(CONTROL_RSP_KIND_SYS, CONTROL_SYS_SUBTYPE_START_STREAM);
+        dsp_set_state(DSP_CTRL_RUNNING);
+        return;
+
+    case CONTROL_SYS_SUBTYPE_STOP_STREAM:
+        rt_kprintf("[DSP-CTRL] RX STOP_STREAM\n");
+        dsp_set_state(DSP_CTRL_CONFIGURED);
+        dsp_send_ack(CONTROL_RSP_KIND_SYS, CONTROL_SYS_SUBTYPE_STOP_STREAM);
+        return;
+
+    case CONTROL_SYS_SUBTYPE_HEARTBEAT:
+        rt_kprintf("[DSP-CTRL] RX HEARTBEAT seq=%u status=%u\n",
+                   (unsigned)CONTROL_HEARTBEAT_GET_SEQ(arg),
+                   (unsigned)CONTROL_HEARTBEAT_GET_STATUS(arg));
+        dsp_send_heartbeat();
+        return;
+
+    default:
+        rt_kprintf("[DSP-CTRL] RX SYS subtype=%u arg=0x%04X\n", subtype, arg);
+        return;
+    }
+}
+
+static void dsp_handle_cmd_message(uint32_t msg)
+{
+    uint8_t group = (uint8_t)CONTROL_GET_SUBTYPE(msg);
+    uint16_t arg = CONTROL_GET_ARG(msg);
+    uint8_t opcode = (uint8_t)CONTROL_CMD_GET_OPCODE(arg);
+
+    if (!control_msg_session_matches(msg, g_ctrl_session_id)) {
+        rt_kprintf("[DSP-CTRL] session mismatch cmd=0x%02X current=0x%02X\n",
+                   CONTROL_GET_SESSION(msg), g_ctrl_session_id);
+        dsp_send_nack(CONTROL_RSP_KIND_CMD, opcode, CONTROL_ERR_SESSION_MISMATCH);
+        return;
+    }
+
+    rt_kprintf("[DSP-CTRL] RX CMD group=%u opcode=0x%02X arg=0x%02X\n",
+               group, opcode, (unsigned)CONTROL_CMD_GET_ARG8(arg));
+
+    if ((group == CONTROL_CMD_GRP_CONFIG) && (opcode == CONTROL_CMD_CONFIG_APPLY)) {
+        if (!g_video_resources_bound) {
+            dsp_send_nack(CONTROL_RSP_KIND_CMD, opcode, CONTROL_ERR_MODEL_NOT_READY);
+            return;
+        }
+        dsp_send_ack(CONTROL_RSP_KIND_CMD, CONTROL_CMD_CONFIG_APPLY);
+        return;
+    }
+
+    if ((group == CONTROL_CMD_GRP_BUFFER) && (opcode == CONTROL_CMD_BUFFER_BIND)) {
+        if (!g_video_resources_bound) {
+            dsp_send_nack(CONTROL_RSP_KIND_CMD, opcode, CONTROL_ERR_BUFFER_BIND_FAILED);
+            return;
+        }
+        dsp_set_state(DSP_CTRL_CONFIGURED);
+        dsp_send_ack(CONTROL_RSP_KIND_CMD, CONTROL_CMD_BUFFER_BIND);
+        return;
+    }
+
+    dsp_send_nack(CONTROL_RSP_KIND_CMD, opcode, CONTROL_ERR_FEATURE_UNSUPPORTED);
+}
+
+static void dsp_poll_control_plane(PipelineContext *ctx)
+{
+    while (!mailbox_is_empty()) {
+        uint32_t msg = mailbox_read_data();
+
+        switch (CONTROL_GET_TYPE(msg)) {
+        case CONTROL_MSG_TYPE_SYS:
+            dsp_handle_sys_message(ctx, msg);
+            break;
+        case CONTROL_MSG_TYPE_CMD:
+            dsp_handle_cmd_message(msg);
+            break;
+        default:
+            rt_kprintf("[DSP-CTRL] RX ignored 0x%08X\n", msg);
+            break;
+        }
+    }
+}
+
+static void dsp_log_idle_state(void)
+{
+    if ((g_idle_cycles == 0u) || ((g_idle_cycles % 10000000u) != 0u)) {
+        return;
+    }
+
+    rt_kprintf("[DSP-CTRL] idle state=%s session=0x%02X hb=%lu drops=%lu\n",
+               dsp_ctrl_state_name(g_ctrl_state),
+               (unsigned)g_ctrl_session_id,
+               (unsigned long)g_heartbeat_seq,
+               (unsigned long)mailbox_get_drop_count());
+    g_idle_cycles = 0u;
+}
 
 /**
  * 在同一块内存中对BGR565图像进行原地缩小
@@ -857,67 +1265,6 @@ static void restore_faces_with_transform(FaceRect* faces, int count, const Trans
 
 // ==================== 业务流程拆分：模块化辅助函数 ====================
 
-// 根据mailbox握手初始化地址、缓冲指针与分辨率
-static void mailbox_setup_if_needed(PipelineContext* ctx) {
-    if (mailbox_is_empty() == false) {
-        uint32_t recv_data = mailbox_read_data();
-        rt_kprintf("[DSP] mailbox_recv = 0x%x\n", recv_data);
-        if (recv_data == 0x5A5A5A5A) {
-            wframe0_addr = REG32(DSP_MM_BASE + 0x30);
-            wframe1_addr = REG32(DSP_MM_BASE + 0x34);
-            rframe0_addr = REG32(DSP_MM_BASE + 0x40);
-            rframe1_addr = REG32(DSP_MM_BASE + 0x44);
-            alpha0_addr  = REG32(DSP_MM_BASE + 0x48);
-            alpha1_addr  = REG32(DSP_MM_BASE + 0x4C);
-            rt_kprintf("[DSP] wframe0=0x%08X rframe0=0x%08X alpha0=0x%08X\n", wframe0_addr, rframe0_addr, alpha0_addr);
-            rt_kprintf("[DSP] wframe1=0x%08X rframe1=0x%08X alpha1=0x%08X\n", wframe1_addr, rframe1_addr, alpha1_addr);
-
-            // 写全局地址与本地上下文
-            wframe0_buffer = (uint16_t *)wframe0_addr;
-            wframe1_buffer = (uint16_t *)wframe1_addr;
-            rframe0_buffer = (uint16_t *)rframe0_addr;
-            rframe1_buffer = (uint16_t *)rframe1_addr;
-            alpha0_buffer  = (uint8_t  *)alpha0_addr;
-            alpha1_buffer  = (uint8_t  *)alpha1_addr;
-
-            display_width  = REG32(DSP_MM_BASE + 0x20) & 0x7FF;
-            display_height = (REG32(DSP_MM_BASE + 0x20) & 0x3FF0000) >> 16;
-            snapshot_width  = REG32(DSP_MM_BASE + 0x28) & 0x7FF;
-            snapshot_height = (REG32(DSP_MM_BASE + 0x28) & 0x3FF0000) >> 16;
-
-            // 同步到上下文（避免后续传参再次依赖全局）
-            ctx->wframe0_buffer = wframe0_buffer;
-            ctx->wframe1_buffer = wframe1_buffer;
-            ctx->rframe0_buffer = rframe0_buffer;
-            ctx->rframe1_buffer = rframe1_buffer;
-            ctx->alpha0_buffer  = alpha0_buffer;
-            ctx->alpha1_buffer  = alpha1_buffer;
-            ctx->display_width  = display_width;
-            ctx->display_height = display_height;
-            ctx->snapshot_width  = snapshot_width;
-            ctx->snapshot_height = snapshot_height;
-
-            rt_kprintf("[DSP] display=%dx%d snapshot=%dx%d\n",
-                       display_width, display_height, snapshot_width, snapshot_height);
-
-            // 清屏为白色，避免残影
-            size_t pix_count = (size_t)ctx->snapshot_width * (size_t)ctx->snapshot_height;
-            for (size_t i = 0; i < pix_count; ++i) {
-                ctx->wframe0_buffer[i] = 0xFFFF;
-                ctx->wframe1_buffer[i] = 0xFFFF;
-            }
-            rt_kprintf("[DSP] MM memory initialized\n");
-
-            debug_test_dsp_mm();
-            REG32(DSP_MM_BASE + 0x70) = 1;
-            REG32(DSP_MM_BASE + 0x1E0) = 1;
-
-            // 初始化多目标检测协议缓冲区
-            detection_multi_init();
-        }
-    }
-}
-
 // 处理一帧：前处理->推理->坐标还原->通知（多目标检测协议 v2.1）
 // frame_buffer: 待处理的帧缓冲区
 // frame_idx: 0=wframe0, 1=wframe1（用于日志区分）
@@ -947,8 +1294,6 @@ static void process_frame(PipelineContext* ctx, uint16_t* frame_buffer, int fram
         uint32_t timestamp = times_count * 100; // 简单时间戳
         DetectionResult_t *result = detection_fill_result(faces_result, face_count, timestamp);
 
-        // ★ 调用 tracker v2: ID关联 + 速度估计 (DSP不选目标)
-        tracker_process(result);
         t3 = get_cycles();
 
         // 发送多目标结果并切换缓冲区
@@ -999,12 +1344,19 @@ static void process_frame(PipelineContext* ctx, uint16_t* frame_buffer, int fram
 static uint32_t g_dsp_frame_id = 0;  // DSP 帧计数器
 
 static void process_frames_if_flagged(PipelineContext* ctx) {
+    int processed_frame = 0;
+
+    if (g_ctrl_state != DSP_CTRL_RUNNING || !g_video_resources_bound) {
+        return;
+    }
+
     // 处理 wframe0
     if (wframe0_flag) {
         wframe0_flag = 0;
         g_dsp_frame_id++;
         process_frame(ctx, ctx->wframe0_buffer, 0);
         REG32(DSP_MM_BASE + 0x38) = 1;  // 通知 wframe0 处理完成
+        processed_frame = 1;
     }
 
     // 处理 wframe1
@@ -1013,6 +1365,11 @@ static void process_frames_if_flagged(PipelineContext* ctx) {
         g_dsp_frame_id++;
         process_frame(ctx, ctx->wframe1_buffer, 1);
         REG32(DSP_MM_BASE + 0x3C) = 1;  // 通知 wframe1 处理完成
+        processed_frame = 1;
+    }
+
+    if (processed_frame && ((g_dsp_frame_id & 0x1Fu) == 0u)) {
+        dsp_send_status((uint8_t)(g_dsp_frame_id & 0xFFu));
     }
 }
 
@@ -1026,26 +1383,26 @@ int main(void)
     dd = _in(_cpm, 0x924);
     REG32(0x44040000) = dd;
 
-    rt_kprintf("[DSP] ======== DSP Core Started ========\n");
-    rt_kprintf("[DSP] Compiled on %s at %s\n", __DATE__, __TIME__);
-
     // 运行期上下文
     PipelineContext ctx = {0};
+    dsp_mailbox_reset_fifos();
+    pipeline_context_reset(&ctx);
 
     while (1)
     {
-        // 心跳打印与握手检测
         if (times_cycles % 10000000 == 0) {
             times_count++;
-            times_cycles = 0;
-//            rt_kprintf("times_count = %ld\n", times_count);
-            mailbox_setup_if_needed(&ctx);
         }
+
+        dsp_poll_control_plane(&ctx);
 
         // 帧处理（双缓冲 pingpong）
         process_frames_if_flagged(&ctx);
 
+        dsp_log_idle_state();
+
         times_cycles++;
+        g_idle_cycles++;
     }
     return 0;
 }
