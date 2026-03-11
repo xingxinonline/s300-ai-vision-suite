@@ -21,6 +21,7 @@
 #include "dsp_mailbox.h"
 #include "control_proto.h"
 #include "detection_protocol.h"
+#include "face_detection_runtime_proto.h"
 
 #include "custom_printf.h"
 
@@ -498,6 +499,21 @@ static void dsp_send_model_ready(void)
         "SYS.DSP_MODEL_READY");
 }
 
+static void dsp_send_runtime_msg(uint32_t msg, const char *label)
+{
+    if (mailbox_write_data_nb(msg)) {
+        rt_kprintf("[DSP-RT] TX %-18s 0x%08X\n", label, msg);
+        return;
+    }
+
+    rt_kprintf("[DSP-RT] TX %-18s dropped\n", label);
+}
+
+static void dsp_request_mm_sync(uint32_t req, const char *label)
+{
+    dsp_send_runtime_msg(FD_RT_MAKE_MM_SYNC_REQ(req), label);
+}
+
 static int pipeline_bind_video_resources(PipelineContext *ctx)
 {
     wframe0_addr = REG32(DSP_MM_BASE + 0x30);
@@ -547,8 +563,8 @@ static int pipeline_bind_video_resources(PipelineContext *ctx)
     }
 
     debug_test_dsp_mm();
-    REG32(DSP_MM_BASE + 0x70) = 1;
-    REG32(DSP_MM_BASE + 0x1E0) = 1;
+    dsp_request_mm_sync(FD_RT_SYNC_REQ_CORE_REG_UPDATE, "MM.CORE_REG_UPDATE");
+    dsp_request_mm_sync(FD_RT_SYNC_REQ_SPI_REG_UPDATE, "MM.SPI_REG_UPDATE");
     g_video_resources_bound = 1u;
     return 0;
 }
